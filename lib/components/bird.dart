@@ -16,100 +16,72 @@ class _BirdState extends State<Bird> {
     //   'O määthö ki pïï mo thööth' Akëëlö
     List<Map<String, String>> birds = [
       {
-        'engName': 'Head',
-        'anyName': 'Wïc',
-        'imageLink': "assets/body_part/head.png"
+        'engName': 'Hamerkop',
+        'anyName': 'Aciik',
+        'imageLink': "assets/birds/aciik.png"
       },
       {
-        'engName': 'Ankle',
-        'anyName': 'Adikwala',
-        'imageLink': "assets/body_part/ankle.png"
+        'engName': 'Village weaver',
+        'anyName': 'Aleerø',
+        'imageLink': "assets/birds/aleero.png"
       },
       {
-        'engName': 'Arm',
-        'anyName': 'Cinø',
-        'imageLink': 'assets/body_part/arm.png'
+        'engName': 'Butterfly',
+        'anyName': 'Adeellakwac',
+        'imageLink': 'assets/birds/butterfly.png'
       },
 
       {
-        'engName': 'Chest',
-        'anyName': 'Käw',
-        'imageLink': 'assets/body_part/chest.png'
-      },
-      {
-        'engName': 'Ear',
-        'anyName': 'Ïth',
-        'imageLink': 'assets/body_part/ear.png'
-      },
-      {
-        'engName': 'Eye',
-        'anyName': 'Wang',
-        'imageLink': 'assets/body_part/eye.png'
-      },
-      {
-        'engName': 'Finger',
-        'anyName': 'Lweedø',
-        'imageLink': 'assets/body_part/finger.png'
-      },
-      {
-        'engName': 'Foot',
-        'anyName': 'Othäny tielø',
-        'imageLink': 'assets/body_part/foot.png'
-      },
-      {
-        'engName': 'Hair',
-        'anyName': 'Jïër',
-        'imageLink': 'assets/body_part/hair.png'
+        'engName': 'Duck',
+        'anyName': 'Badhø',
+        'imageLink': 'assets/birds/duck.png'
       },
 
       // 'O ruu ni cämö',
       //   'O cämö ki wïth caami mo thööth',
       //   'O ruu ni bäng gïn mo ee camø',
       //   'O määthö ki pïï mo thööth' Akëëlö
+
       {
-        'engName': 'Knee',
-        'anyName': 'Wïcuung',
-        'imageLink': 'assets/body_part/knee.png'
+        'engName': 'Fish eagle',
+        'anyName': 'Dibëël',
+        'imageLink': 'assets/birds/fish_eagle.png'
       },
       {
-        'engName': 'Leg',
-        'anyName': 'Tielø',
-        'imageLink': 'assets/body_part/leg.png'
+        'engName': 'Hen',
+        'anyName': 'Gwienø',
+        'imageLink': 'assets/birds/gwieno.png'
       },
       {
-        'engName': 'Mouth',
-        'anyName': 'Dhøk',
-        'imageLink': 'assets/body_part/mouth.png'
+        'engName': 'Cattle Egret',
+        'anyName': 'Okøøk',
+        'imageLink': 'assets/birds/okook.png'
       },
       {
-        'engName': 'Neck',
-        'anyName': 'Ngut',
-        'imageLink': 'assets/body_part/neck.png'
+        'engName': 'Plegadis',
+        'anyName': 'Owaaw',
+        'imageLink': 'assets/birds/owaaw.png'
       },
       {
-        'engName': 'Nose',
-        'anyName': 'Um',
-        'imageLink': 'assets/body_part/nose.png'
+        'engName': 'Pelican',
+        'anyName': 'Obööngö',
+        'imageLink': 'assets/birds/pelican.png'
       },
       {
-        'engName': 'Shoulder',
-        'anyName': 'Göön',
-        'imageLink': 'assets/body_part/shoulder.png'
+        'engName': 'Standard nightjar',
+        'anyName': 'Obwölatäämmö',
+        'imageLink': 'assets/birds/standard_nightjar.png'
+        //määthö
       },
       {
-        'engName': 'Theeth',
-        'anyName': 'Lak',
-        'imageLink': 'assets/body_part/theeth.png'
+        'engName': 'Owl',
+        'anyName': 'Tula',
+        'imageLink': 'assets/birds/tula.png'
       },
       {
-        'engName': 'Thigh',
-        'anyName': 'Ääm',
-        'imageLink': 'assets/body_part/thigh.png'
-      },
-      {
-        'engName': 'Toungue',
-        'anyName': 'Leep',
-        'imageLink': 'assets/body_part/toungue.png'
+        'engName': 'Dove',
+        'anyName': 'Akuuru',
+        'imageLink': 'assets/birds/white_dove.png'
       },
     ];
 
@@ -123,11 +95,11 @@ class _BirdState extends State<Bird> {
         child: Column(children: [
           ListTile(
             title: Text(
-              'Body Parts',
+              'Birds',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
             ),
             subtitle: Text(
-              'Jap Dëël',
+              'Winy',
               style: TextStyle(fontSize: 20, color: Colors.grey[700]),
             ),
           ),
