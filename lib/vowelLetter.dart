@@ -1,19 +1,17 @@
 // ignore_for_file: empty_catches
-
 import 'package:audioplayers/audioplayers.dart';
 import 'package:dha_anywaaa/vowel.dart';
 import 'package:flutter/material.dart';
 
 class VowelLetter extends StatefulWidget {
   const VowelLetter({super.key});
-
   @override
   State<VowelLetter> createState() => _VowelLetterState();
 }
 
 class _VowelLetterState extends State<VowelLetter> {
   late AudioPlayer player;
-  AssetSource path = AssetSource('');
+
   @override
   void initState() {
     super.initState();
@@ -26,128 +24,100 @@ class _VowelLetterState extends State<VowelLetter> {
     super.dispose();
   }
 
-  // playAudio(path, isPlaying) async {
-  //   try {
-  //     if (isPlaying) {
-  //       await player.pause();
-  //       setState(() {
-  //         isPlaying = false;
-  //       });
-  //     } else {
-  //       await player.play(path);
-  //       setState(() {
-  //         isPlaying = true;
-  //       });
-  //     }
-  //   } catch (e) {}
-  // }
+  Future<void> _play(String soundPath) async {
+    try {
+      final src = AssetSource(soundPath);
+      await player.play(src);
+      final dur = await player.getDuration();
+      if (dur != null) await Future.delayed(dur);
+      await player.stop();
+    } catch (_) {}
+  }
+
+  final List<Vowel> vowelLetters = [
+    Vowel(capitalLetter: 'Ä', smallLetter: 'ä', sound: 'sound/Ä.mp3'),
+    Vowel(capitalLetter: 'Ë', smallLetter: 'ë', sound: 'sound/Ë.mp3'),
+    Vowel(capitalLetter: 'Ï', smallLetter: 'ï', sound: 'sound/Ï.mp3'),
+    Vowel(capitalLetter: 'Ö', smallLetter: 'ö', sound: 'sound/Ö.mp3'),
+    Vowel(capitalLetter: 'U', smallLetter: 'u', sound: 'sound/U.mp3'),
+    Vowel(capitalLetter: 'A', smallLetter: 'a', sound: 'sound/A-1.MP3'),
+    Vowel(capitalLetter: 'E', smallLetter: 'e', sound: 'sound/E.mp3'),
+    Vowel(capitalLetter: 'I', smallLetter: 'i', sound: 'sound/I.mp3'),
+    Vowel(capitalLetter: 'O', smallLetter: 'o', sound: 'sound/O.mp3'),
+    Vowel(capitalLetter: 'Ø', smallLetter: 'ø', sound: 'sound/Ø.mp3'),
+  ];
 
   @override
   Widget build(BuildContext context) {
-    // bool isPlaying = false;
-    // goore mo cwol ni cwaak ojabo
-    List vowelLetter = [
-      Vowel(capitalLetter: 'Ä', smallLetter: 'ä', sound: 'sound/Ä.mp3'),
-      Vowel(capitalLetter: 'Ë', smallLetter: 'ë', sound: 'sound/Ë.mp3'),
-      Vowel(capitalLetter: 'Ï', smallLetter: 'ï', sound: 'sound/Ï.mp3'),
-      Vowel(capitalLetter: 'Ö', smallLetter: 'ö', sound: 'sound/Ö.mp3'),
-      Vowel(capitalLetter: 'U', smallLetter: 'u', sound: 'sound/U.mp3'),
-
-      // goore mo cwol ni cwaak odiyo
-      Vowel(capitalLetter: 'A', smallLetter: 'a', sound: 'sound/A-1.MP3'),
-      Vowel(capitalLetter: 'E', smallLetter: 'e', sound: 'sound/E.mp3'),
-      Vowel(capitalLetter: 'I', smallLetter: 'i', sound: 'sound/I.mp3'),
-      Vowel(capitalLetter: 'O', smallLetter: 'o', sound: 'sound/O.mp3'),
-      Vowel(capitalLetter: 'Ø', smallLetter: 'ø', sound: 'sound/Ø.mp3'),
-    ];
-
-// Grid widget
-    Widget vowelGrid(items, {myIndex = 0}) {
-      return GridView.builder(
-        shrinkWrap: true,
-        physics: NeverScrollableScrollPhysics(),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          // crossAxisSpacing: 5.0,
-          // mainAxisSpacing: 5.0,
-        ),
-        itemCount: 5,
-        itemBuilder: (context, index) {
-          return Card(
-            child: TextButton(
-              onPressed: () {
-                try {
-                  // playAudio(index + myIndex);
-                  setState(() async {
-                    // int currentIndex = index + myIndex;
-                    path = AssetSource(vowelLetter[myIndex + index].sound);
-                    // playAudio(path, isPlaying);
-                    await player.play(path);
-                    int duration = (await player.getDuration()) as int;
-                    int durationInseconds = duration / 1000 as int;
-                    await Duration(seconds: durationInseconds);
-
-                    player.stop();
-                  });
-                } catch (Exception) {}
-              },
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-                  Text(
-                    items[index + myIndex].capitalLetter,
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
-                  ),
-                  SizedBox(
-                    width: 10,
-                  ),
-                  Text(
-                    items[index + myIndex].smallLetter,
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
-                  )
-                ],
-              ),
-            ),
-          );
-        },
-      );
-    }
+    const bg    = Color(0xFFF5F0E8);
+    const green = Color(0xFF1B4332);
 
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
-        title: Text(
-          'Göörë moo cïp dwøl',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 21),
-        ),
-        centerTitle: true,
+        backgroundColor: green,
         foregroundColor: Colors.white,
-        backgroundColor: const Color.fromARGB(255, 4, 28, 49),
+        elevation: 0,
+        title: const Text('Göörë moo cïp dwøl',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        centerTitle: true,
       ),
       body: SafeArea(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[
-            vowelTitle('Göörë moo cwøl ni cwaak ojabø'),
-            vowelGrid(vowelLetter),
-            vowelTitle('Göörë moo cwøl ni cwaak odiyyø'),
-            vowelGrid(vowelLetter, myIndex: 5)
-          ],
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _sectionHeader('Göörë moo cwøl ni cwaak ojabø', green),
+              const SizedBox(height: 8),
+              _vowelGrid(vowelLetters, 0, 5),
+              const SizedBox(height: 24),
+              _sectionHeader('Göörë moo cwøl ni cwaak odiyyø', green),
+              const SizedBox(height: 8),
+              _vowelGrid(vowelLetters, 5, 5),
+            ],
+          ),
         ),
       ),
     );
   }
-}
 
-Widget vowelTitle(String title) {
-  return Padding(
-    padding: const EdgeInsets.all(8.0),
-    child: Text(
-      title,
-      style: TextStyle(
-        fontSize: 19.5,
-        fontWeight: FontWeight.bold,
+  Widget _sectionHeader(String title, Color green) {
+    return Text(title,
+        style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: green));
+  }
+
+  Widget _vowelGrid(List<Vowel> items, int offset, int count) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: count,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 5, mainAxisSpacing: 8, crossAxisSpacing: 8, childAspectRatio: 1.0,
       ),
-    ),
-  );
+      itemBuilder: (_, i) {
+        final v = items[offset + i];
+        return InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => _play(v.sound),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4, offset: const Offset(0, 2))],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(v.capitalLetter,
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF1C1C1C))),
+                Text(v.smallLetter,
+                    style: const TextStyle(fontSize: 14, color: Color(0xFF666666))),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
