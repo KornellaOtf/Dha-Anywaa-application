@@ -2,7 +2,10 @@ import 'package:dha_anywaaa/about.dart';
 import 'package:dha_anywaaa/app_settings.dart';
 import 'package:dha_anywaaa/components/savedData.dart';
 import 'package:dha_anywaaa/help.dart';
+import 'package:dha_anywaaa/services/ota_service.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -15,12 +18,96 @@ class _SettingsPageState extends State<SettingsPage> {
   final _nameKey = GlobalKey<FormFieldState>();
   late TextEditingController _nameCtrl;
   String _savedName = '';
+  String _appVersion = '';
+  bool _checkingUpdate = false;
 
   @override
   void initState() {
     super.initState();
     _nameCtrl = TextEditingController();
     _loadName();
+    _loadVersion();
+  }
+
+  Future<void> _loadVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    if (!mounted) return;
+    setState(() => _appVersion = '${info.version} (${info.buildNumber})');
+  }
+
+  Future<void> _checkForUpdate() async {
+    setState(() => _checkingUpdate = true);
+    final result = await OtaService().checkForUpdate(forceCheck: true);
+    if (!mounted) return;
+    setState(() => _checkingUpdate = false);
+
+    if (result == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You\'re up to date!'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    // Show update dialog
+    const green = Color(0xFF1B4332);
+    const gold  = Color(0xFFC9993A);
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(children: [
+          const Icon(Icons.system_update_rounded, color: green),
+          const SizedBox(width: 8),
+          const Text('Update available',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+        ]),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Version ${result.latestVersion} is ready.',
+                style: const TextStyle(fontSize: 14)),
+            const SizedBox(height: 8),
+            if (result.releaseNotes.isNotEmpty)
+              Text(result.releaseNotes,
+                  style: const TextStyle(
+                      fontSize: 13, color: Color(0xFF666666), height: 1.5)),
+            if (result.sizeBytes > 0) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Size: ${(result.sizeBytes / 1024 / 1024).toStringAsFixed(1)} MB',
+                style: const TextStyle(fontSize: 12, color: Color(0xFF888888)),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Later',
+                style: TextStyle(color: Color(0xFF888888))),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: gold,
+              foregroundColor: const Color(0xFF1C1C1C),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              launchUrl(Uri.parse(result.apkUrl),
+                  mode: LaunchMode.externalApplication);
+            },
+            child: const Text('Download',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _loadName() async {
@@ -143,6 +230,32 @@ class _SettingsPageState extends State<SettingsPage> {
             const Divider(height: 1, indent: 56),
             _navTile(context, Icons.info_outline_rounded, 'About',
                 const About()),
+          ]),
+          const SizedBox(height: 20),
+
+          // ── App Update ───────────────────────────────────────────────────
+          _sectionHeader('App Update'),
+          _card(children: [
+            ListTile(
+              leading: const Icon(Icons.system_update_rounded,
+                  color: Color(0xFF1B4332)),
+              title: const Text('Check for update',
+                  style: TextStyle(fontWeight: FontWeight.w600)),
+              subtitle: _appVersion.isNotEmpty
+                  ? Text('Current version: $_appVersion',
+                      style: const TextStyle(
+                          fontSize: 12, color: Color(0xFF888888)))
+                  : null,
+              trailing: _checkingUpdate
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Color(0xFF1B4332)))
+                  : const Icon(Icons.chevron_right,
+                      color: Color(0xFFBBBBBB)),
+              onTap: _checkingUpdate ? null : _checkForUpdate,
+            ),
           ]),
         ],
       ),
