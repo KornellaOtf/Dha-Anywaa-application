@@ -1,171 +1,105 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-final Uri webUrl = Uri.parse('https://dha-anywaa-privacy.netlify.app/');
-final Uri moreWebUrl = Uri.parse('https://dha-anywaa-app.netlify.app/');
+final Uri _privacyUrl = Uri.parse('https://dha-anywaa-privacy.netlify.app/');
+final Uri _moreUrl    = Uri.parse('https://dha-anywaa-app.netlify.app/');
 
-// class About extends StatelessWidget {
-//   const About({super.key});
-class About extends StatefulWidget {
+class About extends StatelessWidget {
   const About({super.key});
 
-  State<About> createState() => _AboutState();
-}
+  Future<void> _launch(Uri url) async {
+    try {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } catch (_) {}
+  }
 
-class _AboutState extends State<About> {
+  void _email() {
+    launchUrl(Uri(scheme: 'mailto', path: 'oriemiobango@gmail.com'));
+  }
+
   @override
   Widget build(BuildContext context) {
-    // String? encodeQueryParameters(Map<String, String> params) {
-    //   return params.entries
-    //       .map((MapEntry<String, String> e) =>
-    //           '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
-    //       .join('&');
-    // }
-    Future<void> _openMoreUrl() async {
-      try {
-        await launchUrl(
-          moreWebUrl,
-          webOnlyWindowName: '_blank',
-          mode: LaunchMode.externalApplication,
-          webViewConfiguration:
-              const WebViewConfiguration(enableJavaScript: true),
-        );
-      } catch (Exception) {}
-    }
-
-    void sendEmail() {
-      final Uri emailLaunchUri = Uri(
-        scheme: 'mailto',
-        path: 'oriemiobango@gmail.com',
-        // query: encodeQueryParameters(<String, String>{
-        //   'subject': 'Example Subject & Symbols are allowed!',
-        // }),
-      );
-      launchUrl(emailLaunchUri);
-    }
-
-    Future<void> _openUrl() async {
-      try {
-        await launchUrl(
-          webUrl,
-          webOnlyWindowName: '_blank',
-          mode: LaunchMode.externalApplication,
-          webViewConfiguration:
-              const WebViewConfiguration(enableJavaScript: true),
-        );
-      } catch (Exception) {}
-    }
+    const bg    = Color(0xFFF5F0E8);
+    const green = Color(0xFF1B4332);
 
     return Scaffold(
-      backgroundColor: Color.fromARGB(255, 242, 239, 239),
+      backgroundColor: bg,
       appBar: AppBar(
-          title: Text(
-            'About',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 21),
-          ),
-          centerTitle: true,
-          foregroundColor: Colors.white,
-          backgroundColor: const Color.fromARGB(255, 4, 28, 49)),
+        backgroundColor: green,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: const Text('About', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+        centerTitle: true,
+      ),
       body: SingleChildScrollView(
-        child: Container(
-          child: SafeArea(
-              child: Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: Column(
-              children: [
-                Container(
-                  child: Column(
-                    children: [
-                      Container(
-                        height: 100,
-                        child: Image.asset('assets/word_images/awal_icon.png'),
-                      ),
-                      Text(
-                        'Dha Anywaa',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 18),
-                      )
-                    ],
-                  ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── App identity card ────────────────────────────────────────
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+              child: Column(children: [
+                SizedBox(
+                  height: 80,
+                  child: Image.asset('assets/word_images/awal_icon.png', fit: BoxFit.contain),
                 ),
-                Divider(
-                  color: Color.fromARGB(255, 4, 28, 49),
-                ),
-                SelectableText(
-                    "\nThis is a Dha Anywaa app designed to assist individuals in learning to read the Anywaa language."
-                    " It is user-friendly, featuring both pictures and audio elements to enhance the learning experience. Geared towards absolute beginners,"
-                    " the app guides users through each step, facilitating the process of reading in Dha Anywaa.\n\n"),
-                Container(
-                  // height: 40,
-                  decoration: BoxDecoration(
-                      // color: Color.fromARGB(255, 223, 212, 212),
-                      borderRadius: BorderRadius.circular(10)),
-                  child: Text(
-                    'Version: 1.0.3',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(99, 0, 0, 0),
-                  child: ListTile(
-                    leading: Icon(
-                      Icons.copyright,
-                      color: Color.fromARGB(255, 162, 158, 158),
-                    ),
-                    title: Text(
-                      '2024 BellaTech',
-                      style:
-                          TextStyle(color: Color.fromARGB(255, 162, 158, 158)),
-                    ),
-                  ),
-                ),
-                TextButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        _openUrl();
-                      });
-                      ;
-                    },
-                    icon: Icon(Icons.privacy_tip),
-                    label: Text('Privacy Policy')),
-                Container(
-                  child: TextButton.icon(
-                      onPressed: () {
-                        setState(() {
-                          sendEmail();
-                        });
-                      },
-                      icon: Icon(Icons.quick_contacts_mail),
-                      label: Text('Contact Us')),
-                ),
-                Container(
-                  child: TextButton.icon(
-                      onPressed: () {
-                        setState(() {
-                          _openMoreUrl();
-                        });
-                      },
-                      icon: Icon(Icons.more_horiz_outlined),
-                      label: Text('Read More')),
-                )
-              ],
+                const SizedBox(height: 12),
+                const Text('Dha Anywaa',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1C1C1C))),
+                const SizedBox(height: 4),
+                const Text('Version: 1.0.3',
+                    style: TextStyle(fontSize: 14, color: Color(0xFF666666))),
+              ]),
             ),
-          )),
+            const SizedBox(height: 16),
+            // ── Description card ────────────────────────────────────────
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+              child: const Text(
+                'This is a Dha Anywaa app designed to assist individuals in learning to read the Anywaa language. '
+                'It is user-friendly, featuring both pictures and audio elements to enhance the learning experience. '
+                'Geared towards absolute beginners, the app guides users through each step, facilitating the process '
+                'of reading in Dha Anywaa.',
+                style: TextStyle(fontSize: 15, color: Color(0xFF444444), height: 1.6),
+              ),
+            ),
+            const SizedBox(height: 16),
+            // ── Links card ──────────────────────────────────────────────
+            Container(
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+              child: Column(children: [
+                _linkTile(Icons.privacy_tip_outlined, 'Privacy Policy',
+                    () => _launch(_privacyUrl), green),
+                const Divider(height: 1, indent: 56),
+                _linkTile(Icons.email_outlined, 'Contact Us', _email, green),
+                const Divider(height: 1, indent: 56),
+                _linkTile(Icons.open_in_browser_outlined, 'Read More',
+                    () => _launch(_moreUrl), green),
+              ]),
+            ),
+            const SizedBox(height: 24),
+            const Center(
+              child: Text('© 2024 BellaTech',
+                  style: TextStyle(fontSize: 13, color: Color(0xFF888888))),
+            ),
+            const SizedBox(height: 8),
+          ],
         ),
       ),
-      bottomNavigationBar: Container(
-        color: const Color.fromARGB(255, 4, 28, 49),
-        child: Container(
-          padding: EdgeInsets.fromLTRB(125, 5, 0, 5),
-          child: Text(
-            'Developed by: BellaTech',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-            ),
-          ),
-        ),
-      ),
+    );
+  }
+
+  Widget _linkTile(IconData icon, String label, VoidCallback onTap, Color green) {
+    return ListTile(
+      leading: Icon(icon, color: green),
+      title: Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+      trailing: const Icon(Icons.chevron_right, color: Color(0xFFBBBBBB)),
+      onTap: onTap,
     );
   }
 }

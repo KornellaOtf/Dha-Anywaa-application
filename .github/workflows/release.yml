@@ -1,0 +1,92 @@
+name: Build & Release OTA
+
+on:
+  push:
+    tags:
+      - 'v*'           # triggers on v1.0.2, v1.1.0, etc.
+
+  workflow_dispatch:   # manual trigger from GitHub UI
+
+permissions:
+  contents: write      # needed to create releases and upload assets
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout ────────────────────────────────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ── 2. Set up Java (required for Gradle / Android build) ───────────────
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # ── 3. Set up Flutter ──────────────────────────────────────────────────
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.7'
+          channel: stable
+          cache: true
+
+      # ── 4. Install dependencies ────────────────────────────────────────────
+      - name: Install dependencies
+        run: flutter pub get
+
+      # ── 5. Build debug APK (use release when signing is configured) ────────
+      - name: Build APK
+        run: flutter build apk --debug --build-number=${{ github.run_number }}
+
+      # ── 6. Rename APK to include version tag ──────────────────────────────
+      - name: Rename APK
+        run: |
+          TAG=${GITHUB_REF_NAME:-v1.0.0}
+          mv build/app/outputs/flutter-apk/app-debug.apk \
+             build/app/outputs/flutter-apk/dha-anywaa-${TAG}.apk
+          echo "APK_PATH=build/app/outputs/flutter-apk/dha-anywaa-${TAG}.apk" >> $GITHUB_ENV
+          echo "TAG=${TAG}" >> $GITHUB_ENV
+
+      # ── 7. Compute SHA-256 of APK ─────────────────────────────────────────
+      - name: Compute SHA-256
+        run: |
+          SHA=$(sha256sum "$APK_PATH" | awk '{print $1}')
+          SIZE=$(stat -c%s "$APK_PATH")
+          echo "SHA256=${SHA}" >> $GITHUB_ENV
+          echo "SIZE=${SIZE}" >> $GITHUB_ENV
+
+      # ── 8. Write manifest.json with real values ───────────────────────────
+      - name: Write manifest.json
+        run: |
+          OWNER=$(echo "${{ github.repository }}" | cut -d/ -f1)
+          REPO=$(echo "${{ github.repository }}" | cut -d/ -f2)
+          VERSION=${TAG#v}   # strip leading 'v'
+          cat > manifest.json <<EOF
+          {
+            "version": "${VERSION}",
+            "versionCode": ${{ github.run_number }},
+            "apkUrl": "https://github.com/${OWNER}/${REPO}/releases/download/${TAG}/dha-anywaa-${TAG}.apk",
+            "sha256": "${SHA256}",
+            "sizeBytes": ${SIZE},
+            "minSupportedVersionCode": 1,
+            "mandatory": false,
+            "releaseNotes": "See release notes on GitHub.",
+            "developer": "Kornella Otf"
+          }
+          EOF
+
+      # ── 9. Create GitHub Release and upload assets ────────────────────────
+      - name: Create GitHub Release
+        run: |
+          gh release create "$TAG" \
+            "$APK_PATH" \
+            manifest.json \
+            --title "Dha Anywaa $TAG" \
+            --generate-notes \
+            --latest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

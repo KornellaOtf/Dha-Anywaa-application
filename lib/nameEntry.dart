@@ -3,102 +3,86 @@ import 'package:flutter/material.dart';
 
 class NameEntry extends StatefulWidget {
   const NameEntry({super.key});
-
-  @override
   State<NameEntry> createState() => _NameEntryState();
 }
 
 class _NameEntryState extends State<NameEntry> {
-  @override
-  SavedData savedData = SavedData();
+  final SavedData savedData = SavedData();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   String name = '';
+
+  @override
   Widget build(BuildContext context) {
+    const bg    = Color(0xFFF5F0E8);
+    const green = Color(0xFF1B4332);
+
     return Scaffold(
-        appBar: AppBar(),
-        body: Padding(
-          padding: const EdgeInsets.all(15.0),
-          child: Column(
-            children: [
-              ListTile(
-                title: Text(
-                  'Welcome to Obwöc paac',
-                  style: TextStyle(fontSize: 30),
-                ),
-                subtitle: Text(
-                  ' Dha anywaa learning hub',
-                  style: TextStyle(fontSize: 20, color: Colors.grey[900]),
-                ),
-              ),
-              SizedBox(
-                height: 160,
-              ),
-              Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    TextFormField(
-                      // obscureText: true,
-                      onChanged: (val) {
-                        setState(() {
-                          name = val;
-                        });
-                      },
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'name is required';
-                        }
-
-                        return null;
-                      },
-                      decoration: InputDecoration(
-                          focusedBorder: const OutlineInputBorder(
-                            borderSide: BorderSide(
-                                color: Color.fromRGBO(66, 165, 245,
-                                    1)), // Change color when focused
-                          ),
-                          // fillColor: currentTheme == Brightness.dark
-                          //     ? const Color.fromARGB(255, 19, 19, 19)
-                          //     : Colors.white,
-                          filled: true,
-                          border: const OutlineInputBorder(
-                              borderSide: BorderSide()),
-                          labelText: 'Enter your name',
-                          labelStyle: const TextStyle(
-                              color: Colors.grey, fontStyle: FontStyle.italic)),
+      backgroundColor: bg,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 60),
+                const Text('Welcome to',
+                    style: TextStyle(fontSize: 16, color: Color(0xFF666666))),
+                const SizedBox(height: 4),
+                const Text('Obwöc paac',
+                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Color(0xFF1C1C1C))),
+                const SizedBox(height: 4),
+                const Text('Dha Anywaa learning hub',
+                    style: TextStyle(fontSize: 16, color: Color(0xFF666666))),
+                const SizedBox(height: 60),
+                TextFormField(
+                  onChanged: (val) => setState(() => name = val),
+                  validator: (v) => (v == null || v.isEmpty) ? 'Name is required' : null,
+                  decoration: InputDecoration(
+                    labelText: 'Enter your name',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
                     ),
-                    SizedBox(
-                      height: 35,
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
                     ),
-                    Card(
-                      color: Colors.blue,
-                      elevation: 10,
-                      // shape:
-                      child: IconButton(
-                        onPressed: () {
-                          if (_formKey.currentState!.validate()) {
-                            savedData.setName(name);
-
-                            Navigator.pushReplacementNamed(
-                                context, 'home_page');
-                          } else {
-                            print('invalid name: $name');
-                          }
-                        },
-                        icon: Icon(
-                          Icons.arrow_right_alt,
-                          color: Colors.white,
-                          size: 50,
-                        ),
-                      ),
-                    )
-                  ],
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: green, width: 2),
+                    ),
+                    labelStyle: const TextStyle(color: Color(0xFF888888)),
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: green,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        savedData.setName(name);
+                        Navigator.pushReplacementNamed(context, 'home_page');
+                      }
+                    },
+                    child: const Text('Get started →',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ));
+        ),
+      ),
+    );
   }
 }

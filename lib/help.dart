@@ -5,31 +5,91 @@ class Help extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const bg    = Color(0xFFF5F0E8);
+    const green = Color(0xFF1B4332);
+
+    const sections = [
+      _HelpSection(
+        icon: Icons.abc,
+        title: 'Alphabet (Göörë)',
+        body: 'The first page contains Dha Anywaa alphabets — both small and capital letters. '
+              'Tap any letter and the app will read it aloud.',
+      ),
+      _HelpSection(
+        icon: Icons.image_outlined,
+        title: 'Words (Dööttï)',
+        body: 'The second page shows words with matching images. Tap an image to hear the app read the word.',
+      ),
+      _HelpSection(
+        icon: Icons.menu_book_outlined,
+        title: 'Reading (Lup)',
+        body: 'The third page contains Dha Anywaa sentences. Tap a sentence to have it read aloud.',
+      ),
+      _HelpSection(
+        icon: Icons.quiz_outlined,
+        title: 'Quiz (Päärö)',
+        body: 'The fourth page tests comprehension. Choose an answer — green means correct, red means wrong. '
+              'Tap "Next question" (Pöödhï) to advance, or "Back" (Døø Køøri) to go back.',
+      ),
+      _HelpSection(
+        icon: Icons.menu_outlined,
+        title: 'Sidebar',
+        body: 'The sidebar (hamburger menu) gives access to Dha Anywaa vowels (Göörë moo cïp dwøl), '
+              'Help, and About. Tap "More" to visit the website.',
+      ),
+    ];
+
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
-          title: Text(
-            'Help',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 21),
-          ),
-          centerTitle: true,
-          foregroundColor: Colors.white,
-          backgroundColor: const Color.fromARGB(255, 4, 28, 49)),
-      body: SingleChildScrollView(
-        child: SafeArea(
-            child: Padding(
-          padding: EdgeInsets.all(10),
-          child: SelectableText(
-              'When you open the Dha Anywaa app, the first page that should pop up is the one containing Dha Anywaa alphabets. The title is "Göörë," which means alphabets, and it includes both the small and capital letters of Dha Anywaa.'
-              'If you find reading the letters challenging, simply click on a letter, and the app will read it to you.\n\n'
-              "The second page consists of words and corresponding images. You can read the words, and if you find them challenging, you can refer to the pictures for hints. If you're unsure, clicking on the image will have the app read it to you.\n\n"
-              "The third page is a bit challenging for beginners as it contains Dha Anywaa sentences. You can interact with the sentences, and if it becomes difficult, clicking on the sentence will once again read it to you.\n\n"
-              "The fourth page is for checking comprehension. It includes what we've learned in previous pages and introduces additional words and animals to challenge the user. Choose an answer, and if it's wrong, the background color will turn red; if it's right, it will show green.\n\n"
-              'After completing the current question, you can click the button at the bottom right corner labeled "Pöödhï," which means next or move on, if you want to go back to the previous question you can click the button at the bottom left corner labeled "Døø Køøri" which means back or go back and it will take you back to the previous question.\n\n'
-              "The app's sidebar provides additional features, such as Dha Anywaa vowels, help, and an about section."
-              'For Dha Anywaa vowel letters, you can touch the first element in the list, "Göörë moo cïp dwøl," which means vowels to navigate to another page where you can learn about Dha Anywaa vowels.'
-              '\n\nFor more information, feel free to email me at oriemiobango@gmail.com.'),
-        )),
+        backgroundColor: green,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: const Text('Help', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+        centerTitle: true,
+      ),
+      body: ListView.separated(
+        padding: const EdgeInsets.all(16),
+        itemCount: sections.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 12),
+        itemBuilder: (_, i) {
+          final s = sections[i];
+          return Container(
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CircleAvatar(
+                  backgroundColor: const Color(0xFFE8F0EB),
+                  child: Icon(s.icon, color: green, size: 20),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(s.title,
+                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold,
+                              color: Color(0xFF1C1C1C))),
+                      const SizedBox(height: 6),
+                      Text(s.body,
+                          style: const TextStyle(fontSize: 14, color: Color(0xFF555555), height: 1.5)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
+}
+
+class _HelpSection {
+  final IconData icon;
+  final String title;
+  final String body;
+  const _HelpSection({required this.icon, required this.title, required this.body});
 }

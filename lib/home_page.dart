@@ -1,442 +1,503 @@
-// ignore_for_file: prefer_const_construct
+// ignore_for_file: prefer_const_constructors
 import 'package:dha_anywaaa/about.dart';
-import 'package:dha_anywaaa/components/animal.dart';
-import 'package:dha_anywaaa/components/bird.dart';
-import 'package:dha_anywaaa/components/body_part.dart';
-import 'package:dha_anywaaa/components/cloth.dart';
-import 'package:dha_anywaaa/components/colors.dart';
-import 'package:dha_anywaaa/components/fish.dart';
-import 'package:dha_anywaaa/components/number.dart';
 import 'package:dha_anywaaa/components/savedData.dart';
-import 'package:dha_anywaaa/components/shape.dart';
 import 'package:dha_anywaaa/help.dart';
-import 'package:dha_anywaaa/pages/page1.dart';
-import 'package:dha_anywaaa/pages/page2.dart';
-import 'package:dha_anywaaa/pages/page3.dart';
-import 'package:dha_anywaaa/pages/page4.dart';
-// import 'package:dha_anywaaa/pages/page1.dart';
-// import 'package:dha_anywaaa/pages/page2.dart';
-// import 'package:dha_anywaaa/pages/page3.dart';
-// import 'package:dha_anywaaa/pages/page4.dart';
+import 'package:dha_anywaaa/services/ota_service.dart';
+import 'package:dha_anywaaa/settings_page.dart';
 import 'package:dha_anywaaa/vowelLetter.dart';
 import 'package:dha_anywaaa/widgets/body.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-final Uri webUrl = Uri.parse('https://dha-anywaa-app.netlify.app/');
+final Uri _webUrl = Uri.parse('https://dha-anywaa-app.netlify.app/');
+
+// Items per category — used to calculate progress %.
+const Map<String, int> _categoryTotals = {
+  'alphabet': 29,
+  'number': 10,
+  'word': 29,
+  'reading': 29,
+  'colors': 8,
+  'shape': 4,
+  'body': 18,
+  'clothes': 10,
+  'bird': 12,
+  'animal': 14,
+  'fish': 10,
+  'quiz': 31,
+};
+
+const List<Color> _accentColors = [
+  Color(0xFFC9993A),
+  Color(0xFF7A2D1E),
+  Color(0xFF1B4332),
+  Color(0xFFC9993A),
+  Color(0xFF7A2D1E),
+  Color(0xFF1B4332),
+  Color(0xFFC9993A),
+  Color(0xFF7A2D1E),
+  Color(0xFF1B4332),
+  Color(0xFFC9993A),
+  Color(0xFF7A2D1E),
+  Color(0xFF1B4332),
+];
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
-
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  SavedData savedData = SavedData();
-  // 'O ruu ni cämö',
-  //   'O cämö ki wïth caami mo thööth',
-  //   'O ruu ni bäng gïn mo ee camø',
-  //   'O määthö ki pïï mo thööth' Akëëlö
-  List<Map<String, String>> categories = [
-    {
-      'engName': 'Numbers',
-      'anyName': 'Kwäänë',
-      'imageLink': 'assets/category_image/numbers_2.png',
-      'route': 'number'
-    },
-    {
-      'engName': 'Alphabets',
-      'anyName': 'Göörë',
-      'imageLink': 'assets/category_image/alphabets.png',
-      'route': 'alphabet'
-    },
-    {
-      'engName': 'Words',
-      'anyName': 'Dööttï',
-      'imageLink': 'assets/category_image/book.png',
-      'route': 'word'
-    },
-    {
-      'engName': 'Reading',
-      'anyName': 'Kwäänö',
-      'imageLink': 'assets/category_image/reading.png',
-      'route': 'reading'
-    },
-    {
-      'engName': 'Colors',
-      'anyName': 'Kït',
-      'imageLink': 'assets/category_image/colors_4.png',
-      'route': 'colors'
-    },
-    {
-      'engName': 'Shapes',
-      'anyName': 'Yi cwääc',
-      'imageLink': 'assets/category_image/shapes_1.png',
-      'route': 'shape'
-    },
-    {
-      'engName': 'Body part',
-      'anyName': 'Jap dëël',
-      'imageLink': 'assets/category_image/body_part.png',
-      'route': 'body'
-    },
-    {
-      'engName': 'Clothes',
-      'anyName': 'Abïëë',
-      'imageLink': 'assets/word_images/cloth.png',
-      'route': 'clothes'
-    },
-    {
-      'engName': 'Birds',
-      'anyName': 'Winy',
-      'imageLink': 'assets/word_images/birds.png',
-      'route': 'bird'
-    },
-    {
-      'engName': 'Animals',
-      'anyName': 'Lääy',
-      'imageLink': 'assets/word_images/animals.png',
-      'route': 'animal'
-    },
-    {
-      'engName': 'Fishes',
-      'anyName': 'Ric',
-      'imageLink': 'assets/word_images/fish.png',
-      'route': 'fish'
-    },
-    {
-      'engName': 'Quiz',
-      'anyName': 'Päärö',
-      'imageLink': 'assets/category_image/quiz.png',
-      'route': 'quiz'
-    }
+  final SavedData _savedData = SavedData();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  String _name = '';
+  String _lastRoute = 'alphabet';
+  int _lastRouteProgress = 0; // learned count
+  int _lastRouteTotal = 29;
+  Map<String, int> _learnedCounts = {};
+  int _bottomNavIndex = 0;
+
+  final List<Map<String, String>> categories = [
+    {'engName': 'Numbers',   'anyName': 'Kwäänë',   'imageLink': 'assets/category_image/numbers_2.png', 'route': 'number'},
+    {'engName': 'Alphabets', 'anyName': 'Göörë',    'imageLink': 'assets/category_image/alphabets.png', 'route': 'alphabet'},
+    {'engName': 'Words',     'anyName': 'Dööttï',   'imageLink': 'assets/category_image/book.png',      'route': 'word'},
+    {'engName': 'Reading',   'anyName': 'Kwäänö',   'imageLink': 'assets/category_image/reading.png',   'route': 'reading'},
+    {'engName': 'Colors',    'anyName': 'Kït',      'imageLink': 'assets/category_image/colors_4.png',  'route': 'colors'},
+    {'engName': 'Shapes',    'anyName': 'Yi cwääc', 'imageLink': 'assets/category_image/shapes_1.png',  'route': 'shape'},
+    {'engName': 'Body',      'anyName': 'Jap dëël', 'imageLink': 'assets/category_image/body_part.png', 'route': 'body'},
+    {'engName': 'Clothes',   'anyName': 'Abïëë',   'imageLink': 'assets/word_images/cloth.png',        'route': 'clothes'},
+    {'engName': 'Birds',     'anyName': 'Winy',     'imageLink': 'assets/word_images/birds.png',        'route': 'bird'},
+    {'engName': 'Animals',   'anyName': 'Lääy',     'imageLink': 'assets/word_images/animals.png',      'route': 'animal'},
+    {'engName': 'Fishes',    'anyName': 'Ric',      'imageLink': 'assets/word_images/fish.png',         'route': 'fish'},
+    {'engName': 'Quiz',      'anyName': 'Päärö',    'imageLink': 'assets/category_image/quiz.png',      'route': 'quiz'},
   ];
 
-  List pageList = [Number(), Page1(), Page2(), Page3(), Kit(), Shpae(), BodyPart(), Cloth(), Bird(), Animal(), Fish(), Page4()];
-  bool themeValue = false;
-  final data = MediaQueryData.fromView(WidgetsBinding.instance.window);
-  String name = '';
-  int _currentIndex = 0;
   @override
   void initState() {
-    _refresh();
-    // TODO: implement initState
     super.initState();
+    _load();
+    _checkForUpdate();
   }
 
-  void _refresh() async {
-    final currentName = await savedData.getName();
+  Future<void> _checkForUpdate() async {
+    final result = await OtaService().checkForUpdate();
+    if (result == null || !mounted) return;
+    _showUpdateDialog(result);
+  }
+
+  void _showUpdateDialog(OtaCheckResult result) {
+    const green = Color(0xFF1B4332);
+    const gold  = Color(0xFFC9993A);
+    showDialog(
+      context: context,
+      barrierDismissible: !result.mandatory,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(children: [
+          const Icon(Icons.system_update_rounded, color: green),
+          const SizedBox(width: 8),
+          const Text('Update available',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+        ]),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Version ${result.latestVersion} is ready.',
+                style: const TextStyle(fontSize: 14, color: Color(0xFF444444))),
+            const SizedBox(height: 8),
+            if (result.releaseNotes.isNotEmpty)
+              Text(result.releaseNotes,
+                  style: const TextStyle(
+                      fontSize: 13, color: Color(0xFF666666), height: 1.5)),
+            if (result.sizeBytes > 0) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Size: ${(result.sizeBytes / 1024 / 1024).toStringAsFixed(1)} MB',
+                style: const TextStyle(fontSize: 12, color: Color(0xFF888888)),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          if (!result.mandatory)
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Later',
+                  style: TextStyle(color: Color(0xFF888888))),
+            ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: gold,
+              foregroundColor: const Color(0xFF1C1C1C),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              launchUrl(Uri.parse(result.apkUrl),
+                  mode: LaunchMode.externalApplication);
+            },
+            child: const Text('Download update',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+    super.didChangeDependencies();
+    // Refresh when returning from a sub-screen
+    _load();
+  }
+
+  Future<void> _load() async {
+    final name      = await _savedData.getName();
+    final lastRoute = await _savedData.getLastRoute();
+    final total     = _categoryTotals[lastRoute] ?? 29;
+    final progress  = await _savedData.learnedCount(lastRoute, total);
+
+    // Load learned counts for all categories
+    final counts = <String, int>{};
+    for (final cat in _categoryTotals.entries) {
+      counts[cat.key] = await _savedData.learnedCount(cat.key, cat.value);
+    }
+
+    if (!mounted) return;
     setState(() {
-      name = currentName;
+      _name = name == 'guess' ? '' : name;
+      _lastRoute = lastRoute;
+      _lastRouteProgress = progress;
+      _lastRouteTotal = total;
+      _learnedCounts = counts;
     });
+  }
+
+  String get _lastRouteName {
+    final match = categories.firstWhere(
+      (c) => c['route'] == _lastRoute,
+      orElse: () => {'engName': 'Alphabet'},
+    );
+    return match['engName'] ?? 'Alphabet';
   }
 
   @override
   Widget build(BuildContext context) {
-    Future<void> _openUrl() async {
-      try {
-        await launchUrl(
-          webUrl,
-          webOnlyWindowName: '_blank',
-          mode: LaunchMode.externalApplication,
-          webViewConfiguration:
-              const WebViewConfiguration(enableJavaScript: true),
-        );
-      } catch (Exception) {}
-    }
-
-    return DefaultTabController(
-      initialIndex: 0,
-      length: 4,
-      child: Scaffold(
-        // backgroundColor: Color.fromARGB(232, 245, 238, 240),
-        appBar: AppBar(
-          foregroundColor: Colors.black,
-          forceMaterialTransparency: true,
-
-          // title: const Text(
-          //   'Dha anywaa',
-          //   style: TextStyle(
-          //     fontWeight: FontWeight.bold,
-          //   ),
-          // ),
-          centerTitle: true,
-          backgroundColor: Colors.transparent,
-        ),
-        drawer: Drawer(
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: [
-              DrawerHeader(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                      image: AssetImage('assets/word_images/side_bar_bg.png'),
-                      fit: BoxFit.cover),
-                  // color: const Color.fromARGB(255, 2, 27, 48),
-                ),
-                child: Container(
-                  margin: const EdgeInsets.fromLTRB(0, 100, 0, 0),
-                  child: const Text(
-                    'Dha Anywaa',
-                    style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white),
-                  ),
-                ),
-              ),
-              ListTile(
-                onTap: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const VowelLetter()));
-                },
-                leading: Icon(Icons.abc),
-                title: const Text(
-                  'Göörë moo cïp dwøl',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Color.fromARGB(255, 4, 28, 49),
-                  ),
-                ),
-              ),
-              ListTile(
-                onTap: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => const Body()));
-                },
-                leading: Icon(Icons.boy_outlined),
-                title: const Text(
-                  'Jap dëël',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Color.fromARGB(255, 4, 28, 49),
-                  ),
-                ),
-              ),
-              ListTile(
-                onTap: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => const About()));
-                },
-                title: const Text(
-                  'About',
-                  style: TextStyle(color: Color.fromARGB(255, 4, 28, 49)),
-                ),
-                leading: const Icon(
-                  Icons.info_outline,
-                  color: Color.fromARGB(255, 4, 28, 49),
-                ),
-              ),
-              ListTile(
-                onTap: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => const Help()));
-                },
-                title: const Text(
-                  'Help',
-                  style: TextStyle(color: Color.fromARGB(255, 4, 28, 49)),
-                ),
-                leading: const Icon(
-                  Icons.help_outline_outlined,
-                  color: Color.fromARGB(255, 4, 28, 49),
-                ),
-              ),
-              ListTile(
-                onTap: () {
-                  setState(() {
-                    _openUrl();
-                  });
-                },
-                title: const Text(
-                  'More',
-                  style: TextStyle(color: Color.fromARGB(255, 4, 28, 49)),
-                ),
-                leading: const Icon(
-                  Icons.more_horiz,
-                  color: Color.fromARGB(255, 4, 28, 49),
-                ),
-              ),
-              ListTile(
-                onTap: () {
-                  savedData.setName('guess');
-                  Navigator.pushReplacementNamed(context, 'name_entry');
-                },
-                title: const Text(
-                  'Log out',
-                  style: TextStyle(color: Color.fromARGB(255, 4, 28, 49)),
-                ),
-                leading: const Icon(
-                  Icons.more_horiz,
-                  color: Color.fromARGB(255, 4, 28, 49),
-                ),
-              ),
-              const SizedBox(
-                height: 300,
-              ),
-            ],
+    return Scaffold(
+      key: _scaffoldKey,
+      backgroundColor: const Color(0xFFF5F0E8),
+      appBar: AppBar(
+        forceMaterialTransparency: true,
+        backgroundColor: Colors.transparent,
+        leading: Padding(
+          padding: const EdgeInsets.all(8),
+          child: CircleAvatar(
+            backgroundColor: Colors.white,
+            child: IconButton(
+              icon: const Icon(Icons.menu, color: Color(0xFF1C1C1C), size: 20),
+              onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+            ),
           ),
         ),
-        // body: const TabBarView(children: <Widget>[
-        //   Page1(),
-        //   Page2(),
-        //   Page3(),
-        //   Page4(),
-        // ]),
-        body: LayoutBuilder(builder: (context ,constraints){
-    if (constraints.maxWidth > 600) {
-      // Tablet layout
-      return Column(
-        children: [
-          data.size.shortestSide> 600? Padding(
-            padding: const EdgeInsets.only(left: 20, bottom: 10),
-            child: Row(children: [Text(
-                  'Hello, ',
-                  style: TextStyle(fontSize: 25),
-                ),
-                Text(
-                  '$name',
-                  style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
-                ), ],),
-          ) :
-          ListTile(
-            title: Text(
-                'Hello,',
-                style: TextStyle(fontSize: 20),
+      ),
+      drawer: _buildDrawer(context),
+      bottomNavigationBar: _buildBottomNav(),
+      body: RefreshIndicator(
+        color: const Color(0xFF1B4332),
+        onRefresh: _load,
+        child: CustomScrollView(
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+              sliver: SliverToBoxAdapter(child: _buildGreeting()),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+              sliver: SliverToBoxAdapter(child: _buildContinueCard(context)),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(24, 28, 24, 8),
+              sliver: SliverToBoxAdapter(
+                child: const Text('Explore',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
               ),
-              subtitle:Text(
-                '$name',
-                style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold),
-              ), 
-          )
-              ,
-              
-              SizedBox(height: 10),
-          Expanded(
-            child: Row(
-              children: [
-                
-                Expanded(
-                  flex: 3,
-                  child: Container(
-                    child: ListView.builder(
-                      itemCount: categories.length,
-                      itemBuilder: (context, index){
-                      return GestureDetector(
-                        onTap: (){
-                          setState(() {
-                            _currentIndex = index;
-                          });
-                        },
-                        child: Container(
-                          decoration:  BoxDecoration(
-                            border: Border(
-                              left: _currentIndex != index?  BorderSide(): BorderSide(
-                                color: Colors.blue,
-                                width: 5
-                              )
-                            )
-                          ),
-                          padding: const EdgeInsets.only(bottom: 10.0),
-                          child: ListTile(
-                            leading: SizedBox(
-                              width: 100,
-                              child: Image.asset( '${categories[index]['imageLink']}')),
-                            subtitle: Text('${categories[index]['engName']}',
-                                          style: TextStyle(color: Colors.grey, fontSize: 18),),
-                            title: Text('${categories[index]['anyName']}',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.grey[700],
-                                            fontSize: 20,
-                                          ),),
-                          ),
-                        ),
-                      );
-                    }),
-                    // color: Colors.amber,
-                    height: MediaQuery.of(context).size.height,
-                  
-                  ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+              sliver: SliverGrid(
+                delegate: SliverChildBuilderDelegate(
+                  (_, i) => _buildCategoryCard(context, i),
+                  childCount: categories.length,
                 ),
-                  Expanded(
-                    flex: 7,
-                    child: Container(
-                      child: pageList[_currentIndex],
-                    color: Colors.grey,
-                    height: MediaQuery.of(context).size.height,
-                              
-                              ),
-                  )
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 1.25,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGreeting() {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      const Text('Welcome back',
+          style: TextStyle(fontSize: 14, color: Color(0xFF666666))),
+      const SizedBox(height: 2),
+      Text(_name.isEmpty ? 'Learner' : _name,
+          style: const TextStyle(
+              fontSize: 32, fontWeight: FontWeight.bold, color: Color(0xFF1C1C1C))),
+    ]);
+  }
+
+  Widget _buildContinueCard(BuildContext context) {
+    final progress = _lastRouteTotal > 0
+        ? _lastRouteProgress / _lastRouteTotal
+        : 0.0;
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF1B4332),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('CONTINUE',
+            style: TextStyle(fontSize: 11, letterSpacing: 1.5, color: Color(0xFFC9993A))),
+        const SizedBox(height: 4),
+        Text(_lastRouteName,
+            style: const TextStyle(
+                fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
+        const SizedBox(height: 4),
+        Text('$_lastRouteProgress / $_lastRouteTotal learned',
+            style: const TextStyle(fontSize: 12, color: Color(0xAAFFFFFF))),
+        const SizedBox(height: 12),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: progress,
+            backgroundColor: Colors.white.withOpacity(0.2),
+            color: const Color(0xFFC9993A),
+            minHeight: 6,
+          ),
+        ),
+        const SizedBox(height: 16),
+        ElevatedButton(
+          onPressed: () async {
+            await _savedData.setLastRoute(_lastRoute);
+            if (!mounted) return;
+            Navigator.pushNamed(context, _lastRoute).then((_) => _load());
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFC9993A),
+            foregroundColor: const Color(0xFF1C1C1C),
+            shape: const StadiumBorder(),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          ),
+          child: const Text('Resume', style: TextStyle(fontWeight: FontWeight.bold)),
+        ),
+      ]),
+    );
+  }
+
+  Widget _buildCategoryCard(BuildContext context, int i) {
+    final cat         = categories[i];
+    final route       = cat['route']!;
+    final accentColor = _accentColors[i % _accentColors.length];
+    final total       = _categoryTotals[route] ?? 0;
+    final learned     = _learnedCounts[route] ?? 0;
+    final hasProgress = total > 0 && learned > 0;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () async {
+        await _savedData.setLastRoute(route);
+        if (!mounted) return;
+        Navigator.pushNamed(context, route).then((_) => _load());
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border(top: BorderSide(color: accentColor, width: 3)),
+        ),
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              Container(
+                width: 28, height: 4,
+                decoration: BoxDecoration(
+                    color: accentColor,
+                    borderRadius: BorderRadius.circular(2)),
+              ),
+              const Spacer(),
+              if (hasProgress)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: accentColor.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text('$learned/$total',
+                      style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: accentColor)),
+                ),
+            ]),
+            const SizedBox(height: 10),
+            Text(cat['engName']!,
+                style: const TextStyle(
+                    fontSize: 15, fontWeight: FontWeight.bold,
+                    color: Color(0xFF1C1C1C))),
+            const SizedBox(height: 2),
+            Text(cat['anyName']!,
+                style: const TextStyle(fontSize: 12, color: Color(0xFF666666))),
+            if (total > 0) ...[
+              const Spacer(),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(3),
+                child: LinearProgressIndicator(
+                  value: total > 0 ? learned / total : 0,
+                  minHeight: 3,
+                  backgroundColor: const Color(0xFFE0E0E0),
+                  color: accentColor,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomNav() {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Color(0xFFE0E0E0))),
+      ),
+      child: BottomNavigationBar(
+        currentIndex: _bottomNavIndex,
+        backgroundColor: Colors.white,
+        selectedItemColor: const Color(0xFF1B4332),
+        unselectedItemColor: const Color(0xFF666666),
+        selectedLabelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+        unselectedLabelStyle: const TextStyle(fontSize: 11),
+        type: BottomNavigationBarType.fixed,
+        elevation: 0,
+        onTap: (i) {
+          setState(() => _bottomNavIndex = i);
+          if (i == 0) {
+            // already home — scroll to top handled by RefreshIndicator
+          } else if (i == 1) {
+            Navigator.pushNamed(context, 'quiz').then((_) {
+              setState(() => _bottomNavIndex = 0);
+              _load();
+            });
+          } else if (i == 2) {
+            Navigator.pushNamed(context, 'reading').then((_) {
+              setState(() => _bottomNavIndex = 0);
+            });
+          } else if (i == 3) {
+            _scaffoldKey.currentState?.openDrawer();
+            setState(() => _bottomNavIndex = 0);
+          }
+        },
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.menu_book_outlined), label: 'Learn'),
+          BottomNavigationBarItem(icon: Icon(Icons.check_circle_outline), label: 'Quiz'),
+          BottomNavigationBarItem(icon: Icon(Icons.list_alt_outlined), label: 'Read'),
+          BottomNavigationBarItem(icon: Icon(Icons.more_horiz), label: 'More'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDrawer(BuildContext context) {
+    return Drawer(
+      child: Column(children: [
+        // Header
+        DrawerHeader(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/word_images/side_bar_bg.png'),
+              fit: BoxFit.cover,
+            ),
+          ),
+          child: Align(
+            alignment: Alignment.bottomLeft,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Dha Anywaa',
+                    style: TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.bold,
+                        color: Colors.white)),
+                if (_name.isNotEmpty)
+                  Text(_name,
+                      style: const TextStyle(fontSize: 14, color: Color(0xCCFFFFFF))),
               ],
             ),
           ),
-        ],
-      );
-    } else {
-      // Phone layout
-      return 
-  
-        
-        Padding(
-          padding:
-              const EdgeInsets.only(top: 10, left: 20, right: 20, bottom: 15),
-          child: Column(
-            // mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Hello',
-                style: TextStyle(fontSize: 20),
-              ),
-              Text(
-                '$name',
-                style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 20),
-              Expanded(
-                  child: GridView.count(
-                crossAxisCount: 2,
-                children: List.generate(
-                    categories.length,
-                    (index) => Card(
-                          child: GestureDetector(
-                            onTap: () {
-                              Navigator.pushNamed(
-                                  context, '${categories[index]['route']}');
-                            },
-                            child: Column(
-                              children: [
-                                Expanded(
-                                  child: Image.asset(
-                                      '${categories[index]['imageLink']}'),
-                                ),
-                                ListTile(
-                                  subtitle: Text(
-                                    '${categories[index]['engName']}',
-                                    style: TextStyle(color: Colors.grey),
-                                  ),
-                                  title: Text(
-                                    '${categories[index]['anyName']}',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.grey[700],
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                )
-                              ],
-                            ),
-                          ),
-                        )),
-              ))
-            ],
-          ),
-          );  }
-  },) 
-      ),
+        ),
+        // Items
+        Expanded(
+          child: ListView(padding: EdgeInsets.zero, children: [
+            _drawerTile(context, Icons.abc_rounded, 'Göörë moo cïp dwøl',
+                () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VowelLetter()))),
+            _drawerTile(context, Icons.boy_outlined, 'Jap dëël',
+                () => Navigator.push(context, MaterialPageRoute(builder: (_) => const Body()))),
+            const Divider(indent: 16, endIndent: 16),
+            _drawerTile(context, Icons.settings_outlined, 'Settings',
+                () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsPage()))),
+            _drawerTile(context, Icons.info_outline_rounded, 'About',
+                () => Navigator.push(context, MaterialPageRoute(builder: (_) => const About()))),
+            _drawerTile(context, Icons.help_outline_rounded, 'Help',
+                () => Navigator.push(context, MaterialPageRoute(builder: (_) => const Help()))),
+            _drawerTile(context, Icons.open_in_browser_outlined, 'More',
+                () async {
+              try {
+                await launchUrl(_webUrl, mode: LaunchMode.externalApplication);
+              } catch (_) {}
+            }),
+            const Divider(indent: 16, endIndent: 16),
+            _drawerTile(context, Icons.logout_rounded, 'Log out', () async {
+              await _savedData.setName('guess');
+              if (!mounted) return;
+              Navigator.pushReplacementNamed(context, '/');
+            }, color: const Color(0xFF8B3A2A)),
+          ]),
+        ),
+      ]),
+    );
+  }
+
+  Widget _drawerTile(
+    BuildContext context,
+    IconData icon,
+    String label,
+    VoidCallback onTap, {
+    Color color = const Color(0xFF1B4332),
+  }) {
+    return ListTile(
+      leading: Icon(icon, color: color),
+      title: Text(label,
+          style: TextStyle(
+              fontWeight: FontWeight.w500,
+              color: color == const Color(0xFF8B3A2A)
+                  ? color
+                  : const Color(0xFF1C1C1C))),
+      onTap: onTap,
     );
   }
 }
