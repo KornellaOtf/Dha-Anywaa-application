@@ -1,6 +1,7 @@
 import 'package:dha_anywaaa/about.dart';
 import 'package:dha_anywaaa/anywaa_ai_page.dart';
 import 'package:dha_anywaaa/widgets/anywaa_ai_logo.dart';
+import 'package:dha_anywaaa/widgets/update_dialog.dart';
 import 'package:dha_anywaaa/components/savedData.dart';
 import 'package:dha_anywaaa/help.dart';
 import 'package:dha_anywaaa/privacy_policy_page.dart';
@@ -12,7 +13,6 @@ import 'package:dha_anywaaa/vowelLetter.dart';
 import 'package:dha_anywaaa/widgets/body.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 // Items per category: used to calculate progress %.
 const Map<String, int> _categoryTotals = {
@@ -97,60 +97,17 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _showUpdateDialog(OtaCheckResult result) {
-    showDialog(
-      context: context,
-      barrierDismissible: !result.mandatory,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-        title: Row(children: [
-          const Icon(Icons.system_update_rounded, color: kGreen),
-          const SizedBox(width: 8),
-          const Text('Update available',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
-        ]),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Version ${result.latestVersion} is ready.',
-                style: TextStyle(fontSize: 14, color: context.c.textSub)),
-            const SizedBox(height: 8),
-            if (result.releaseNotes.isNotEmpty)
-              Text(result.releaseNotes,
-                  style: TextStyle(
-                      fontSize: 13, color: context.c.textSub, height: 1.5)),
-            if (result.sizeBytes > 0) ...[
-              const SizedBox(height: 8),
-              Text(
-                'Size: ${(result.sizeBytes / 1024 / 1024).toStringAsFixed(1)} MB',
-                style: TextStyle(fontSize: 12, color: context.c.textSub),
-              ),
-            ],
-          ],
-        ),
-        actions: [
-          if (!result.mandatory)
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Later', style: TextStyle(color: context.c.textSub)),
-            ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: kGold,
-              foregroundColor: kText,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
-            onPressed: () {
-              Navigator.pop(context);
-              launchUrl(Uri.parse(result.apkUrl),
-                  mode: LaunchMode.externalApplication);
-            },
-            child: const Text('Download update',
-                style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
+    showAnywaaUpdateDialog(
+      context,
+      result,
+      // Use the same resumable in-app download as Settings, then open Settings
+      // so the progress bar and "Install update" action are visible.
+      onUpdate: () {
+        OtaService().startDownload(result);
+        if (!mounted) return;
+        Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const SettingsPage()));
+      },
     );
   }
 
