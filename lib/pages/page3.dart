@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_const_constructors
 import 'package:audioplayers/audioplayers.dart';
 import 'package:dha_anywaaa/Sentence.dart';
+import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 class Page3 extends StatefulWidget {
@@ -10,7 +11,6 @@ class Page3 extends StatefulWidget {
 
 class _Page3State extends State<Page3> {
   late AudioPlayer player;
-  AssetSource path = AssetSource('');
   bool _isPlaying = false;
   int _playingIndex = -1;
 
@@ -78,74 +78,159 @@ class _Page3State extends State<Page3> {
 
   @override
   Widget build(BuildContext context) {
-    const bg    = Color(0xFFF5F0E8);
-    const green = Color(0xFF1B4332);
-    const rust  = Color(0xFF8B3A2A);
-
     return Scaffold(
-      backgroundColor: bg,
+      backgroundColor: kBg,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: Padding(
           padding: const EdgeInsets.all(8),
-          child: CircleAvatar(
-            backgroundColor: Colors.white,
+          child: Material(
+            elevation: 3,
+            shape: const CircleBorder(),
+            color: Colors.white,
             child: IconButton(
-              icon: const Icon(Icons.chevron_left, color: Color(0xFF1C1C1C)),
+              icon: const Icon(Icons.chevron_left_rounded, color: kText),
               onPressed: () => Navigator.pop(context),
             ),
           ),
         ),
-        title: const Text('Reading', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1C1C1C))),
+        title: const Text('Reading',
+            style: TextStyle(
+                fontWeight: FontWeight.bold, fontSize: 18, color: kText)),
         centerTitle: true,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: Center(
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                decoration: BoxDecoration(
+                  color: kRust.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: kRust.withOpacity(0.2)),
+                ),
+                child: Row(children: const [
+                  Icon(Icons.record_voice_over_outlined,
+                      size: 14, color: kRust),
+                  SizedBox(width: 5),
+                  Text('Audio',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: kRust)),
+                ]),
+              ),
+            ),
+          ),
+        ],
       ),
       body: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         itemCount: wordAndSentence.length,
         itemBuilder: (context, idx) {
-          final s = wordAndSentence[idx];
+          final s        = wordAndSentence[idx];
           final isActive = _playingIndex == idx && _isPlaying;
-          return GestureDetector(
-            onTap: () {
-              final src = AssetSource(s.audioUrl);
-              _playAudio(idx, src);
-            },
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: isActive ? Border.all(color: green, width: 1.5) : null,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: 36,
-                      child: Text(s.letter,
-                          style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: rust)),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(s.word,
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: green)),
-                          const SizedBox(height: 4),
-                          Text(s.sentence,
-                              style: const TextStyle(fontSize: 14, color: Color(0xFF555555), height: 1.5)),
-                        ],
-                      ),
-                    ),
-                    Icon(
-                      isActive ? Icons.pause_circle_outline : Icons.play_circle_outline,
-                      color: green, size: 26,
-                    ),
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: GestureDetector(
+              onTap: () => _playAudio(idx, AssetSource(s.audioUrl)),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOut,
+                decoration: BoxDecoration(
+                  color: isActive
+                      ? kGreen.withOpacity(0.06)
+                      : Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isActive
+                        ? kGreen.withOpacity(0.4)
+                        : Colors.transparent,
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    if (isActive)
+                      BoxShadow(
+                        color: kGreen.withOpacity(0.18),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      )
+                    else
+                      kShadowSoft,
                   ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 14),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Letter badge
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? kGreen
+                              : kRust.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Center(
+                          child: Text(
+                            s.letter,
+                            style: TextStyle(
+                              fontSize: s.letter.length > 1 ? 15 : 20,
+                              fontWeight: FontWeight.bold,
+                              color: isActive ? Colors.white : kRust,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(s.word,
+                                style: TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                    color: isActive ? kGreen : kText)),
+                            const SizedBox(height: 4),
+                            Text(s.sentence.trim(),
+                                style: const TextStyle(
+                                    fontSize: 14,
+                                    color: kTextSub,
+                                    height: 1.5)),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      // Play/Pause icon
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? kGreen.withOpacity(0.15)
+                              : kGreen.withOpacity(0.07),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          isActive
+                              ? Icons.pause_rounded
+                              : Icons.play_arrow_rounded,
+                          color: kGreen,
+                          size: 22,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

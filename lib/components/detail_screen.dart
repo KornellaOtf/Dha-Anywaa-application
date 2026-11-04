@@ -1,5 +1,6 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:dha_anywaaa/components/savedData.dart';
+import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 /// Reusable detail + grid screen for every vocabulary category.
@@ -10,7 +11,7 @@ class DetailScreen extends StatefulWidget {
   final String category;
   final String title;
   final List<Map<String, String>> items;
-  final String? audioKey; // e.g. 'wordSound'; null = no audio
+  final String? audioKey;
 
   const DetailScreen({
     super.key,
@@ -93,29 +94,33 @@ class _DetailScreenState extends State<DetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const bg    = Color(0xFFF5F0E8);
-    const green = Color(0xFF1B4332);
-    const rust  = Color(0xFF8B3A2A);
-
     return Scaffold(
-      backgroundColor: bg,
+      backgroundColor: kBg,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: Padding(
           padding: const EdgeInsets.all(8),
-          child: CircleAvatar(
-            backgroundColor: Colors.white,
+          child: Material(
+            elevation: 3,
+            shape: const CircleBorder(),
+            color: Colors.white,
             child: IconButton(
-              icon: const Icon(Icons.chevron_left, color: Color(0xFF1C1C1C)),
+              icon: const Icon(Icons.chevron_left_rounded, color: kText),
               onPressed: () {
-                if (_zoom) setState(() => _zoom = false);
-                else Navigator.pop(context);
+                if (_zoom) {
+                  setState(() => _zoom = false);
+                } else {
+                  Navigator.pop(context);
+                }
               },
             ),
           ),
         ),
-        title: Text(widget.title),
+        title: Text(widget.title,
+            style: const TextStyle(
+                fontWeight: FontWeight.bold, fontSize: 18, color: kText)),
         centerTitle: true,
         actions: [
           Padding(
@@ -123,211 +128,411 @@ class _DetailScreenState extends State<DetailScreen> {
             child: Center(
               child: Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                 decoration: BoxDecoration(
-                  color: green.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  color: kGreen.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: kGreen.withOpacity(0.2)),
                 ),
                 child: Text(
                   '$_learnedCount/${widget.items.length}',
                   style: const TextStyle(
-                      fontSize: 12,
+                      fontSize: 13,
                       fontWeight: FontWeight.bold,
-                      color: green),
+                      color: kGreen),
                 ),
               ),
             ),
           ),
         ],
       ),
-      body: _zoom
-          ? _buildDetail(green, rust)
-          : _buildGrid(),
+      // AnimatedSwitcher for grid ↔ detail transition
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 280),
+        switchInCurve: Curves.easeOut,
+        switchOutCurve: Curves.easeIn,
+        transitionBuilder: (child, anim) => FadeTransition(
+          opacity: anim,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 0.04),
+              end: Offset.zero,
+            ).animate(anim),
+            child: child,
+          ),
+        ),
+        child: _zoom
+            ? _DetailPanel(
+                key: ValueKey('detail_$_index'),
+                item: widget.items[_index],
+                learned: _learned[_index],
+                isPlaying: _isPlaying,
+                hasAudio: widget.audioKey != null &&
+                    (widget.items[_index][widget.audioKey!]?.isNotEmpty ??
+                        false),
+                index: _index,
+                total: widget.items.length,
+                onPrev: _index > 0
+                    ? () => setState(() => _index--)
+                    : null,
+                onNext: _index < widget.items.length - 1
+                    ? () => setState(() => _index++)
+                    : null,
+                onPlay: () => _playAudio(_index),
+                onToggleLearned: () => _toggleLearned(_index),
+                onClose: () => setState(() => _zoom = false),
+              )
+            : _GridView(
+                key: const ValueKey('grid'),
+                items: widget.items,
+                learned: _learned,
+                onSelect: (i) => setState(() {
+                  _zoom = true;
+                  _index = i;
+                }),
+              ),
+      ),
     );
   }
+}
 
-  // ── Detail view ──────────────────────────────────────────────────────────
+// ── Grid sub-widget ───────────────────────────────────────────────────────────
+class _GridView extends StatelessWidget {
+  final List<Map<String, String>> items;
+  final List<bool> learned;
+  final ValueChanged<int> onSelect;
 
-  Widget _buildDetail(Color green, Color rust) {
-    final item    = widget.items[_index];
-    final learned = _learned[_index];
-    final hasAudio = widget.audioKey != null &&
-        (item[widget.audioKey!]?.isNotEmpty ?? false);
+  const _GridView({
+    super.key,
+    required this.items,
+    required this.learned,
+    required this.onSelect,
+  });
 
+  @override
+  Widget build(BuildContext context) {
+    return GridView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      itemCount: items.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 14,
+        crossAxisSpacing: 14,
+        childAspectRatio: 0.82,
+      ),
+      itemBuilder: (_, i) {
+        final item    = items[i];
+        final isLearn = learned[i];
+        return _GridCell(
+          item: item,
+          learned: isLearn,
+          onTap: () => onSelect(i),
+        );
+      },
+    );
+  }
+}
+
+class _GridCell extends StatefulWidget {
+  final Map<String, String> item;
+  final bool learned;
+  final VoidCallback onTap;
+
+  const _GridCell(
+      {required this.item, required this.learned, required this.onTap});
+
+  @override
+  State<_GridCell> createState() => _GridCellState();
+}
+
+class _GridCellState extends State<_GridCell> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapCancel: () => setState(() => _pressed = false),
+      onTapUp: (_) {
+        setState(() => _pressed = false);
+        widget.onTap();
+      },
+      child: AnimatedScale(
+        scale: _pressed ? 0.95 : 1.0,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        child: Container(
+          decoration: gridCellDeco(learned: widget.learned),
+          child: Stack(children: [
+            Column(children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 14, 12, 8),
+                  child: Image.asset(widget.item['imageLink']!,
+                      fit: BoxFit.contain),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(widget.item['anyName']!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                            color: kText)),
+                    if ((widget.item['engName'] ?? '').isNotEmpty)
+                      Text(widget.item['engName']!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style:
+                              const TextStyle(fontSize: 12, color: kTextSub)),
+                  ],
+                ),
+              ),
+            ]),
+            if (widget.learned)
+              Positioned(
+                top: 10,
+                right: 10,
+                child: Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    color: kGreen.withOpacity(0.14),
+                    shape: BoxShape.circle,
+                  ),
+                  child:
+                      const Icon(Icons.check_rounded, color: kGreen, size: 14),
+                ),
+              ),
+          ]),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Detail sub-widget ─────────────────────────────────────────────────────────
+class _DetailPanel extends StatelessWidget {
+  final Map<String, String> item;
+  final bool learned;
+  final bool isPlaying;
+  final bool hasAudio;
+  final int index;
+  final int total;
+  final VoidCallback? onPrev;
+  final VoidCallback? onNext;
+  final VoidCallback onPlay;
+  final VoidCallback onToggleLearned;
+  final VoidCallback onClose;
+
+  const _DetailPanel({
+    super.key,
+    required this.item,
+    required this.learned,
+    required this.isPlaying,
+    required this.hasAudio,
+    required this.index,
+    required this.total,
+    required this.onPrev,
+    required this.onNext,
+    required this.onPlay,
+    required this.onToggleLearned,
+    required this.onClose,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return SingleChildScrollView(
       child: Column(children: [
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
+        // ── Image + name card ───────────────────────────────────────────────
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Container(
             width: double.infinity,
             padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: learned ? green.withOpacity(0.06) : Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border: learned ? Border.all(color: green, width: 1.5) : null,
-            ),
+            decoration: detailCardDeco(learned: learned),
             child: Column(children: [
-              Image.asset(item['imageLink']!, height: 220, fit: BoxFit.contain),
-              const SizedBox(height: 14),
+              // Subtle bg tint behind image
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: BoxDecoration(
+                  color: (learned ? kGreen : kGold).withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Image.asset(item['imageLink']!,
+                    height: 200, fit: BoxFit.contain),
+              ),
+              const SizedBox(height: 16),
               Text(item['anyName']!,
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      color: green)),
-              if ((item['engName'] ?? '').isNotEmpty)
+                      color: learned ? kGreen : kText)),
+              if ((item['engName'] ?? '').isNotEmpty) ...[
+                const SizedBox(height: 4),
                 Text(item['engName']!,
-                    style: const TextStyle(
-                        fontSize: 16, color: Color(0xFF666666))),
+                    style: const TextStyle(fontSize: 16, color: kTextSub)),
+              ],
               if (learned) ...[
-                const SizedBox(height: 10),
-                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Icon(Icons.check_circle_rounded, color: green, size: 16),
-                  const SizedBox(width: 4),
-                  Text('Learned',
-                      style: TextStyle(
-                          fontSize: 13,
-                          color: green,
-                          fontWeight: FontWeight.w600)),
-                ]),
+                const SizedBox(height: 12),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: kGreen.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: kGreen.withOpacity(0.25)),
+                  ),
+                  child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                    Icon(Icons.check_circle_rounded,
+                        color: kGreen, size: 15),
+                    SizedBox(width: 5),
+                    Text('Learned',
+                        style: TextStyle(
+                            fontSize: 13,
+                            color: kGreen,
+                            fontWeight: FontWeight.w700)),
+                  ]),
+                ),
               ],
             ]),
           ),
         ),
         const SizedBox(height: 24),
-        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          CircleAvatar(
-            radius: 28, backgroundColor: Colors.white,
-            child: IconButton(
-              icon: const Icon(Icons.chevron_left, color: Color(0xFF1C1C1C)),
-              onPressed: () {
-                if (_index > 0) setState(() => _index--);
-              },
+
+        // ── Navigation + play ────────────────────────────────────────────────
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _NavButton(
+              icon: Icons.chevron_left_rounded,
+              onPressed: onPrev,
             ),
-          ),
-          const SizedBox(width: 16),
-          CircleAvatar(
-            radius: 36,
-            backgroundColor: hasAudio ? rust : Colors.grey[300],
-            child: _isPlaying
-                ? const SizedBox(
-                    width: 20, height: 20,
-                    child: CircularProgressIndicator(
-                        color: Colors.white, strokeWidth: 2))
-                : IconButton(
-                    icon: Icon(Icons.play_arrow,
-                        color: hasAudio ? Colors.white : Colors.grey[500],
-                        size: 28),
-                    onPressed: hasAudio ? () => _playAudio(_index) : null,
+            const SizedBox(width: 16),
+            // Play button (larger, rust accent)
+            Material(
+              elevation: 6,
+              shape: const CircleBorder(),
+              color: hasAudio ? kRust : Colors.grey[300],
+              shadowColor: (hasAudio ? kRust : Colors.grey).withOpacity(0.4),
+              child: SizedBox(
+                width: 72,
+                height: 72,
+                child: isPlaying
+                    ? const Padding(
+                        padding: EdgeInsets.all(20),
+                        child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.5,
+                            backgroundColor: Colors.white24),
+                      )
+                    : IconButton(
+                        icon: Icon(Icons.play_arrow_rounded,
+                            color: hasAudio ? Colors.white : Colors.grey[500],
+                            size: 32),
+                        onPressed: hasAudio ? onPlay : null,
+                      ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            _NavButton(
+              icon: Icons.chevron_right_rounded,
+              onPressed: onNext,
+            ),
+          ],
+        ),
+
+        // Position indicator
+        const SizedBox(height: 12),
+        Text('${index + 1} / $total',
+            style: const TextStyle(fontSize: 12, color: kTextMuted)),
+        const SizedBox(height: 20),
+
+        // ── Mark as learned ──────────────────────────────────────────────────
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: SizedBox(
+            width: double.infinity,
+            child: learned
+                ? DecoratedBox(
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                              color: kGreen.withOpacity(0.3),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4))
+                        ]),
+                    child: ElevatedButton.icon(
+                      onPressed: onToggleLearned,
+                      icon: const Icon(Icons.check_circle_rounded, size: 18),
+                      label: const Text('Learned'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kGreen,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
+                      ),
+                    ),
+                  )
+                : DecoratedBox(
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: const [kShadowSoft]),
+                    child: OutlinedButton.icon(
+                      onPressed: onToggleLearned,
+                      icon: const Icon(Icons.add_task_outlined, size: 18),
+                      label: const Text('Mark as learned'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: kGreen,
+                        side: const BorderSide(color: kGreen, width: 1.5),
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
+                      ),
+                    ),
                   ),
           ),
-          const SizedBox(width: 16),
-          CircleAvatar(
-            radius: 28, backgroundColor: Colors.white,
-            child: IconButton(
-              icon: const Icon(Icons.chevron_right, color: Color(0xFF1C1C1C)),
-              onPressed: () {
-                if (_index < widget.items.length - 1) setState(() => _index++);
-              },
-            ),
-          ),
-        ]),
-        const SizedBox(height: 16),
-        learned
-            ? ElevatedButton.icon(
-                onPressed: () => _toggleLearned(_index),
-                icon: const Icon(Icons.check_circle_rounded, size: 18),
-                label: const Text('Learned'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: green,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 28, vertical: 14),
-                ),
-              )
-            : OutlinedButton.icon(
-                onPressed: () => _toggleLearned(_index),
-                icon: const Icon(Icons.radio_button_unchecked, size: 18),
-                label: const Text('Mark as learned'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: green,
-                  side: BorderSide(color: green),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 28, vertical: 14),
-                ),
-              ),
-        const SizedBox(height: 24),
+        ),
+        const SizedBox(height: 32),
       ]),
     );
   }
+}
 
-  // ── Grid view ─────────────────────────────────────────────────────────────
+class _NavButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback? onPressed;
 
-  Widget _buildGrid() {
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: widget.items.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: 0.85),
-      itemBuilder: (_, i) {
-        final item    = widget.items[i];
-        final learned = _learned[i];
-        const green   = Color(0xFF1B4332);
-        return InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () => setState(() { _zoom = true; _index = i; }),
-          child: Container(
-            decoration: BoxDecoration(
-              color: learned ? green.withOpacity(0.06) : Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: learned
-                  ? Border.all(color: green.withOpacity(0.4))
-                  : null,
-            ),
-            child: Stack(children: [
-              Column(children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Image.asset(item['imageLink']!, fit: BoxFit.contain),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 0, 10, 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(item['anyName']!,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                              color: Color(0xFF1C1C1C))),
-                      if ((item['engName'] ?? '').isNotEmpty)
-                        Text(item['engName']!,
-                            style: const TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF666666))),
-                    ],
-                  ),
-                ),
-              ]),
-              if (learned)
-                Positioned(
-                  top: 8, right: 8,
-                  child: Icon(Icons.check_circle_rounded,
-                      color: green, size: 18),
-                ),
-            ]),
-          ),
-        );
-      },
+  const _NavButton({required this.icon, this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onPressed != null;
+    return Material(
+      elevation: enabled ? 4 : 0,
+      shape: const CircleBorder(),
+      color: Colors.white,
+      shadowColor: kGreen.withOpacity(0.2),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onPressed,
+        child: SizedBox(
+          width: 56,
+          height: 56,
+          child: Icon(icon,
+              color: enabled ? kText : Colors.grey[400], size: 26),
+        ),
+      ),
     );
   }
 }

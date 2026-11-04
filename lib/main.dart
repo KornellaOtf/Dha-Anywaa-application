@@ -13,6 +13,7 @@ import 'package:dha_anywaaa/pages/page1.dart';
 import 'package:dha_anywaaa/pages/page2.dart';
 import 'package:dha_anywaaa/pages/page3.dart';
 import 'package:dha_anywaaa/pages/page4.dart';
+import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:dha_anywaaa/wraper.dart';
 import 'package:flutter/material.dart';
 
@@ -33,42 +34,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Dha Anywaa',
-      theme: ThemeData(
-        scaffoldBackgroundColor: const Color(0xFFF5F0E8),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF1B4332),
-          background: const Color(0xFFF5F0E8),
-        ),
-        useMaterial3: true,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          foregroundColor: Color(0xFF1C1C1C),
-          titleTextStyle: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1C1C1C),
-          ),
-        ),
-        cardTheme: CardTheme(
-          color: Colors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16)),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF1B4332),
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12)),
-            padding:
-                const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-            textStyle: const TextStyle(
-                fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-        ),
-      ),
+      theme: AppTheme.data,
       routes: {
         '/': (context) => const Wrapper(),
         'number': (context) => const Number(),
