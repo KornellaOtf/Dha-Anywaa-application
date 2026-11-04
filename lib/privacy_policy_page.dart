@@ -95,7 +95,7 @@ class _PolicyBody extends StatelessWidget {
         _section(
           'Contact',
           'If you have questions about this policy, contact:\n'
-          '[CONTACT_EMAIL]',
+          'Kornellaotf@gmail.com',
         ),
         const SizedBox(height: 8),
         const Text(

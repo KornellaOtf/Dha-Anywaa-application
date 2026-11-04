@@ -354,7 +354,7 @@ class _NumGridCellState extends State<_NumGridCell> {
         curve: Curves.easeOut,
         child: Container(
           decoration: gridCellDeco(learned: widget.learned),
-          child: Stack(children: [
+          child: Stack(alignment: Alignment.center, children: [
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

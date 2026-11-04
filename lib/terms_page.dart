@@ -75,7 +75,7 @@ class _TermsBody extends StatelessWidget {
         _section(
           'Contact',
           'Questions about these terms:\n'
-          '[CONTACT_EMAIL]',
+          'Kornellaotf@gmail.com',
         ),
         const SizedBox(height: 8),
         const Text(

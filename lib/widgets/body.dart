@@ -47,12 +47,20 @@ class Body extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12)),
                 child: ListTile(
                   leading: CircleAvatar(
+                    radius: 26,
                     backgroundColor: green.withValues(alpha: 0.1),
-                    child: Text(p['letter']!,
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: green,
-                            fontSize: 13)),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 7),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(p['letter']!,
+                            maxLines: 1,
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: green,
+                                fontSize: 13)),
+                      ),
+                    ),
                   ),
                   title: Text(p['anyName']!,
                       style: const TextStyle(
