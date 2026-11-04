@@ -16,11 +16,20 @@ import 'package:dha_anywaaa/pages/page4.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:dha_anywaaa/wraper.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Load the saved preference first so the correct theme is applied from the
+  // very first frame instead of flashing the system theme on relaunch.
+  final prefs = await SharedPreferences.getInstance();
   runApp(
     AppSettings(
-      notifier: AppSettingsNotifier(),
+      notifier: AppSettingsNotifier(
+        initialThemeMode:
+            AppSettingsNotifier.modeFromIndex(prefs.getInt('theme_mode') ?? 0),
+        initialSoundEnabled: prefs.getBool('sound_enabled') ?? true,
+      ),
       child: const MyApp(),
     ),
   );

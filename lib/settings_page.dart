@@ -21,17 +21,28 @@ class _SettingsPageState extends State<SettingsPage> {
   final _nameCtrl            = TextEditingController();
   String _appVersion         = '';
 
-  // OTA state
-  bool   _checkingUpdate  = false;
-  bool   _downloading     = false;
-  double _downloadProgress = 0;
-  String _otaStatus       = '';          // shown under the tile
+  // OTA state. The download itself lives in the OtaService singleton so it
+  // keeps running when this screen is left, rebuilt, or a progress tick fires.
+  final OtaService _ota = OtaService();
+  bool   _checkingUpdate = false;
+  String _otaStatus      = '';   // transient "checking / up to date" message
+  bool   _apkOpened      = false;
 
   @override
   void initState() {
     super.initState();
     _loadName();
     _loadVersion();
+    _ota.download.addListener(_onDownloadChanged);
+  }
+
+  // Auto-launch the installer the moment a download completes.
+  void _onDownloadChanged() {
+    final s = _ota.download.value;
+    if (s.phase == OtaPhase.success && s.filePath != null && !_apkOpened) {
+      _apkOpened = true;
+      OpenFile.open(s.filePath!);
+    }
   }
 
   Future<void> _loadName() async {
@@ -48,6 +59,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   void dispose() {
+    _ota.download.removeListener(_onDownloadChanged);
     _nameCtrl.dispose();
     super.dispose();
   }
@@ -135,7 +147,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             onPressed: () {
               Navigator.pop(context);
-              _downloadAndInstall(result);
+              _startDownload(result);
             },
             child: const Text('Update now',
                 style: TextStyle(fontWeight: FontWeight.bold)),
@@ -145,42 +157,9 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Future<void> _downloadAndInstall(OtaCheckResult result) async {
-    setState(() {
-      _downloading      = true;
-      _downloadProgress = 0;
-      _otaStatus        = 'Downloading…';
-    });
-
-    final file = await OtaService().downloadApk(
-      result,
-      onProgress: (p) {
-        if (!mounted) return;
-        setState(() {
-          _downloadProgress = p;
-          _otaStatus =
-              'Downloading… ${(p * 100).toStringAsFixed(0)}%';
-        });
-      },
-    );
-
-    if (!mounted) return;
-
-    if (file == null) {
-      setState(() {
-        _downloading = false;
-        _otaStatus   = 'Download failed. Try again.';
-      });
-      return;
-    }
-
-    setState(() {
-      _downloading = false;
-      _otaStatus   = 'Download complete. Tap to install.';
-    });
-
-    // Open the APK. Android will prompt the user to install it
-    await OpenFile.open(file.path);
+  void _startDownload(OtaCheckResult result) {
+    _apkOpened = false;
+    _ota.startDownload(result);
   }
 
   // ── Build ─────────────────────────────────────────────────────────────────
@@ -339,53 +318,79 @@ class _SettingsPageState extends State<SettingsPage> {
           // ── App Update ──────────────────────────────────────────────────
           _sectionHeader('App Update'),
           _card(children: [
-            ListTile(
-              leading: Icon(Icons.system_update_rounded,
-                  color: context.c.accent),
-              title: const Text('Check for update',
-                  style: TextStyle(fontWeight: FontWeight.w600)),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (_appVersion.isNotEmpty)
-                    Text(_appVersion,
-                        style: TextStyle(
-                            fontSize: 12, color: context.c.textSub)),
-                  if (_otaStatus.isNotEmpty)
-                    Text(_otaStatus,
-                        style: TextStyle(
-                            fontSize: 12,
-                            color: _otaStatus.contains('failed')
-                                ? const Color(0xFF8B3A2A)
-                                : _otaStatus.contains('up to date') ||
-                                        _otaStatus.contains('complete')
-                                    ? context.c.accent
-                                    : context.c.textSub)),
-                  if (_downloading) ...[
-                    const SizedBox(height: 6),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: _downloadProgress,
-                        minHeight: 4,
-                        backgroundColor: context.c.border,
-                        color: green,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-              trailing: _checkingUpdate || _downloading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: green))
-                  : Icon(Icons.chevron_right,
-                      color: context.c.border),
-              onTap: (_checkingUpdate || _downloading)
-                  ? null
-                  : _checkForUpdate,
+            ValueListenableBuilder<OtaDownloadState>(
+              valueListenable: _ota.download,
+              builder: (context, dl, _) {
+                final showDl = dl.phase == OtaPhase.running ||
+                    dl.phase == OtaPhase.success ||
+                    dl.phase == OtaPhase.error;
+                final status = showDl ? dl.message : _otaStatus;
+                final busy = _checkingUpdate || dl.phase == OtaPhase.running;
+                final failed = status.contains('failed') ||
+                    status.contains('incomplete') ||
+                    status.contains('verification');
+                return ListTile(
+                  leading: Icon(Icons.system_update_rounded,
+                      color: context.c.accent),
+                  title: Text(
+                      dl.phase == OtaPhase.success
+                          ? 'Install update'
+                          : 'Check for update',
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (_appVersion.isNotEmpty)
+                        Text(_appVersion,
+                            style: TextStyle(
+                                fontSize: 12, color: context.c.textSub)),
+                      if (status.isNotEmpty)
+                        Text(status,
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: failed
+                                    ? const Color(0xFF8B3A2A)
+                                    : (status.contains('up to date') ||
+                                            status.contains('complete'))
+                                        ? context.c.accent
+                                        : context.c.textSub)),
+                      if (dl.phase == OtaPhase.running) ...[
+                        const SizedBox(height: 6),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: dl.progress,
+                            minHeight: 4,
+                            backgroundColor: context.c.border,
+                            color: green,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  trailing: busy
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: green))
+                      : Icon(Icons.chevron_right,
+                          color: context.c.border),
+                  onTap: busy
+                      ? null
+                      : () {
+                          if (dl.phase == OtaPhase.success &&
+                              dl.filePath != null) {
+                            _apkOpened = false;
+                            OpenFile.open(dl.filePath!);
+                          } else if (dl.phase == OtaPhase.error) {
+                            _ota.clearDownload();
+                          } else {
+                            _checkForUpdate();
+                          }
+                        },
+                );
+              },
             ),
           ]),
           const SizedBox(height: 20),
