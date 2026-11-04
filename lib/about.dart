@@ -14,7 +14,7 @@ class About extends StatelessWidget {
   }
 
   void _email() {
-    launchUrl(Uri(scheme: 'mailto', path: 'oriemiobango@gmail.com'));
+    launchUrl(Uri(scheme: 'mailto', path: 'Kornellaotf@gmail.com'));
   }
 
   @override
@@ -89,7 +89,7 @@ class About extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             const Center(
-              child: Text('© 2024 BellaTech',
+              child: Text('Developed by Kornella Otf',
                   style: TextStyle(fontSize: 13, color: Color(0xFF888888))),
             ),
             const SizedBox(height: 8),
