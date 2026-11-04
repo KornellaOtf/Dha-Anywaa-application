@@ -274,4 +274,28 @@ void main() {
     expect(first.found, isFalse);
     expect(first.text, contains('Which word'));
   });
+
+  test('hero suggestions are dynamic and always answerable', () async {
+    final ai = AnywaaAiService.instance;
+    await ai.load();
+
+    final first = ai.sampleQuestions(count: 6);
+    expect(first.length, greaterThanOrEqualTo(5));
+    // Every generated prompt resolves against the real dictionary (words) or
+    // the number rules, so no chip can dead-end on the hero screen.
+    for (final q in first) {
+      final res = ai.answer(q);
+      expect(res.found || res.text.contains('Dha Anywaa'), isTrue,
+          reason: 'unanswerable suggestion: $q');
+      ai.newChat();
+    }
+
+    // Across many draws the pool is not a fixed set: it must vary.
+    final seen = <String>{};
+    for (var i = 0; i < 12; i++) {
+      seen.addAll(ai.sampleQuestions(count: 6));
+    }
+    expect(seen.length, greaterThan(first.length),
+        reason: 'suggestions never change between draws');
+  });
 }
