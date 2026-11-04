@@ -131,9 +131,9 @@ class _DetailScreenState extends State<DetailScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                 decoration: BoxDecoration(
-                  color: kGreen.withOpacity(0.12),
+                  color: kGreen.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: kGreen.withOpacity(0.2)),
+                  border: Border.all(color: kGreen.withValues(alpha: 0.2)),
                 ),
                 child: Text(
                   '$_learnedCount/${widget.items.length}',
@@ -306,7 +306,7 @@ class _GridCellState extends State<_GridCell> {
                 child: Container(
                   padding: const EdgeInsets.all(3),
                   decoration: BoxDecoration(
-                    color: kGreen.withOpacity(0.14),
+                    color: kGreen.withValues(alpha: 0.14),
                     shape: BoxShape.circle,
                   ),
                   child:
@@ -367,7 +367,7 @@ class _DetailPanel extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 decoration: BoxDecoration(
-                  color: (learned ? kGreen : kGold).withOpacity(0.05),
+                  color: (learned ? kGreen : kGold).withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Image.asset(item['imageLink']!,
@@ -398,9 +398,9 @@ class _DetailPanel extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   decoration: BoxDecoration(
-                    color: kGreen.withOpacity(0.12),
+                    color: kGreen.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: kGreen.withOpacity(0.25)),
+                    border: Border.all(color: kGreen.withValues(alpha: 0.25)),
                   ),
                   child: const Row(mainAxisSize: MainAxisSize.min, children: [
                     Icon(Icons.check_circle_rounded,
@@ -434,7 +434,7 @@ class _DetailPanel extends StatelessWidget {
                 elevation: 6,
                 shape: const CircleBorder(),
                 color: kRust,
-                shadowColor: kRust.withOpacity(0.4),
+                shadowColor: kRust.withValues(alpha: 0.4),
                 child: SizedBox(
                   width: 72,
                   height: 72,
@@ -481,7 +481,7 @@ class _DetailPanel extends StatelessWidget {
                         borderRadius: BorderRadius.circular(14),
                         boxShadow: [
                           BoxShadow(
-                              color: kGreen.withOpacity(0.3),
+                              color: kGreen.withValues(alpha: 0.3),
                               blurRadius: 10,
                               offset: const Offset(0, 4))
                         ]),
@@ -537,7 +537,7 @@ class _NavButton extends StatelessWidget {
       elevation: enabled ? 4 : 0,
       shape: const CircleBorder(),
       color: Colors.white,
-      shadowColor: kGreen.withOpacity(0.2),
+      shadowColor: kGreen.withValues(alpha: 0.2),
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: onPressed,

@@ -95,9 +95,9 @@ class _NumberState extends State<Number> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                 decoration: BoxDecoration(
-                  color: kGreen.withOpacity(0.12),
+                  color: kGreen.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: kGreen.withOpacity(0.2)),
+                  border: Border.all(color: kGreen.withValues(alpha: 0.2)),
                 ),
                 child: Text('$_learnedCount/${_numbers.length}',
                     style: const TextStyle(
@@ -156,16 +156,10 @@ class _NumberState extends State<Number> {
                   height: 140,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: learned
-                          ? [kGreen, kGreenMid]
-                          : [kGreen.withOpacity(0.1), kGold.withOpacity(0.1)],
-                    ),
+                    color: learned ? kGreen : kGreen.withValues(alpha: 0.10),
                     boxShadow: [
                       BoxShadow(
-                        color: (learned ? kGreen : kGold).withOpacity(0.25),
+                        color: (learned ? kGreen : kGold).withValues(alpha: 0.25),
                         blurRadius: 20,
                         offset: const Offset(0, 6),
                       ),
@@ -197,9 +191,9 @@ class _NumberState extends State<Number> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 6),
                     decoration: BoxDecoration(
-                      color: kGreen.withOpacity(0.12),
+                      color: kGreen.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: kGreen.withOpacity(0.25)),
+                      border: Border.all(color: kGreen.withValues(alpha: 0.25)),
                     ),
                     child: const Row(mainAxisSize: MainAxisSize.min, children: [
                       Icon(Icons.check_circle_rounded,
@@ -258,7 +252,7 @@ class _NumberState extends State<Number> {
                           borderRadius: BorderRadius.circular(14),
                           boxShadow: [
                             BoxShadow(
-                                color: kGreen.withOpacity(0.28),
+                                color: kGreen.withValues(alpha: 0.28),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4))
                           ]),
@@ -371,8 +365,8 @@ class _NumGridCellState extends State<_NumGridCell> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: widget.learned
-                        ? kGreen.withOpacity(0.15)
-                        : kGreen.withOpacity(0.08),
+                        ? kGreen.withValues(alpha: 0.15)
+                        : kGreen.withValues(alpha: 0.08),
                   ),
                   child: Center(
                     child: Text(
@@ -402,7 +396,7 @@ class _NumGridCellState extends State<_NumGridCell> {
                 child: Container(
                   padding: const EdgeInsets.all(3),
                   decoration: BoxDecoration(
-                    color: kGreen.withOpacity(0.14),
+                    color: kGreen.withValues(alpha: 0.14),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.check_rounded,
@@ -431,7 +425,7 @@ class _NumNavBtn extends StatelessWidget {
       elevation: enabled ? 4 : 0,
       shape: const CircleBorder(),
       color: Colors.white,
-      shadowColor: kGreen.withOpacity(0.2),
+      shadowColor: kGreen.withValues(alpha: 0.2),
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: enabled ? onTap : null,

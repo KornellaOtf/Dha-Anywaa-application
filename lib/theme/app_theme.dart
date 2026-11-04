@@ -42,17 +42,17 @@ BoxDecoration cardDeco({Color? color, bool shadow = true, double radius = 18}) =
 BoxDecoration gridCellDeco({required bool learned, Color? accentColor}) =>
     BoxDecoration(
       color: learned
-          ? (accentColor ?? kGreen).withOpacity(0.07)
+          ? (accentColor ?? kGreen).withValues(alpha: 0.07)
           : Colors.white,
       borderRadius: BorderRadius.circular(18),
       border: learned
-          ? Border.all(color: (accentColor ?? kGreen).withOpacity(0.4))
+          ? Border.all(color: (accentColor ?? kGreen).withValues(alpha: 0.4))
           : null,
       boxShadow: const [kShadowSoft],
     );
 
 BoxDecoration detailCardDeco({required bool learned}) => BoxDecoration(
-      color: learned ? kGreen.withOpacity(0.06) : Colors.white,
+      color: learned ? kGreen.withValues(alpha: 0.06) : Colors.white,
       borderRadius: BorderRadius.circular(22),
       border: learned ? Border.all(color: kGreen, width: 1.5) : null,
       boxShadow: const [kShadowCard],
@@ -100,7 +100,6 @@ class AppTheme {
       scaffoldBackgroundColor: kBg,
       colorScheme: ColorScheme.fromSeed(
         seedColor: kGreen,
-        background: kBg,
         surface: Colors.white,
       ),
       textTheme: textTheme,

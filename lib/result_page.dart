@@ -65,10 +65,10 @@ class Result extends StatelessWidget {
                   height: 90,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: _iconColor().withOpacity(0.12),
+                    color: _iconColor().withValues(alpha: 0.12),
                     boxShadow: [
                       BoxShadow(
-                        color: _iconColor().withOpacity(0.25),
+                        color: _iconColor().withValues(alpha: 0.25),
                         blurRadius: 20,
                         offset: const Offset(0, 6),
                       ),
@@ -103,14 +103,10 @@ class Result extends StatelessWidget {
                   height: 180,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [_ringColor(), _ringColor().withOpacity(0.75)],
-                    ),
+                    color: _ringColor(),
                     boxShadow: [
                       BoxShadow(
-                        color: _ringColor().withOpacity(0.40),
+                        color: _ringColor().withValues(alpha: 0.40),
                         blurRadius: 24,
                         offset: const Offset(0, 8),
                       ),
@@ -182,7 +178,7 @@ class Result extends StatelessWidget {
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: kGold.withOpacity(0.40),
+                        color: kGold.withValues(alpha: 0.40),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),

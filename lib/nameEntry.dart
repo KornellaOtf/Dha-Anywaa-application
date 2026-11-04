@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 class NameEntry extends StatefulWidget {
   const NameEntry({super.key});
+  @override
   State<NameEntry> createState() => _NameEntryState();
 }
 
@@ -92,7 +93,7 @@ class _NameEntryState extends State<NameEntry> {
                     boxShadow: _focused
                         ? [
                             BoxShadow(
-                              color: kGreen.withOpacity(0.18),
+                              color: kGreen.withValues(alpha: 0.18),
                               blurRadius: 12,
                               offset: const Offset(0, 4),
                             ),

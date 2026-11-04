@@ -1,3 +1,4 @@
+import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 class Body extends StatelessWidget {
@@ -5,8 +6,8 @@ class Body extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const green = Color(0xFF1B4332);
-    const bg    = Color(0xFFF5F0E8);
+    const green = kGreen;
+    const bg    = kBg;
 
     return Scaffold(
       backgroundColor: bg,
@@ -46,7 +47,7 @@ class Body extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12)),
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: green.withOpacity(0.1),
+                    backgroundColor: green.withValues(alpha: 0.1),
                     child: Text(p['letter']!,
                         style: TextStyle(
                             fontWeight: FontWeight.bold,
@@ -58,7 +59,7 @@ class Body extends StatelessWidget {
                           fontWeight: FontWeight.bold, fontSize: 15)),
                   trailing: Text(p['engName']!,
                       style: const TextStyle(
-                          fontSize: 13, color: Color(0xFF888888))),
+                          fontSize: 13, color: kTextSub)),
                 ),
               )),
         ]),

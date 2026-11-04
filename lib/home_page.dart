@@ -29,18 +29,18 @@ const Map<String, int> _categoryTotals = {
 };
 
 const List<Color> _accentColors = [
-  Color(0xFFC9993A), // gold
-  Color(0xFF7A2D1E), // rust
-  Color(0xFF1B4332), // green
-  Color(0xFF4A7C59), // mid-green
-  Color(0xFFC9993A),
-  Color(0xFF7A2D1E),
-  Color(0xFF1B4332),
-  Color(0xFF4A7C59),
-  Color(0xFFC9993A),
-  Color(0xFF7A2D1E),
-  Color(0xFF1B4332),
-  Color(0xFF4A7C59),
+  kGold, // gold
+  kRust, // rust
+  kGreen, // green
+  kGreenMid, // mid-green
+  kGold,
+  kRust,
+  kGreen,
+  kGreenMid,
+  kGold,
+  kRust,
+  kGreen,
+  kGreenMid,
 ];
 
 class HomePage extends StatefulWidget {
@@ -371,7 +371,7 @@ class _HomePageState extends State<HomePage> {
                       cacheWidth: 200,
                       errorBuilder: (_, __, ___) => Icon(
                         Icons.image_not_supported_outlined,
-                        color: accentColor.withOpacity(0.4),
+                        color: accentColor.withValues(alpha: 0.4),
                         size: 40,
                       ),
                     ),
@@ -484,7 +484,7 @@ class _HomePageState extends State<HomePage> {
           width: double.infinity,
           decoration: const BoxDecoration(
             image: DecorationImage(
-              image: AssetImage('assets/word_images/side_bar_bg.png'),
+              image: AssetImage('assets/word_images/side_bar_bg.jpg'),
               fit: BoxFit.cover,
             ),
           ),
@@ -604,7 +604,7 @@ class _HomePageState extends State<HomePage> {
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(icon, color: color, size: 19),

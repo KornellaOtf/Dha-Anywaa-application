@@ -1,5 +1,6 @@
 // ignore_for_file: empty_catches
 import 'package:audioplayers/audioplayers.dart';
+import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:dha_anywaaa/vowel.dart';
 import 'package:flutter/material.dart';
 
@@ -49,8 +50,8 @@ class _VowelLetterState extends State<VowelLetter> {
 
   @override
   Widget build(BuildContext context) {
-    const bg    = Color(0xFFF5F0E8);
-    const green = Color(0xFF1B4332);
+    const bg    = kBg;
+    const green = kGreen;
 
     return Scaffold(
       backgroundColor: bg,
@@ -104,15 +105,15 @@ class _VowelLetterState extends State<VowelLetter> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4, offset: const Offset(0, 2))],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4, offset: const Offset(0, 2))],
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(v.capitalLetter,
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF1C1C1C))),
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: kText)),
                 Text(v.smallLetter,
-                    style: const TextStyle(fontSize: 14, color: Color(0xFF666666))),
+                    style: const TextStyle(fontSize: 14, color: kTextSub)),
               ],
             ),
           ),

@@ -1,3 +1,4 @@
+import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:dha_anywaaa/about.dart';
 import 'package:dha_anywaaa/app_settings.dart';
 import 'package:dha_anywaaa/components/savedData.dart';
@@ -93,13 +94,13 @@ class _SettingsPageState extends State<SettingsPage> {
               const SizedBox(height: 8),
               Text(result.releaseNotes,
                   style: const TextStyle(
-                      fontSize: 13, color: Color(0xFF666666), height: 1.5)),
+                      fontSize: 13, color: kTextSub, height: 1.5)),
             ],
             if (result.sizeBytes > 0) ...[
               const SizedBox(height: 8),
               Text(
                 'Size: ${(result.sizeBytes / 1024 / 1024).toStringAsFixed(1)} MB',
-                style: const TextStyle(fontSize: 12, color: Color(0xFF888888))),
+                style: const TextStyle(fontSize: 12, color: kTextSub)),
             ],
             if (result.mandatory) ...[
               const SizedBox(height: 10),
@@ -123,12 +124,12 @@ class _SettingsPageState extends State<SettingsPage> {
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text('Later',
-                  style: TextStyle(color: Color(0xFF888888))),
+                  style: TextStyle(color: kTextSub)),
             ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: gold,
-              foregroundColor: const Color(0xFF1C1C1C),
+              foregroundColor: kText,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10)),
             ),
@@ -217,10 +218,10 @@ class _SettingsPageState extends State<SettingsPage> {
               title: const Text('Sound effects',
                   style: TextStyle(fontWeight: FontWeight.w600)),
               subtitle: Text(settings.soundEnabled ? 'On' : 'Off',
-                  style: const TextStyle(color: Color(0xFF888888))),
+                  style: TextStyle(color: kTextSub)),
               trailing: Switch(
                 value: settings.soundEnabled,
-                activeColor: green,
+                activeThumbColor: green,
                 onChanged: (v) => settings.setSoundEnabled(v),
               ),
             ),
@@ -297,7 +298,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   if (_appVersion.isNotEmpty)
                     Text(_appVersion,
                         style: const TextStyle(
-                            fontSize: 12, color: Color(0xFF888888))),
+                            fontSize: 12, color: kTextSub)),
                   if (_otaStatus.isNotEmpty)
                     Text(_otaStatus,
                         style: TextStyle(
@@ -307,7 +308,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 : _otaStatus.contains('up to date') ||
                                         _otaStatus.contains('complete')
                                     ? green
-                                    : const Color(0xFF888888))),
+                                    : kTextSub)),
                   if (_downloading) ...[
                     const SizedBox(height: 6),
                     ClipRRect(
@@ -329,7 +330,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       child: CircularProgressIndicator(
                           strokeWidth: 2, color: green))
                   : const Icon(Icons.chevron_right,
-                      color: Color(0xFFBBBBBB)),
+                      color: kBorder),
               onTap: (_checkingUpdate || _downloading)
                   ? null
                   : _checkForUpdate,
@@ -358,7 +359,7 @@ class _SettingsPageState extends State<SettingsPage> {
               title: const Text('Open-source licences',
                   style: TextStyle(fontWeight: FontWeight.w500)),
               trailing: const Icon(Icons.chevron_right,
-                  color: Color(0xFFBBBBBB)),
+                  color: kBorder),
               onTap: () => showLicensePage(
                 context: context,
                 applicationName: 'Learn Dha Anywaa',
@@ -372,7 +373,7 @@ class _SettingsPageState extends State<SettingsPage> {
               child: Center(
                 child: Text(_appVersion,
                     style: const TextStyle(
-                        fontSize: 12, color: Color(0xFF888888))),
+                        fontSize: 12, color: kTextSub)),
               ),
             ),
           const SizedBox(height: 24),
@@ -389,7 +390,7 @@ class _SettingsPageState extends State<SettingsPage> {
               fontSize: 11,
               letterSpacing: 1.4,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF888888))),
+              color: kTextSub)),
     );
   }
 
@@ -407,7 +408,7 @@ class _SettingsPageState extends State<SettingsPage> {
       leading: Icon(icon, color: const Color(0xFF1F4D3A)),
       title: Text(label,
           style: const TextStyle(fontWeight: FontWeight.w500)),
-      trailing: const Icon(Icons.chevron_right, color: Color(0xFFBBBBBB)),
+      trailing: const Icon(Icons.chevron_right, color: kBorder),
       onTap: () => Navigator.push(
           context, MaterialPageRoute(builder: (_) => page)),
     );

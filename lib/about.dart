@@ -125,7 +125,7 @@ class _AboutState extends State<About> {
                   subtitle: const Text('Kornellaotf@gmail.com',
                       style: TextStyle(fontSize: 12, color: kTextMuted)),
                   trailing: const Icon(Icons.chevron_right,
-                      color: Color(0xFFBBBBBB)),
+                      color: kBorder),
                   onTap: _email,
                 ),
               ]),
@@ -150,7 +150,7 @@ class _AboutState extends State<About> {
           style: const TextStyle(
               fontSize: 15, fontWeight: FontWeight.w500)),
       trailing:
-          const Icon(Icons.chevron_right, color: Color(0xFFBBBBBB)),
+          const Icon(Icons.chevron_right, color: kBorder),
       onTap: () => Navigator.push(
           context, MaterialPageRoute(builder: (_) => page)),
     );
