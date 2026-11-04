@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
@@ -95,35 +97,82 @@ class OtaService {
   }
 
   // ── Download APK to local storage ─────────────────────────────────────────
-  /// Downloads the APK and returns its local [File] path.
+  /// Downloads the APK, verifies its integrity (size + SHA-256 against the
+  /// manifest) and returns the local [File]. Returns `null` if the download
+  /// fails or the file is corrupt/truncated so the caller can retry instead of
+  /// handing an invalid APK to the Android installer.
   /// [onProgress] is called with 0.0–1.0 as bytes arrive.
   Future<File?> downloadApk(
     OtaCheckResult result, {
     void Function(double progress)? onProgress,
   }) async {
+    File? file;
     try {
       final dir  = await getExternalStorageDirectory() ??
                    await getApplicationDocumentsDirectory();
-      final file = File('${dir.path}/dha_anywaa_update.apk');
+      file = File('${dir.path}/dha_anywaa_update.apk');
 
       final request  = http.Request('GET', Uri.parse(result.apkUrl));
-      final response = await request.send().timeout(const Duration(minutes: 5));
+      // Timeout covers only the response headers; the body stream has its own
+      // idle timeout below so a stalled 200 MB download aborts cleanly.
+      final response = await request.send().timeout(const Duration(seconds: 30));
 
       if (response.statusCode != 200) return null;
 
       final total     = response.contentLength ?? 0;
       int   received  = 0;
       final sink      = file.openWrite();
+      final digestSink = _DigestSink();
+      final hasher     = sha256.startChunkedConversion(digestSink);
 
-      await for (final chunk in response.stream) {
-        sink.add(chunk);
-        received += chunk.length;
-        if (total > 0) onProgress?.call(received / total);
+      try {
+        await for (final chunk in
+            response.stream.timeout(const Duration(seconds: 60))) {
+          sink.add(chunk);
+          hasher.add(chunk);
+          received += chunk.length;
+          if (total > 0) onProgress?.call(received / total);
+        }
+      } finally {
+        hasher.close();
+        await sink.close();
       }
-      await sink.close();
+
+      // ── Integrity checks ──────────────────────────────────────────────────
+      if (result.sizeBytes > 0 && received != result.sizeBytes) {
+        await _deleteQuietly(file);
+        return null;
+      }
+      if (result.sha256.isNotEmpty &&
+          digestSink.digest.toString().toLowerCase() !=
+              result.sha256.toLowerCase()) {
+        await _deleteQuietly(file);
+        return null;
+      }
+
       return file;
     } catch (_) {
+      if (file != null) await _deleteQuietly(file);
       return null;
     }
   }
+
+  Future<void> _deleteQuietly(File file) async {
+    try {
+      if (await file.exists()) await file.delete();
+    } catch (_) {}
+  }
+}
+
+/// Minimal [Sink] that captures the single [Digest] emitted when a chunked
+/// SHA-256 conversion is closed.
+class _DigestSink implements Sink<Digest> {
+  late Digest _digest;
+  Digest get digest => _digest;
+
+  @override
+  void add(Digest data) => _digest = data;
+
+  @override
+  void close() {}
 }
