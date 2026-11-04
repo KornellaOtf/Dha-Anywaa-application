@@ -286,7 +286,12 @@ class AppTheme {
         thumbColor: WidgetStateProperty.resolveWith(
             (s) => s.contains(WidgetState.selected) ? Colors.white : c.textSub),
         trackColor: WidgetStateProperty.resolveWith(
-            (s) => s.contains(WidgetState.selected) ? kGreen : c.border),
+            (s) => s.contains(WidgetState.selected) ? kGreenMid : c.border),
+        // Without this, Material 3 paints the off-state track outline from the
+        // green seed color, so the toggle reads as "green" on a light surface
+        // while looking fine in dark mode. Keep it neutral instead.
+        trackOutlineColor: WidgetStateProperty.resolveWith(
+            (s) => s.contains(WidgetState.selected) ? Colors.transparent : c.border),
       ),
     );
   }
