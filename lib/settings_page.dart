@@ -99,11 +99,15 @@ class _SettingsPageState extends State<SettingsPage> {
         children: [
           _section('General', [
             _row(
+              icon: Icons.palette_outlined,
+              iconColor: kGreen,
               title: 'Theme',
               trailing: _valueChevron(modeLabel),
               onTap: () => _pickTheme(settings),
             ),
             _row(
+              icon: Icons.volume_up_rounded,
+              iconColor: kGreenMid,
               title: 'Sound effects',
               trailing: Switch(
                 value: settings.soundEnabled,
@@ -111,6 +115,8 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
             _row(
+              icon: Icons.person_outline_rounded,
+              iconColor: kGold,
               title: 'Name',
               trailing: _valueChevron(_name.isEmpty ? 'Not set' : _name),
               onTap: _editName,
@@ -119,8 +125,15 @@ class _SettingsPageState extends State<SettingsPage> {
           const SizedBox(height: 24),
 
           _section('Updates', [
-            _row(title: 'Version', trailing: _plainValue(_appVersion)),
             _row(
+              icon: Icons.tag,
+              iconColor: kGreenMid,
+              title: 'Version',
+              trailing: _plainValue(_appVersion),
+            ),
+            _row(
+              icon: Icons.system_update_alt_rounded,
+              iconColor: kRust,
               title: 'Check for updates',
               trailing: _checking
                   ? const SizedBox(
@@ -136,6 +149,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
           _section('Assistant', [
             _row(
+              icon: Icons.eco_rounded,
+              iconColor: kGreen,
               title: 'Anywaa AI',
               subtitle: 'Offline word helper. Ask a word, a meaning, or a number.',
               trailing: Icon(Icons.chevron_right, color: context.c.border),
@@ -147,22 +162,32 @@ class _SettingsPageState extends State<SettingsPage> {
 
           _section('About', [
             _row(
+                icon: Icons.privacy_tip_outlined,
+                iconColor: kGreenMid,
                 title: 'Privacy Policy',
                 trailing: Icon(Icons.chevron_right, color: context.c.border),
                 onTap: () => _push(const PrivacyPolicyPage())),
             _row(
+                icon: Icons.description_outlined,
+                iconColor: kGold,
                 title: 'Terms of Use',
                 trailing: Icon(Icons.chevron_right, color: context.c.border),
                 onTap: () => _push(const TermsPage())),
             _row(
+                icon: Icons.help_outline_rounded,
+                iconColor: kRust,
                 title: 'Help',
                 trailing: Icon(Icons.chevron_right, color: context.c.border),
                 onTap: () => _push(const Help())),
             _row(
+                icon: Icons.info_outline_rounded,
+                iconColor: kGreen,
                 title: 'About',
                 trailing: Icon(Icons.chevron_right, color: context.c.border),
                 onTap: () => _push(const About())),
             _row(
+              icon: Icons.code_rounded,
+              iconColor: kTextMuted,
               title: 'Open-source licences',
               trailing: Icon(Icons.chevron_right, color: context.c.border),
               onTap: () => showLicensePage(
@@ -257,7 +282,7 @@ class _SettingsPageState extends State<SettingsPage> {
     for (var i = 0; i < rows.length; i++) {
       if (i > 0) {
         withDividers.add(Container(
-            height: 1, margin: const EdgeInsets.only(left: 16), color: context.c.border));
+            height: 1, margin: const EdgeInsets.only(left: 72), color: context.c.border));
       }
       withDividers.add(rows[i]);
     }
@@ -288,20 +313,41 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget _row({
     required String title,
+    IconData? icon,
+    Color iconColor = kGreen,
     String? subtitle,
     required Widget trailing,
     VoidCallback? onTap,
   }) {
     return ListTile(
       onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      leading: icon == null
+          ? null
+          : _leadingIcon(icon, iconColor),
       title: Text(title,
           style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: context.c.text)),
       subtitle: subtitle == null
           ? null
-          : Text(subtitle, style: TextStyle(fontSize: 13, color: context.c.textSub)),
+          : Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(subtitle, style: TextStyle(fontSize: 13, color: context.c.textSub)),
+            ),
       trailing: trailing,
     );
   }
+
+  // iOS-style coloured icon chip: solid tinted square with a white glyph.
+  Widget _leadingIcon(IconData icon, Color color) => Container(
+        width: 38,
+        height: 38,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [BoxShadow(color: color.withValues(alpha: 0.30), blurRadius: 6, offset: const Offset(0, 2))],
+        ),
+        child: Icon(icon, color: Colors.white, size: 21),
+      );
 
   Widget _valueChevron(String value) => Row(
         mainAxisSize: MainAxisSize.min,
