@@ -160,8 +160,9 @@ class _Page4State extends State<Page4> {
                             size: 18, color: kText),
                         onPressed: () async {
                           final should = await _onWillPop();
-                          if (should && context.mounted)
+                          if (should && context.mounted) {
                             Navigator.pop(context);
+                          }
                         },
                       ),
                     ),
@@ -292,8 +293,9 @@ class _Page4State extends State<Page4> {
                               setState(() {
                                 _pageSelectedIndex = pageIdx;
                                 _selectedIndex = listIdx;
-                                if (isCorrect && count == 1)
+                                if (isCorrect && count == 1) {
                                   _finalResult++;
+                                }
                               });
                             },
                           ),
