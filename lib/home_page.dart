@@ -1,5 +1,6 @@
 import 'package:dha_anywaaa/about.dart';
 import 'package:dha_anywaaa/anywaa_ai_page.dart';
+import 'package:dha_anywaaa/widgets/anywaa_ai_logo.dart';
 import 'package:dha_anywaaa/components/savedData.dart';
 import 'package:dha_anywaaa/help.dart';
 import 'package:dha_anywaaa/privacy_policy_page.dart';
@@ -547,7 +548,7 @@ class _HomePageState extends State<HomePage> {
               Navigator.pop(context);
               Navigator.push(context,
                   MaterialPageRoute(builder: (_) => const AnywaaAiPage()));
-            }),
+            }, leading: const AnywaaAiLogo(size: 36)),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Divider(),
@@ -606,19 +607,21 @@ class _HomePageState extends State<HomePage> {
     String label,
     VoidCallback onTap, {
     Color color = kGreen,
+    Widget? leading,
   }) {
     final iconColor = color == kGreen ? context.c.accent : color;
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
-      leading: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: iconColor.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(icon, color: iconColor, size: 19),
-      ),
+      leading: leading ??
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: iconColor, size: 19),
+          ),
       title: Text(label,
           style: TextStyle(
               fontWeight: FontWeight.w600,

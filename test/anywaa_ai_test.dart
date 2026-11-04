@@ -36,4 +36,180 @@ void main() {
     expect(miss.found, isFalse);
     expect(miss.text, contains('local Anywaa dictionary'));
   });
+
+  test('curated vocabulary (phrases, numbers, symbols) is answerable', () async {
+    final ai = AnywaaAiService.instance;
+    await ai.load();
+
+    // Multi-word greeting phrase (a stop-word-only phrase resolves via its
+    // exact whole-phrase form, so it is queried directly).
+    final greet = ai.answer('how are you');
+    expect(greet.found, isTrue);
+    expect(greet.matches.first.entry.en.toLowerCase(), 'how are you');
+
+    // Number system beyond the old 1-10 (tens).
+    final num = ai.answer('what is twenty in dha anywaa');
+    expect(num.found, isTrue);
+    expect(num.matches.first.entry.dha, 'Piariew');
+
+    // Hundreds resolve as their own entries.
+    final hundred = ai.answer('three hundred');
+    expect(hundred.found, isTrue);
+    expect(hundred.matches.first.entry.dha, 'Dipedak');
+
+    // Insect vocabulary.
+    final insect = ai.answer('spider');
+    expect(insect.found, isTrue);
+    expect(insect.matches.first.entry.dha, 'Othïënø');
+
+    // Math symbol reachable via its English name.
+    final math = ai.answer('how do you say plus in dha anywaa');
+    expect(math.found, isTrue);
+    expect(math.matches.first.entry.dha, 'Dwal');
+  });
+
+  test('seed vocabulary is layered in without overriding curated forms',
+      () async {
+    final ai = AnywaaAiService.instance;
+    await ai.load();
+
+    // Brand-new domain terms (were absent from the original 710 data).
+    final milk = ai.answer('milk');
+    expect(milk.found, isTrue);
+    expect(milk.matches.first.entry.dha, 'Caak');
+
+    final water = ai.answer('what is the word for water');
+    expect(water.found, isTrue);
+    expect(water.matches.first.entry.dha, 'Pïï');
+
+    final ours = ai.answer('ours');
+    expect(ours.found, isTrue);
+    expect(ours.matches.first.entry.dha, 'Marwa');
+
+    // Curated spelling stays the displayed answer even though the dataset
+    // added a competing synonym (to speak: primary 'Chaano').
+    final speak = ai.answer('to speak');
+    expect(speak.found, isTrue);
+    expect(speak.matches.first.entry.dha, 'Chaano');
+
+    // ...but a dataset alternate spelling is still findable as a synonym.
+    final cigira = ai.answer('cigira');
+    expect(cigira.found, isTrue);
+    expect(cigira.matches.any((m) => m.entry.en == 'lion'), isTrue);
+  });
+
+  test('smarter matching: plurals, typos, and wrapped phrases', () async {
+    final ai = AnywaaAiService.instance;
+    await ai.load();
+
+    // Plural resolves to the singular headword via light stemming.
+    final plural = ai.answer('spiders');
+    expect(plural.found, isTrue);
+    expect(plural.matches.first.entry.en, 'spider');
+
+    // A typo still resolves to the closest real word.
+    final typo = ai.answer('waterr');
+    expect(typo.found, isTrue);
+    expect(typo.matches.first.entry.dha, 'Pïï');
+
+    // A stop-word phrase nested in a longer sentence still resolves via
+    // phrase containment (this used to be lost after stop-word stripping).
+    final wrapped =
+        ai.answer('how do you say how are you in Dha Anywaa');
+    expect(wrapped.found, isTrue);
+    expect(wrapped.matches.first.entry.en, 'how are you');
+
+    // Junk with a near-miss must still be refused, not guessed.
+    final miss = ai.answer('qqzzx');
+    expect(miss.found, isFalse);
+  });
+
+  test('machine-readable dataset domains are answerable (v4 coverage)',
+      () async {
+    final ai = AnywaaAiService.instance;
+    await ai.load();
+    expect(ai.wordCount, greaterThan(1300));
+
+    // Newly added body / animal / food / nature domains.
+    expect(ai.answer('tongue').matches.first.entry.dha, 'Lep');
+    expect(ai.answer('what is crocodile').matches.first.entry.dha, 'Nyaang');
+    expect(ai.answer('honey').matches.first.entry.dha, contains('Maar'));
+    expect(ai.answer('rain').matches.first.entry.dha, 'Koth');
+
+    // Adjectives by color.
+    expect(ai.answer('black').matches.first.entry.dha, 'Macól');
+
+    // Curated spelling stays primary even though the dataset added a variant
+    // (lion: dataset 'Nguu' primary with synonym 'Cigïïra').
+    final lion = ai.answer('lion');
+    expect(lion.found, isTrue);
+    expect(lion.matches.first.entry.dha, contains('Nguu'));
+
+    // Dataset term findable through its alternate spelling as a synonym.
+    final koom = ai.answer('koom');
+    expect(koom.found, isTrue);
+    expect(koom.matches.any((m) => m.entry.en == 'chair'), isTrue);
+  });
+
+  test('conversational intents answer like a chat, not a failed lookup',
+      () async {
+    final ai = AnywaaAiService.instance;
+    await ai.load();
+
+    // Identity.
+    final who = ai.answer('who are you?');
+    expect(who.found, isFalse);
+    expect(who.text, contains('Anywaa AI'));
+
+    // Capability.
+    final cap = ai.answer('what can you do');
+    expect(cap.text, contains('translate'));
+
+    // Origin.
+    final from = ai.answer('where are you from');
+    expect(from.text, contains('device'));
+
+    // A bare greeting is recognised (and is not mistaken for a word lookup).
+    final hi = ai.answer('hi');
+    expect(hi.found, isFalse);
+    expect(hi.text, contains('Ask me'));
+  });
+
+  test('number generator spells 1-9999 from the taught rules', () async {
+    final ai = AnywaaAiService.instance;
+    await ai.load();
+
+    // Teen: "Apar ka <unit>".
+    expect(ai.answer('how do you say 11').text,
+        contains('Apar ka aciel'));
+    // Compound tens + unit.
+    expect(ai.answer('what is 55').text,
+        contains('Piarabich ka ab'));
+    // Round hundred with a trailing ten.
+    expect(ai.answer('say 110 in Dha Anywaa').text,
+        contains('Dipa ka apar'));
+    // Thousands.
+    expect(ai.answer('say 2026').text,
+        contains('Kumme ariew ka piariew ka ab'));
+    // Out of range is refused, never fabricated.
+    expect(ai.answer('say 99999').found, isFalse);
+  });
+
+  test('direction auto-detected when the query gives no explicit hint',
+      () async {
+    final ai = AnywaaAiService.instance;
+    await ai.load();
+
+    // A Dha Anywaa word typed alone (no "english"/"dha" cue) is understood as
+    // asking for the English meaning.
+    final dhaOnly = ai.answer('wic');
+    expect(dhaOnly.found, isTrue);
+    expect(dhaOnly.text, contains('English'));
+    expect(dhaOnly.text.toLowerCase(), contains('abandon'));
+
+    // An English word typed alone returns the Dha translation.
+    final enOnly = ai.answer('water');
+    expect(enOnly.found, isTrue);
+    expect(enOnly.text, contains('Dha Anywaa'));
+  });
 }
