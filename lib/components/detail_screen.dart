@@ -2,6 +2,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:dha_anywaaa/components/savedData.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// Reusable detail + grid screen for every vocabulary category.
 /// Pass [category] (matches SavedData keys), [title], and [items] list.
@@ -269,7 +270,11 @@ class _GridCellState extends State<_GridCell> {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(12, 14, 12, 8),
                   child: Image.asset(widget.item['imageLink']!,
-                      fit: BoxFit.contain),
+                      fit: BoxFit.contain,
+                      cacheWidth: 240,
+                      errorBuilder: (_, __, ___) => const Icon(
+                          Icons.image_not_supported_outlined,
+                          color: Color(0xFFCCCCCC), size: 40)),
                 ),
               ),
               Padding(
@@ -366,14 +371,21 @@ class _DetailPanel extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Image.asset(item['imageLink']!,
-                    height: 200, fit: BoxFit.contain),
+                    height: 200,
+                    fit: BoxFit.contain,
+                    cacheHeight: 400,
+                    errorBuilder: (_, __, ___) => const SizedBox(
+                          height: 200,
+                          child: Icon(Icons.image_not_supported_outlined,
+                              color: Color(0xFFCCCCCC), size: 72),
+                        )),
               ),
               const SizedBox(height: 16),
               Text(item['anyName']!,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: GoogleFonts.playfairDisplay(
                       fontSize: 28,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w700,
                       color: learned ? kGreen : kText)),
               if ((item['engName'] ?? '').isNotEmpty) ...[
                 const SizedBox(height: 4),
@@ -415,33 +427,36 @@ class _DetailPanel extends StatelessWidget {
               icon: Icons.chevron_left_rounded,
               onPressed: onPrev,
             ),
-            const SizedBox(width: 16),
-            // Play button (larger, rust accent)
-            Material(
-              elevation: 6,
-              shape: const CircleBorder(),
-              color: hasAudio ? kRust : Colors.grey[300],
-              shadowColor: (hasAudio ? kRust : Colors.grey).withOpacity(0.4),
-              child: SizedBox(
-                width: 72,
-                height: 72,
-                child: isPlaying
-                    ? const Padding(
-                        padding: EdgeInsets.all(20),
-                        child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2.5,
-                            backgroundColor: Colors.white24),
-                      )
-                    : IconButton(
-                        icon: Icon(Icons.play_arrow_rounded,
-                            color: hasAudio ? Colors.white : Colors.grey[500],
-                            size: 32),
-                        onPressed: hasAudio ? onPlay : null,
-                      ),
+            if (hasAudio) ...[
+              const SizedBox(width: 16),
+              // Play button (terracotta) shown only when this word has audio
+              Material(
+                elevation: 6,
+                shape: const CircleBorder(),
+                color: kRust,
+                shadowColor: kRust.withOpacity(0.4),
+                child: SizedBox(
+                  width: 72,
+                  height: 72,
+                  child: isPlaying
+                      ? const Padding(
+                          padding: EdgeInsets.all(20),
+                          child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2.5,
+                              backgroundColor: Colors.white24),
+                        )
+                      : IconButton(
+                          icon: const Icon(Icons.play_arrow_rounded,
+                              color: Colors.white, size: 32),
+                          onPressed: onPlay,
+                        ),
+                ),
               ),
-            ),
-            const SizedBox(width: 16),
+              const SizedBox(width: 16),
+            ] else ...[
+              const SizedBox(width: 24),
+            ],
             _NavButton(
               icon: Icons.chevron_right_rounded,
               onPressed: onNext,
