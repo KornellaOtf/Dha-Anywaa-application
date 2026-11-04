@@ -1,8 +1,7 @@
 import 'package:dha_anywaaa/components/savedData.dart';
+import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
-// Numbers need a custom grid (big numeral display) so we keep a slim
-// StatefulWidget instead of delegating to DetailScreen.
 class Number extends StatefulWidget {
   const Number({super.key});
   @override
@@ -60,195 +59,389 @@ class _NumberState extends State<Number> {
 
   @override
   Widget build(BuildContext context) {
-    const bg    = Color(0xFFF5F0E8);
-    const green = Color(0xFF1B4332);
-    const rust  = Color(0xFF8B3A2A);
-
     return Scaffold(
-      backgroundColor: bg,
+      backgroundColor: kBg,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: Padding(
           padding: const EdgeInsets.all(8),
-          child: CircleAvatar(
-            backgroundColor: Colors.white,
+          child: Material(
+            elevation: 3,
+            shape: const CircleBorder(),
+            color: Colors.white,
             child: IconButton(
-              icon: const Icon(Icons.chevron_left, color: Color(0xFF1C1C1C)),
+              icon: const Icon(Icons.chevron_left_rounded, color: kText),
               onPressed: () {
-                if (_zoom) setState(() => _zoom = false);
-                else Navigator.pop(context);
+                if (_zoom) {
+                  setState(() => _zoom = false);
+                } else {
+                  Navigator.pop(context);
+                }
               },
             ),
           ),
         ),
-        title: const Text('Numbers'),
+        title: const Text('Numbers',
+            style: TextStyle(
+                fontWeight: FontWeight.bold, fontSize: 18, color: kText)),
         centerTitle: true,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                 decoration: BoxDecoration(
-                  color: green.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  color: kGreen.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: kGreen.withOpacity(0.2)),
                 ),
                 child: Text('$_learnedCount/${_numbers.length}',
                     style: const TextStyle(
-                        fontSize: 12, fontWeight: FontWeight.bold, color: green)),
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: kGreen)),
               ),
             ),
           ),
         ],
       ),
-      body: _zoom ? _buildDetail(green, rust) : _buildGrid(green),
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 280),
+        switchInCurve: Curves.easeOut,
+        switchOutCurve: Curves.easeIn,
+        transitionBuilder: (child, anim) => FadeTransition(
+          opacity: anim,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 0.04),
+              end: Offset.zero,
+            ).animate(anim),
+            child: child,
+          ),
+        ),
+        child: _zoom
+            ? _buildDetail(key: ValueKey('num_detail_$_index'))
+            : _buildGrid(key: const ValueKey('num_grid')),
+      ),
     );
   }
 
-  Widget _buildDetail(Color green, Color rust) {
+  // ── Detail ──────────────────────────────────────────────────────────────────
+
+  Widget _buildDetail({Key? key}) {
     final item    = _numbers[_index];
     final learned = _learned[_index];
 
-    return SingleChildScrollView(
-      child: Column(children: [
-        const SizedBox(height: 16),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
-            decoration: BoxDecoration(
-              color: learned ? green.withOpacity(0.06) : Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border: learned ? Border.all(color: green, width: 1.5) : null,
-            ),
-            child: Column(children: [
-              Text(item['number']!,
-                  style: TextStyle(
-                      fontSize: 120,
-                      fontWeight: FontWeight.bold,
-                      color: green)),
-              const SizedBox(height: 8),
-              Text(item['anyDis']!,
-                  style: TextStyle(
-                      fontSize: 28, fontWeight: FontWeight.bold, color: green)),
-              Text(item['description']!,
-                  style: const TextStyle(fontSize: 16, color: Color(0xFF666666))),
-              if (learned) ...[
-                const SizedBox(height: 12),
-                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Icon(Icons.check_circle_rounded, color: green, size: 16),
-                  const SizedBox(width: 4),
-                  Text('Learned',
+    return KeyedSubtree(
+      key: key,
+      child: SingleChildScrollView(
+        child: Column(children: [
+          const SizedBox(height: 12),
+
+          // ── Big numeral card ──────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+              decoration: detailCardDeco(learned: learned),
+              child: Column(children: [
+                // Number circle
+                Container(
+                  width: 140,
+                  height: 140,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: learned
+                          ? [kGreen, kGreenMid]
+                          : [kGreen.withOpacity(0.1), kGold.withOpacity(0.1)],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: (learned ? kGreen : kGold).withOpacity(0.25),
+                        blurRadius: 20,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      item['number']!,
                       style: TextStyle(
-                          fontSize: 13, color: green, fontWeight: FontWeight.w600)),
-                ]),
-              ],
-            ]),
-          ),
-        ),
-        const SizedBox(height: 24),
-        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          CircleAvatar(
-            radius: 28, backgroundColor: Colors.white,
-            child: IconButton(
-              icon: const Icon(Icons.chevron_left, color: Color(0xFF1C1C1C)),
-              onPressed: () { if (_index > 0) setState(() => _index--); },
+                        fontSize: 72,
+                        fontWeight: FontWeight.bold,
+                        color: learned ? Colors.white : kGreen,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(item['anyDis']!,
+                    style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: learned ? kGreen : kText)),
+                const SizedBox(height: 4),
+                Text(item['description']!,
+                    style: const TextStyle(fontSize: 16, color: kTextSub)),
+                if (learned) ...[
+                  const SizedBox(height: 14),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: kGreen.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: kGreen.withOpacity(0.25)),
+                    ),
+                    child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                      Icon(Icons.check_circle_rounded,
+                          color: kGreen, size: 15),
+                      SizedBox(width: 5),
+                      Text('Learned',
+                          style: TextStyle(
+                              fontSize: 13,
+                              color: kGreen,
+                              fontWeight: FontWeight.w700)),
+                    ]),
+                  ),
+                ],
+              ]),
             ),
           ),
-          const SizedBox(width: 16),
-          CircleAvatar(
-            radius: 36, backgroundColor: rust,
-            child: const Icon(Icons.play_arrow, color: Colors.white, size: 28),
-          ),
-          const SizedBox(width: 16),
-          CircleAvatar(
-            radius: 28, backgroundColor: Colors.white,
-            child: IconButton(
-              icon: const Icon(Icons.chevron_right, color: Color(0xFF1C1C1C)),
-              onPressed: () {
-                if (_index < _numbers.length - 1) setState(() => _index++);
-              },
+          const SizedBox(height: 24),
+
+          // ── Nav buttons ───────────────────────────────────────────────────
+          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            _NumNavBtn(
+              icon: Icons.chevron_left_rounded,
+              enabled: _index > 0,
+              onTap: () => setState(() => _index--),
             ),
-          ),
-        ]),
-        const SizedBox(height: 16),
-        learned
-            ? ElevatedButton.icon(
-                onPressed: () => _toggleLearned(_index),
-                icon: const Icon(Icons.check_circle_rounded, size: 18),
-                label: const Text('Learned'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: green,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-                ),
-              )
-            : OutlinedButton.icon(
-                onPressed: () => _toggleLearned(_index),
-                icon: const Icon(Icons.radio_button_unchecked, size: 18),
-                label: const Text('Mark as learned'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: green,
-                  side: BorderSide(color: green),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-                ),
+            const SizedBox(width: 16),
+            // Counter badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: const [kShadowSoft],
               ),
-        const SizedBox(height: 24),
-      ]),
+              child: Text('${_index + 1} / ${_numbers.length}',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w600, fontSize: 13)),
+            ),
+            const SizedBox(width: 16),
+            _NumNavBtn(
+              icon: Icons.chevron_right_rounded,
+              enabled: _index < _numbers.length - 1,
+              onTap: () => setState(() => _index++),
+            ),
+          ]),
+          const SizedBox(height: 20),
+
+          // ── Mark as learned ───────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: SizedBox(
+              width: double.infinity,
+              child: learned
+                  ? DecoratedBox(
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                                color: kGreen.withOpacity(0.28),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4))
+                          ]),
+                      child: ElevatedButton.icon(
+                        onPressed: () => _toggleLearned(_index),
+                        icon: const Icon(Icons.check_circle_rounded, size: 18),
+                        label: const Text('Learned'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kGreen,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
+                        ),
+                      ),
+                    )
+                  : DecoratedBox(
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: const [kShadowSoft]),
+                      child: OutlinedButton.icon(
+                        onPressed: () => _toggleLearned(_index),
+                        icon: const Icon(Icons.add_task_outlined, size: 18),
+                        label: const Text('Mark as learned'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: kGreen,
+                          side: const BorderSide(color: kGreen, width: 1.5),
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
+                        ),
+                      ),
+                    ),
+            ),
+          ),
+          const SizedBox(height: 32),
+        ]),
+      ),
     );
   }
 
-  Widget _buildGrid(Color green) {
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _numbers.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2, mainAxisSpacing: 12, crossAxisSpacing: 12,
-          childAspectRatio: 1.0),
-      itemBuilder: (_, i) {
-        final item    = _numbers[i];
-        final learned = _learned[i];
-        return InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () => setState(() { _zoom = true; _index = i; }),
-          child: Container(
-            decoration: BoxDecoration(
-              color: learned ? green.withOpacity(0.06) : Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: learned ? Border.all(color: green.withOpacity(0.4)) : null,
-            ),
-            child: Stack(children: [
-              Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                Text(item['number']!,
-                    style: TextStyle(
-                        fontSize: 52,
-                        fontWeight: FontWeight.bold,
-                        color: green)),
-                const SizedBox(height: 4),
-                Text(item['anyDis']!,
+  // ── Grid ────────────────────────────────────────────────────────────────────
+
+  Widget _buildGrid({Key? key}) {
+    return KeyedSubtree(
+      key: key,
+      child: GridView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        itemCount: _numbers.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 14,
+          crossAxisSpacing: 14,
+          childAspectRatio: 0.9,
+        ),
+        itemBuilder: (_, i) {
+          final item    = _numbers[i];
+          final learned = _learned[i];
+          return _NumGridCell(
+            item: item,
+            learned: learned,
+            onTap: () => setState(() { _zoom = true; _index = i; }),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ── Grid cell ─────────────────────────────────────────────────────────────────
+class _NumGridCell extends StatefulWidget {
+  final Map<String, String> item;
+  final bool learned;
+  final VoidCallback onTap;
+
+  const _NumGridCell(
+      {required this.item, required this.learned, required this.onTap});
+
+  @override
+  State<_NumGridCell> createState() => _NumGridCellState();
+}
+
+class _NumGridCellState extends State<_NumGridCell> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapCancel: () => setState(() => _pressed = false),
+      onTapUp: (_) {
+        setState(() => _pressed = false);
+        widget.onTap();
+      },
+      child: AnimatedScale(
+        scale: _pressed ? 0.94 : 1.0,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        child: Container(
+          decoration: gridCellDeco(learned: widget.learned),
+          child: Stack(children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Number badge
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: widget.learned
+                        ? kGreen.withOpacity(0.15)
+                        : kGreen.withOpacity(0.08),
+                  ),
+                  child: Center(
+                    child: Text(
+                      widget.item['number']!,
+                      style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: widget.learned ? kGreen : kGreen),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(widget.item['anyDis']!,
                     style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
-                        color: Color(0xFF1C1C1C))),
-                Text(item['description']!,
+                        color: kText)),
+                Text(widget.item['description']!,
                     style: const TextStyle(
-                        fontSize: 12, color: Color(0xFF666666))),
-              ]),
-              if (learned)
-                Positioned(
-                  top: 8, right: 8,
-                  child: Icon(Icons.check_circle_rounded,
-                      color: green, size: 18)),
-            ]),
-          ),
-        );
-      },
+                        fontSize: 12, color: kTextSub)),
+              ],
+            ),
+            if (widget.learned)
+              Positioned(
+                top: 10,
+                right: 10,
+                child: Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    color: kGreen.withOpacity(0.14),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.check_rounded,
+                      color: kGreen, size: 14),
+                ),
+              ),
+          ]),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Nav button ────────────────────────────────────────────────────────────────
+class _NumNavBtn extends StatelessWidget {
+  final IconData icon;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  const _NumNavBtn(
+      {required this.icon, required this.enabled, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      elevation: enabled ? 4 : 0,
+      shape: const CircleBorder(),
+      color: Colors.white,
+      shadowColor: kGreen.withOpacity(0.2),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: enabled ? onTap : null,
+        child: SizedBox(
+          width: 56,
+          height: 56,
+          child: Icon(icon,
+              color: enabled ? kText : Colors.grey[400], size: 26),
+        ),
+      ),
     );
   }
 }

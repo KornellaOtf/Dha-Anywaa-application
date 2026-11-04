@@ -1,5 +1,6 @@
 import 'package:dha_anywaaa/Questions.dart';
 import 'package:dha_anywaaa/result_page.dart';
+import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 class Page4 extends StatefulWidget {
@@ -36,21 +37,29 @@ class _Page4State extends State<Page4> {
     final quit = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Quit quiz?',
-            style: TextStyle(fontWeight: FontWeight.bold)),
-        content: const Text('Your progress will be lost.'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        title: const Row(children: [
+          Icon(Icons.quiz_outlined, color: kRust, size: 22),
+          SizedBox(width: 10),
+          Text('Quit quiz?',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        ]),
+        content: const Text('Your progress will be lost.',
+            style: TextStyle(color: kTextSub)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: const Text('Keep going',
-                style: TextStyle(color: Color(0xFF1B4332))),
+                style: TextStyle(
+                    color: kGreen, fontWeight: FontWeight.w600)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF8B3A2A),
+              backgroundColor: kRust,
+              foregroundColor: Colors.white,
+              elevation: 0,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                  borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Quit'),
@@ -95,23 +104,30 @@ class _Page4State extends State<Page4> {
     Questions(id: 31, answer_index: 'Ocale',   image: 'assets/word_images/blank_image.png', question: 'Nyeng mano cak ki køøt juu mo peny amane?',                     options: ['Okëëlö', 'Ocale', 'Oriemmi', 'Abäng']..shuffle()),
   ]..shuffle();
 
-  Color _optionColor(int pageIdx, int listIdx) {
+  Color _optionBgColor(int pageIdx, int listIdx) {
     if (_pageSelectedIndex != pageIdx) return Colors.white;
-    final q = _questionsList[pageIdx];
+    final q        = _questionsList[pageIdx];
     final correct  = q.options[listIdx] == q.answer_index;
     final selected = _selectedIndex == listIdx;
     if (selected && correct)  return const Color(0xFFD4EDDA);
     if (selected && !correct) return const Color(0xFFFFE5E5);
-    if (correct)              return const Color(0xFFD4EDDA).withOpacity(0.6);
+    if (correct)              return const Color(0xFFD4EDDA).withOpacity(0.5);
     return Colors.white;
+  }
+
+  Color _optionBorderColor(int pageIdx, int listIdx) {
+    if (_pageSelectedIndex != pageIdx) return kBorder;
+    final q        = _questionsList[pageIdx];
+    final correct  = q.options[listIdx] == q.answer_index;
+    final selected = _selectedIndex == listIdx;
+    if (selected && correct)  return const Color(0xFF28A745);
+    if (selected && !correct) return const Color(0xFFDC3545);
+    if (correct)              return const Color(0xFF28A745).withOpacity(0.5);
+    return kBorder;
   }
 
   @override
   Widget build(BuildContext context) {
-    const bg    = Color(0xFFF5F0E8);
-    const green = Color(0xFF1B4332);
-    const gold  = Color(0xFFC9993A);
-
     return PopScope(
       canPop: false,
       onPopInvoked: (didPop) async {
@@ -120,7 +136,7 @@ class _Page4State extends State<Page4> {
         if (should && context.mounted) Navigator.pop(context);
       },
       child: Scaffold(
-        backgroundColor: bg,
+        backgroundColor: kBg,
         body: PageView.builder(
           controller: _controller,
           physics: const NeverScrollableScrollPhysics(),
@@ -131,18 +147,21 @@ class _Page4State extends State<Page4> {
 
             return SafeArea(
               child: Column(children: [
-                // ── top bar ──────────────────────────────────────────────
+                // ── Top bar ──────────────────────────────────────────────
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
                   child: Row(children: [
-                    CircleAvatar(
-                      backgroundColor: Colors.white,
+                    Material(
+                      elevation: 3,
+                      shape: const CircleBorder(),
+                      color: Colors.white,
                       child: IconButton(
-                        icon: const Icon(Icons.close, size: 18,
-                            color: Color(0xFF1C1C1C)),
+                        icon: const Icon(Icons.close_rounded,
+                            size: 18, color: kText),
                         onPressed: () async {
                           final should = await _onWillPop();
-                          if (should && context.mounted) Navigator.pop(context);
+                          if (should && context.mounted)
+                            Navigator.pop(context);
                         },
                       ),
                     ),
@@ -152,87 +171,123 @@ class _Page4State extends State<Page4> {
                         'Question ${pageIdx + 1} of ${_questionsList.length}',
                         textAlign: TextAlign.center,
                         style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 14),
+                            fontWeight: FontWeight.bold, fontSize: 13),
                       ),
                     ),
                     // Live score badge
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
+                          horizontal: 12, vertical: 5),
                       decoration: BoxDecoration(
-                        color: green.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
+                        color: kGreen.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(20),
+                        border:
+                            Border.all(color: kGreen.withOpacity(0.2)),
                       ),
                       child: Text(
                         '$_finalResult/${_questionsList.length}',
                         style: const TextStyle(
-                            fontSize: 13,
+                            fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: green),
+                            color: kGreen),
                       ),
                     ),
                   ]),
                 ),
-                const SizedBox(height: 8),
-                // ── progress bar ─────────────────────────────────────────
+                const SizedBox(height: 10),
+
+                // ── Progress bar ────────────────────────────────────────
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: (pageIdx + 1) / _questionsList.length,
-                      minHeight: 5,
-                      backgroundColor: const Color(0xFFE0E0E0),
-                      valueColor:
-                          const AlwaysStoppedAnimation<Color>(green),
+                    child: TweenAnimationBuilder<double>(
+                      tween: Tween(
+                          begin: 0,
+                          end: (pageIdx + 1) / _questionsList.length),
+                      duration: const Duration(milliseconds: 400),
+                      curve: Curves.easeOut,
+                      builder: (_, val, __) => LinearProgressIndicator(
+                        value: val,
+                        minHeight: 6,
+                        backgroundColor: const Color(0xFFE8E8E8),
+                        color: kGold,
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
-                // ── question card ─────────────────────────────────────────
+                const SizedBox(height: 14),
+
+                // ── Question card ───────────────────────────────────────
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
-                        color: green,
-                        borderRadius: BorderRadius.circular(16)),
+                      borderRadius: BorderRadius.circular(20),
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [kGreen, kGreenMid],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: kGreen.withOpacity(0.32),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
                     padding: const EdgeInsets.all(20),
                     child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text('CHOOSE THE WORD',
                               style: TextStyle(
-                                  fontSize: 11,
-                                  letterSpacing: 1.5,
-                                  color: gold,
-                                  fontWeight: FontWeight.w600)),
-                          const SizedBox(height: 6),
+                                  fontSize: 10,
+                                  letterSpacing: 1.8,
+                                  color: kGold,
+                                  fontWeight: FontWeight.w700)),
+                          const SizedBox(height: 8),
                           Text(q.question,
                               style: const TextStyle(
-                                  fontSize: 22,
+                                  fontSize: 20,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.white)),
+                                  color: Colors.white,
+                                  height: 1.3)),
                         ]),
                   ),
                 ),
-                const SizedBox(height: 12),
-                // ── options ───────────────────────────────────────────────
+                const SizedBox(height: 14),
+
+                // ── Options ─────────────────────────────────────────────
                 Expanded(
                   child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16),
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: 4,
                     itemBuilder: (_, listIdx) {
                       final isCorrect =
                           q.options[listIdx] == q.answer_index;
-                      final isSelected = _selectedIndex == listIdx &&
-                          _pageSelectedIndex == pageIdx;
+                      final isSelected =
+                          _selectedIndex == listIdx &&
+                              _pageSelectedIndex == pageIdx;
+
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.only(bottom: 10),
                         child: AbsorbPointer(
                           absorbing: isAnswered,
-                          child: GestureDetector(
+                          child: _OptionTile(
+                            label: q.options[listIdx],
+                            letter: ['A', 'B', 'C', 'D'][listIdx],
+                            answered: isAnswered,
+                            selected: isSelected,
+                            correct: isCorrect,
+                            bgColor:
+                                _optionBgColor(pageIdx, listIdx),
+                            borderColor:
+                                _optionBorderColor(pageIdx, listIdx),
                             onTap: () {
                               _answeredIds.add(q.id);
                               final count = _answeredIds
@@ -240,110 +295,77 @@ class _Page4State extends State<Page4> {
                                   .length;
                               setState(() {
                                 _pageSelectedIndex = pageIdx;
-                                _selectedIndex    = listIdx;
-                                if (isCorrect && count == 1) {
+                                _selectedIndex = listIdx;
+                                if (isCorrect && count == 1)
                                   _finalResult++;
-                                }
                               });
                             },
-                            child: AnimatedContainer(
-                              duration:
-                                  const Duration(milliseconds: 200),
-                              decoration: BoxDecoration(
-                                color: _optionColor(pageIdx, listIdx),
-                                borderRadius:
-                                    BorderRadius.circular(12),
-                                border: Border.all(
-                                    color: const Color(0xFFE0E0E0)),
-                              ),
-                              child: ListTile(
-                                leading: CircleAvatar(
-                                  backgroundColor:
-                                      const Color(0xFFE8E8E8),
-                                  radius: 16,
-                                  child: Text(
-                                      ['A', 'B', 'C', 'D'][listIdx],
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 13)),
-                                ),
-                                title: Text(q.options[listIdx],
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold)),
-                                trailing: isAnswered
-                                    ? (isSelected
-                                        ? Text(
-                                            isCorrect
-                                                ? 'Correct'
-                                                : 'Not quite',
-                                            style: TextStyle(
-                                                color: isCorrect
-                                                    ? Colors.green[700]
-                                                    : Colors.red[700],
-                                                fontWeight:
-                                                    FontWeight.bold,
-                                                fontSize: 13))
-                                        : (isCorrect
-                                            ? Text('Correct',
-                                                style: TextStyle(
-                                                    color:
-                                                        Colors.green[700],
-                                                    fontWeight:
-                                                        FontWeight.bold,
-                                                    fontSize: 13))
-                                            : null))
-                                    : null,
-                              ),
-                            ),
                           ),
                         ),
                       );
                     },
                   ),
                 ),
-                // ── next / finish button ──────────────────────────────────
+
+                // ── Next / finish ───────────────────────────────────────
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                   child: SizedBox(
                     width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: green,
-                        foregroundColor: Colors.white,
-                        disabledBackgroundColor:
-                            green.withOpacity(0.4),
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: isAnswered
+                            ? [
+                                BoxShadow(
+                                  color: kGreen.withOpacity(0.3),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                )
+                              ]
+                            : const [kShadowSoft],
                       ),
-                      // Disabled until user answers
-                      onPressed: isAnswered
-                          ? () {
-                              if ((pageIdx + 1) ==
-                                  _questionsList.length) {
-                                Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (_) => Result(
-                                            finalResult:
-                                                _finalResult,
-                                            total: _questionsList
-                                                .length)));
-                              } else {
-                                _controller.nextPage(
-                                    duration: const Duration(
-                                        milliseconds: 400),
-                                    curve: Curves.easeInOut);
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kGreen,
+                          foregroundColor: Colors.white,
+                          disabledBackgroundColor:
+                              kGreen.withOpacity(0.35),
+                          elevation: 0,
+                          padding:
+                              const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(14)),
+                        ),
+                        onPressed: isAnswered
+                            ? () {
+                                if ((pageIdx + 1) ==
+                                    _questionsList.length) {
+                                  Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) => Result(
+                                              finalResult:
+                                                  _finalResult,
+                                              total: _questionsList
+                                                  .length)));
+                                } else {
+                                  _controller.nextPage(
+                                      duration: const Duration(
+                                          milliseconds: 400),
+                                      curve: Curves.easeInOut);
+                                }
                               }
-                            }
-                          : null,
-                      child: Text(
-                        (pageIdx + 1) == _questionsList.length
-                            ? 'See results'
-                            : 'Next question',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16),
+                            : null,
+                        child: Text(
+                          (pageIdx + 1) == _questionsList.length
+                              ? 'See results  →'
+                              : 'Next question  →',
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16),
+                        ),
                       ),
                     ),
                   ),
@@ -351,6 +373,125 @@ class _Page4State extends State<Page4> {
               ]),
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+// ── Animated option tile ──────────────────────────────────────────────────────
+class _OptionTile extends StatefulWidget {
+  final String label;
+  final String letter;
+  final bool answered;
+  final bool selected;
+  final bool correct;
+  final Color bgColor;
+  final Color borderColor;
+  final VoidCallback onTap;
+
+  const _OptionTile({
+    required this.label,
+    required this.letter,
+    required this.answered,
+    required this.selected,
+    required this.correct,
+    required this.bgColor,
+    required this.borderColor,
+    required this.onTap,
+  });
+
+  @override
+  State<_OptionTile> createState() => _OptionTileState();
+}
+
+class _OptionTileState extends State<_OptionTile> {
+  bool _pressed = false;
+  bool _popped = false;
+
+  @override
+  void didUpdateWidget(covariant _OptionTile old) {
+    super.didUpdateWidget(old);
+    if (widget.answered && !old.answered) {
+      // Trigger pop animation when answered
+      Future.delayed(const Duration(milliseconds: 80), () {
+        if (mounted) setState(() => _popped = true);
+      });
+      Future.delayed(const Duration(milliseconds: 280), () {
+        if (mounted) setState(() => _popped = false);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapCancel: () => setState(() => _pressed = false),
+      onTapUp: (_) {
+        setState(() => _pressed = false);
+        widget.onTap();
+      },
+      child: AnimatedScale(
+        scale: _popped
+            ? 1.02
+            : (_pressed ? 0.97 : 1.0),
+        duration: Duration(
+            milliseconds: _popped ? 200 : 120),
+        curve: Curves.easeOut,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          decoration: BoxDecoration(
+            color: widget.bgColor,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: widget.borderColor, width: 1.5),
+            boxShadow: [kShadowSoft],
+          ),
+          child: ListTile(
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+            leading: CircleAvatar(
+              radius: 17,
+              backgroundColor: widget.answered && widget.selected
+                  ? widget.correct
+                      ? const Color(0xFF28A745).withOpacity(0.15)
+                      : const Color(0xFFDC3545).withOpacity(0.15)
+                  : const Color(0xFFF0F0F0),
+              child: Text(
+                widget.letter,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  color: widget.answered && widget.selected
+                      ? widget.correct
+                          ? const Color(0xFF28A745)
+                          : const Color(0xFFDC3545)
+                      : kTextSub,
+                ),
+              ),
+            ),
+            title: Text(widget.label,
+                style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                    color: kText)),
+            trailing: widget.answered
+                ? (widget.selected
+                    ? Icon(
+                        widget.correct
+                            ? Icons.check_circle_rounded
+                            : Icons.cancel_rounded,
+                        color: widget.correct
+                            ? const Color(0xFF28A745)
+                            : const Color(0xFFDC3545),
+                        size: 22,
+                      )
+                    : (widget.correct
+                        ? const Icon(Icons.check_circle_outline_rounded,
+                            color: Color(0xFF28A745), size: 20)
+                        : null))
+                : null,
+          ),
         ),
       ),
     );
