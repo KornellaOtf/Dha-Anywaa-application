@@ -1,4 +1,5 @@
 import 'package:dha_anywaaa/app_settings.dart';
+import 'package:dha_anywaaa/anywaa_ai_page.dart';
 import 'package:dha_anywaaa/components/animal.dart';
 import 'package:dha_anywaaa/components/bird.dart';
 import 'package:dha_anywaaa/components/body_part.dart';
@@ -56,6 +57,7 @@ class MyApp extends StatelessWidget {
         'shape': (context) => const Shpae(),
         'reading': (context) => const Page3(),
         'quiz': (context) => const Page4(),
+        'anywaa_ai': (context) => const AnywaaAiPage(),
         'home_page': (context) => const HomePage(),
         'name_entry': (context) => const NameEntry(),
         'colors': (context) => const Kit(),

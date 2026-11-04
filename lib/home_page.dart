@@ -1,4 +1,5 @@
 import 'package:dha_anywaaa/about.dart';
+import 'package:dha_anywaaa/anywaa_ai_page.dart';
 import 'package:dha_anywaaa/components/savedData.dart';
 import 'package:dha_anywaaa/help.dart';
 import 'package:dha_anywaaa/privacy_policy_page.dart';
@@ -541,6 +542,11 @@ class _HomePageState extends State<HomePage> {
               Navigator.pop(context);
               Navigator.push(context,
                   MaterialPageRoute(builder: (_) => const Body()));
+            }),
+            _drawerTile(context, Icons.smart_display_rounded, 'Anywaa AI', () {
+              Navigator.pop(context);
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const AnywaaAiPage()));
             }),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
