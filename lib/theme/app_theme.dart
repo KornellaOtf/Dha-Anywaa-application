@@ -181,7 +181,6 @@ class AppTheme {
 
   static ThemeData _build(AppColors c, Brightness brightness) {
     final textTheme = _textTheme(text: c.text, textSub: c.textSub);
-    final isDark = brightness == Brightness.dark;
 
     return ThemeData(
       useMaterial3: true,
@@ -285,7 +284,7 @@ class AppTheme {
       ),
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith(
-            (s) => s.contains(WidgetState.selected) ? Colors.white : (isDark ? c.textSub : Colors.white)),
+            (s) => s.contains(WidgetState.selected) ? Colors.white : c.textSub),
         trackColor: WidgetStateProperty.resolveWith(
             (s) => s.contains(WidgetState.selected) ? kGreen : c.border),
       ),

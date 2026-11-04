@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:dha_anywaaa/services/anywaa_ai_service.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
+import 'package:dha_anywaaa/widgets/anywaa_ai_logo.dart';
 
 class AnywaaAiPage extends StatefulWidget {
   const AnywaaAiPage({super.key});
@@ -29,7 +30,9 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
     'How do you say water in Dha Anywaa?',
     'What does wic mean?',
     'translate house to Anywaa',
-    'meaning of cow',
+    'meaning of spider',
+    'Say 2026 in Dha Anywaa',
+    'How do you say thank you?',
   ];
 
   @override
@@ -41,14 +44,7 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
   Future<void> _start() async {
     await _ai.load();
     if (!mounted) return;
-    setState(() {
-      _loading = false;
-      _msgs.add(_Msg.bot(
-        'Bare mo! I am the Anywaa helper. Ask me a word in English or in Dha '
-        'Anywaa and I will answer from the words stored on your device. I work '
-        'fully offline and I never make up a translation.',
-      ));
-    });
+    setState(() => _loading = false);
   }
 
   @override
@@ -68,7 +64,7 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
     });
     _scrollDown();
 
-    // Tiny delay so the "thinking" bubble is visible; the work is instant.
+    // Tiny delay so the "thinking" bubble reads; the lookup itself is instant.
     Future.delayed(const Duration(milliseconds: 320), () {
       final res = _ai.answer(text);
       if (!mounted) return;
@@ -84,7 +80,7 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scroll.hasClients) {
         _scroll.animateTo(
-          _scroll.position.maxScrollExtent + 200,
+          _scroll.position.maxScrollExtent + 240,
           duration: const Duration(milliseconds: 260),
           curve: Curves.easeOut,
         );
@@ -98,57 +94,136 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
     return Scaffold(
       backgroundColor: c.bg,
       appBar: AppBar(
-        title: const Text('Anywaa AI'),
+        backgroundColor: kGreen,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        titleSpacing: 0,
+        title: Row(
+          children: [
+            const AnywaaAiLogo(size: 32),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Anywaa AI',
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+                Text('on-device helper',
+                    style: TextStyle(
+                        fontSize: 11, color: Colors.white.withValues(alpha: 0.75))),
+              ],
+            ),
+          ],
+        ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 14),
-            child: Icon(Icons.wifi_off_rounded, size: 18, color: c.textSub),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.lock_outline_rounded,
+                      size: 13, color: Colors.white.withValues(alpha: 0.9)),
+                  const SizedBox(width: 5),
+                  Text('Offline',
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white.withValues(alpha: 0.9))),
+                ],
+              ),
+            ),
           ),
         ],
       ),
       body: _loading
-          ? Center(
-              child: CircularProgressIndicator(color: c.accent),
-            )
+          ? Center(child: CircularProgressIndicator(color: c.accent))
           : Column(
               children: [
                 Expanded(
-                  child: ListView.builder(
-                    controller: _scroll,
-                    padding: const EdgeInsets.fromLTRB(14, 16, 14, 8),
-                    itemCount: _msgs.length + (_thinking ? 1 : 0),
-                    itemBuilder: (_, i) {
-                      if (_thinking && i == _msgs.length) {
-                        return const _ThinkingBubble();
-                      }
-                      return _Bubble(msg: _msgs[i]);
-                    },
-                  ),
+                  child: _msgs.isEmpty
+                      ? _hero(c)
+                      : ListView.builder(
+                          controller: _scroll,
+                          padding: const EdgeInsets.fromLTRB(14, 16, 14, 8),
+                          itemCount: _msgs.length + (_thinking ? 1 : 0),
+                          itemBuilder: (_, i) {
+                            if (_thinking && i == _msgs.length) {
+                              return const _ThinkingBubble();
+                            }
+                            return _Bubble(msg: _msgs[i], onAsk: _send);
+                          },
+                        ),
                 ),
-                if (_msgs.length <= 1) _examplesRow(c),
                 _inputBar(c),
               ],
             ),
     );
   }
 
-  Widget _examplesRow(AppColors c) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 4, 14, 6),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: _examples
-            .map((e) => ActionChip(
-                  label: Text(e, style: TextStyle(fontSize: 12, color: c.text)),
-                  backgroundColor: c.card,
-                  side: BorderSide(color: c.border),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20)),
-                  onPressed: () => _send(e),
-                ))
-            .toList(),
-      ),
+  Widget _hero(AppColors c) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 28, 20, 8),
+      children: [
+        Center(
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.85, end: 1.0),
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOutBack,
+            builder: (_, scale, child) =>
+                Transform.scale(scale: scale, child: child),
+            child: const AnywaaAiLogo(size: 96),
+          ),
+        ),
+        const SizedBox(height: 18),
+        Text(
+          'Bare mo! Ask me anything in Dha Anywaa',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            color: c.text,
+            height: 1.25,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'I translate words, explain meanings, and say numbers. Everything '
+          'comes from the dictionary on your device. I work fully offline and '
+          'I never make up a translation.',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 14, height: 1.5, color: c.textSub),
+        ),
+        const SizedBox(height: 22),
+        Text('Try asking',
+            style: TextStyle(
+                fontSize: 12,
+                letterSpacing: 1.2,
+                fontWeight: FontWeight.bold,
+                color: c.textSub)),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: _examples
+              .map((e) => ActionChip(
+                    label: Text(e,
+                        style: TextStyle(fontSize: 12.5, color: c.text)),
+                    avatar: Icon(Icons.arrow_forward_rounded,
+                        size: 15, color: c.accent),
+                    backgroundColor: c.card,
+                    side: BorderSide(color: c.border),
+                    shape:
+                        RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    onPressed: () => _send(e),
+                  ))
+              .toList(),
+        ),
+      ],
     );
   }
 
@@ -165,9 +240,16 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
                   color: c.card,
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(color: c.border),
+                  boxShadow: const [kShadowSoft],
                 ),
                 child: Row(
                   children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 12),
+                      child: Icon(Icons.chat_bubble_outline_rounded,
+                          size: 18, color: c.textSub),
+                    ),
+                    const SizedBox(width: 6),
                     Expanded(
                       child: TextField(
                         controller: _ctrl,
@@ -175,11 +257,11 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
                         onSubmitted: (_) => _send(),
                         style: TextStyle(color: c.text, fontSize: 15),
                         decoration: InputDecoration(
-                          hintText: 'Ask a word, English or Dha Anywaa',
+                          hintText: 'Ask a word or a number',
                           hintStyle: TextStyle(color: c.textSub),
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 12),
+                              horizontal: 4, vertical: 13),
                         ),
                       ),
                     ),
@@ -188,17 +270,21 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
               ),
             ),
             const SizedBox(width: 10),
-            Material(
-              color: kGreen,
-              shape: const CircleBorder(),
-              elevation: 0,
-              child: InkWell(
-                customBorder: const CircleBorder(),
-                onTap: _thinking ? null : () => _send(),
-                child: const Padding(
-                  padding: EdgeInsets.all(12),
-                  child: Icon(Icons.arrow_upward_rounded,
-                      color: Colors.white, size: 22),
+            AnimatedScale(
+              scale: _thinking ? 0.9 : 1.0,
+              duration: const Duration(milliseconds: 150),
+              child: Material(
+                color: kGreen,
+                shape: const CircleBorder(),
+                elevation: 0,
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: _thinking ? null : () => _send(),
+                  child: const Padding(
+                    padding: EdgeInsets.all(13),
+                    child: Icon(Icons.arrow_upward_rounded,
+                        color: Colors.white, size: 22),
+                  ),
                 ),
               ),
             ),
@@ -211,41 +297,41 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
 
 class _Bubble extends StatelessWidget {
   final _Msg msg;
-  const _Bubble({required this.msg});
+  final ValueChanged<String> onAsk;
+  const _Bubble({required this.msg, required this.onAsk});
 
   @override
   Widget build(BuildContext context) {
     final c = context.c;
     final user = msg.fromUser;
-    final align = user ? TextAlign.right : TextAlign.left;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
-      child: Column(
-        crossAxisAlignment:
-            user ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      child: Row(
+        mainAxisAlignment:
+            user ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment:
-                user ? MainAxisAlignment.end : MainAxisAlignment.start,
-            children: [
-              if (!user) ...[
+          if (!user) ...[
+            const AnywaaAiLogo(size: 26),
+            const SizedBox(width: 8),
+          ],
+          Flexible(
+            child: Column(
+              crossAxisAlignment:
+                  user ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              children: [
                 Container(
-                  width: 26,
-                  height: 26,
-                  margin: const EdgeInsets.only(right: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: kGreen.withValues(alpha: 0.14),
-                  ),
-                  child: Icon(Icons.eco_rounded, size: 16, color: c.accent),
-                ),
-              ],
-              Flexible(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: user ? kGreen : c.card,
+                    gradient: user
+                        ? const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [kGreenMid, kGreen],
+                          )
+                        : null,
+                    color: user ? null : c.card,
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(16),
                       topRight: const Radius.circular(16),
@@ -253,10 +339,13 @@ class _Bubble extends StatelessWidget {
                       bottomRight: Radius.circular(user ? 4 : 16),
                     ),
                     boxShadow: const [kShadowSoft],
+                    border: user
+                        ? null
+                        : Border.all(color: c.border.withValues(alpha: 0.6)),
                   ),
                   child: Text(
                     msg.text,
-                    textAlign: align,
+                    textAlign: user ? TextAlign.right : TextAlign.left,
                     style: TextStyle(
                       fontSize: 14.5,
                       height: 1.35,
@@ -264,27 +353,49 @@ class _Bubble extends StatelessWidget {
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          if (!user && msg.answer != null && msg.answer!.found)
-            Padding(
-              padding: const EdgeInsets.only(top: 8, left: 34),
-              child: _ResultList(answer: msg.answer!),
+                if (!user && msg.answer != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8, left: 2),
+                    child: _AnswerBody(answer: msg.answer!, onAsk: onAsk),
+                  ),
+              ],
             ),
+          ),
         ],
       ),
     );
   }
 }
 
-class _ResultList extends StatelessWidget {
+class _AnswerBody extends StatelessWidget {
   final AnywaaAnswer answer;
-  const _ResultList({required this.answer});
+  final ValueChanged<String> onAsk;
+  const _AnswerBody({required this.answer, required this.onAsk});
 
   @override
   Widget build(BuildContext context) {
     final c = context.c;
+    if (!answer.found) {
+      if (answer.suggestions.isEmpty) return const SizedBox.shrink();
+      return Padding(
+        padding: const EdgeInsets.only(left: 2),
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: answer.suggestions
+              .map((s) => ActionChip(
+                    label: Text(s,
+                        style: TextStyle(fontSize: 12.5, color: c.accent)),
+                    backgroundColor: c.accent.withValues(alpha: 0.08),
+                    side: BorderSide(color: c.accent.withValues(alpha: 0.3)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18)),
+                    onPressed: () => onAsk(s),
+                  ))
+              .toList(),
+        ),
+      );
+    }
     final items = answer.matches;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -297,7 +408,12 @@ class _ResultList extends StatelessWidget {
             decoration: BoxDecoration(
               color: c.card,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: c.border),
+              border: Border(
+                left: BorderSide(color: c.accent, width: 3),
+                top: BorderSide(color: c.border.withValues(alpha: 0.6)),
+                right: BorderSide(color: c.border.withValues(alpha: 0.6)),
+                bottom: BorderSide(color: c.border.withValues(alpha: 0.6)),
+              ),
               boxShadow: const [kShadowSoft],
             ),
             child: Column(
@@ -306,17 +422,18 @@ class _ResultList extends StatelessWidget {
                 Text(
                   m.entry.en,
                   style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 15,
-                    color: c.text,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12.5,
+                    letterSpacing: 0.4,
+                    color: c.textSub,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   m.entry.dha,
                   style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 18,
                     color: c.accent,
                   ),
                 ),
@@ -324,27 +441,23 @@ class _ResultList extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     m.entry.defs,
-                    style: TextStyle(fontSize: 13, height: 1.4, color: c.textSub),
+                    style:
+                        TextStyle(fontSize: 13, height: 1.4, color: c.textSub),
                   ),
                 ],
               ],
             ),
           ),
-        Container(
-          margin: const EdgeInsets.only(top: 2),
-          padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
-          decoration: BoxDecoration(
-            color: c.accent.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(10),
-          ),
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.lock_outline_rounded, size: 14, color: c.accent),
+              Icon(Icons.verified_user_outlined, size: 13, color: c.textSub),
               const SizedBox(width: 6),
               Text(
-                'Answered offline from on-device words',
-                style: TextStyle(fontSize: 11, color: c.accent),
+                'From the on-device dictionary',
+                style: TextStyle(fontSize: 11, color: c.textSub),
               ),
             ],
           ),
@@ -363,16 +476,8 @@ class _ThinkingBubble extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         children: [
-          Container(
-            width: 26,
-            height: 26,
-            margin: const EdgeInsets.only(right: 8),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: kGreen.withValues(alpha: 0.14),
-            ),
-            child: Icon(Icons.eco_rounded, size: 16, color: c.accent),
-          ),
+          const AnywaaAiLogo(size: 26),
+          const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
@@ -383,8 +488,7 @@ class _ThinkingBubble extends StatelessWidget {
             child: SizedBox(
               width: 18,
               height: 18,
-              child: CircularProgressIndicator(
-                  strokeWidth: 2, color: c.accent),
+              child: CircularProgressIndicator(strokeWidth: 2, color: c.accent),
             ),
           ),
         ],
