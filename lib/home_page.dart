@@ -8,6 +8,7 @@ import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:dha_anywaaa/vowelLetter.dart';
 import 'package:dha_anywaaa/widgets/body.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 final Uri _webUrl = Uri.parse('https://dha-anywaa-app.netlify.app/');
@@ -215,14 +216,7 @@ class _HomePageState extends State<HomePage> {
           slivers: [
             // ── Greeting ────────────────────────────────────────────────────
             SliverToBoxAdapter(
-              child: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                    colors: [kBg, Color(0xFFEDE5D0)],
-                  ),
-                ),
+              child: Padding(
                 padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
                 child: _buildGreeting(),
               ),
@@ -236,29 +230,11 @@ class _HomePageState extends State<HomePage> {
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(24, 28, 24, 8),
               sliver: SliverToBoxAdapter(
-                child: Row(
-                  children: [
-                    const Text('Explore',
-                        style: TextStyle(
-                            fontSize: 22, fontWeight: FontWeight.bold)),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: kGreen.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        '${categories.length} topics',
-                        style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: kGreen),
-                      ),
-                    ),
-                  ],
-                ),
+                child: Text('Explore',
+                    style: GoogleFonts.playfairDisplay(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        color: kText)),
               ),
             ),
             // ── Category grid ───────────────────────────────────────────────
@@ -290,8 +266,8 @@ class _HomePageState extends State<HomePage> {
       const SizedBox(height: 2),
       Text(
         _name.isEmpty ? 'Learner' : _name,
-        style: const TextStyle(
-            fontSize: 32, fontWeight: FontWeight.bold, color: kText),
+        style: GoogleFonts.playfairDisplay(
+            fontSize: 32, fontWeight: FontWeight.w700, color: kText),
       ),
     ]);
   }
@@ -301,113 +277,59 @@ class _HomePageState extends State<HomePage> {
         ? _lastRouteProgress / _lastRouteTotal
         : 0.0;
     return DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22),
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [kGreen, kGreenMid],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: kGreen.withOpacity(0.35),
-              blurRadius: 18,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(22),
-            onTap: () async {
-              await _savedData.setLastRoute(_lastRoute);
-              if (!mounted) return;
-              Navigator.pushNamed(context, _lastRoute).then((_) => _load());
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('CONTINUE',
-                        style: TextStyle(
-                            fontSize: 11,
-                            letterSpacing: 1.5,
-                            color: kGold,
-                            fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 4),
-                    Text(_lastRouteName,
-                        style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white)),
-                    const SizedBox(height: 4),
-                    Text(
-                        '$_lastRouteProgress / $_lastRouteTotal learned',
-                        style: const TextStyle(
-                            fontSize: 12, color: Color(0xAAFFFFFF))),
-                    const SizedBox(height: 12),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: progress,
-                        backgroundColor: Colors.white.withOpacity(0.2),
-                        color: kGold,
-                        minHeight: 6,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(30),
-                            boxShadow: [
-                              BoxShadow(
-                                color: kGold.withOpacity(0.4),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: kGold,
-                              foregroundColor: kText,
-                              elevation: 0,
-                              shape: const StadiumBorder(),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 24, vertical: 11),
-                            ),
-                            onPressed: () async {
-                              await _savedData.setLastRoute(_lastRoute);
-                              if (!mounted) return;
-                              Navigator.pushNamed(context, _lastRoute)
-                                  .then((_) => _load());
-                            },
-                            child: const Text('Resume',
-                                style:
-                                    TextStyle(fontWeight: FontWeight.bold)),
+      decoration: cardDeco(color: Colors.white),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: () async {
+            await _savedData.setLastRoute(_lastRoute);
+            if (!mounted) return;
+            Navigator.pushNamed(context, _lastRoute).then((_) => _load());
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Continue',
+                          style: TextStyle(fontSize: 12, color: kTextSub)),
+                      const SizedBox(height: 2),
+                      Text(_lastRouteName,
+                          style: GoogleFonts.playfairDisplay(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              color: kText)),
+                      if (_lastRouteProgress > 0) ...[
+                        const SizedBox(height: 10),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(3),
+                          child: LinearProgressIndicator(
+                            value: progress,
+                            minHeight: 5,
+                            backgroundColor: kBorder,
+                            color: kGreen,
                           ),
                         ),
-                        const Spacer(),
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.12),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.chevron_right_rounded,
-                              color: Colors.white),
-                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                            '$_lastRouteProgress / $_lastRouteTotal learned',
+                            style: const TextStyle(
+                                fontSize: 11, color: kTextMuted)),
                       ],
-                    ),
-                  ]),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Icon(Icons.chevron_right_rounded, color: kTextSub),
+              ],
             ),
           ),
         ),
+      ),
     );
   }
 
@@ -429,58 +351,68 @@ class _HomePageState extends State<HomePage> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
-          border: Border(top: BorderSide(color: accentColor, width: 3)),
           boxShadow: const [kShadowSoft],
         ),
-        padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(children: [
-              Container(
-                width: 28,
-                height: 4,
-                decoration: BoxDecoration(
-                    color: accentColor,
-                    borderRadius: BorderRadius.circular(2)),
-              ),
-              const Spacer(),
-              if (hasProgress)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 7, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: accentColor.withOpacity(0.13),
-                    borderRadius: BorderRadius.circular(20),
+            // ── Image area ─────────────────────────────────────────────────
+            Expanded(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(18)),
+                child: Container(
+                  width: double.infinity,
+                  color: Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Image.asset(
+                      cat['imageLink']!,
+                      fit: BoxFit.contain,
+                      cacheWidth: 200,
+                      errorBuilder: (_, __, ___) => Icon(
+                        Icons.image_not_supported_outlined,
+                        color: accentColor.withOpacity(0.4),
+                        size: 40,
+                      ),
+                    ),
                   ),
-                  child: Text('$learned/$total',
-                      style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: accentColor)),
-                ),
-            ]),
-            const SizedBox(height: 10),
-            Text(cat['engName']!,
-                style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: kText)),
-            const SizedBox(height: 2),
-            Text(cat['anyName']!,
-                style: const TextStyle(fontSize: 12, color: kTextSub)),
-            if (total > 0) ...[
-              const Spacer(),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(3),
-                child: LinearProgressIndicator(
-                  value: total > 0 ? learned / total : 0,
-                  minHeight: 4,
-                  backgroundColor: const Color(0xFFE8E8E8),
-                  color: accentColor,
                 ),
               ),
-            ],
+            ),
+            // ── Label area ─────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(cat['engName']!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: kText)),
+                  const SizedBox(height: 1),
+                  Text(cat['anyName']!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 11, color: kTextSub)),
+                  if (hasProgress) ...[
+                    const SizedBox(height: 6),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(3),
+                      child: LinearProgressIndicator(
+                        value: learned / total,
+                        minHeight: 3,
+                        backgroundColor: const Color(0xFFE8E8E8),
+                        color: accentColor,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ],
         ),
       ),
