@@ -59,6 +59,6 @@ class SavedData {
   Future<void> clearProgress() async {
     final prefs = await SharedPreferences.getInstance();
     final keys = prefs.getKeys().where((k) => k.startsWith('learned_') || k == 'last_route');
-    for (final k in keys) await prefs.remove(k);
+    for (final k in keys) { await prefs.remove(k); }
   }
 }

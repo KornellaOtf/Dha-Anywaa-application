@@ -270,6 +270,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     if (n.isEmpty) return;
                     await _savedData.setName(n);
                     if (!mounted) return;
+                    // ignore: use_build_context_synchronously
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                           content: Text('Name saved'),

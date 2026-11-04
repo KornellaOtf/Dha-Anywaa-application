@@ -284,6 +284,7 @@ class _HomePageState extends State<HomePage> {
           onTap: () async {
             await _savedData.setLastRoute(_lastRoute);
             if (!mounted) return;
+            // ignore: use_build_context_synchronously
             Navigator.pushNamed(context, _lastRoute).then((_) => _load());
           },
           child: Padding(
@@ -344,6 +345,7 @@ class _HomePageState extends State<HomePage> {
       onTap: () async {
         await _savedData.setLastRoute(route);
         if (!mounted) return;
+        // ignore: use_build_context_synchronously
         Navigator.pushNamed(context, route).then((_) => _load());
       },
       child: Container(
@@ -582,6 +584,7 @@ class _HomePageState extends State<HomePage> {
               Navigator.pop(context);
               await _savedData.setName('guess');
               if (!mounted) return;
+              // ignore: use_build_context_synchronously
               Navigator.pushReplacementNamed(context, '/');
             }, color: kRust),
             const SizedBox(height: 16),
