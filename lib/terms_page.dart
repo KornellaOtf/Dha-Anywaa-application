@@ -35,7 +35,7 @@ class _TermsBody extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _section(context, 
-          'Last updated: 2025',
+          'Last updated: 2026',
           '',
           isHeader: true,
         ),

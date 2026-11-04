@@ -266,10 +266,6 @@ class _Page1State extends State<Page1> with SingleTickerProviderStateMixin {
                             fontWeight: FontWeight.w600,
                             color: context.c.text),
                       ),
-                      const SizedBox(height: 6),
-                      Text('Sound: ${letter.sound.split('/').last}',
-                          style: TextStyle(
-                              fontSize: 12, color: context.c.textSub)),
                       if (learned) ...[
                         const SizedBox(height: 14),
                         Container(
