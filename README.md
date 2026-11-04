@@ -1,42 +1,153 @@
+# Learn Dha Anywaa
 
-# Dha Anywaa
+A Flutter app for learning the Dha Anywaa (Anuak) language.
+Alphabet, vocabulary, reading and a quiz. Works fully offline.
 
-This is an app that help people who are interested in learning reading in anywaa language.
+Developed by **Kornella Otf** (Kornellaotf@gmail.com)
 
-For more details check out this didicated website.
-https://dha-anywaa-app.netlify.app/
+---
 
-## The anywaa language app
+## What it is
 
-This is a Dha Anywaa app designed by a university student to assist individuals in learning to read the Anywaa language.
-It is user-friendly, featuring both pictures and audio elements to enhance the learning experience. 
-Geared towards absolute beginners, the app guides users through each step, facilitating the process of reading in Dha Anywaa.
+Dha Anywaa (also written Anuak) is a Nilo-Saharan language spoken in
+Ethiopia and South Sudan. This app is designed for absolute beginners.
+It teaches the alphabet with audio, vocabulary with pictures and audio,
+reading sentences, and tests knowledge with a multiple-choice quiz.
 
-The application was developed by a university student named Oriemi Obang Oriemi, aiming to support those interested in acquiring reading skills in Dha Anywaa.
-Dha Anywaa is a language belonging to the larger Luo family group, primarily spoken in East Africa (Ethiopia, South Sudan...).
-It possesses its own set of alphabets and unique rules. This mobile application focuses on reading alphabets, words, and sentences in the Anywaa language.
+No account or internet connection is required to use the core features.
+The app checks for updates once every 6 hours when online.
 
-The initial page of the app emphasizes both uppercase and lowercase alphabets.
-The second page focuses on words and their corresponding images, utilizing individual letters to form words. 
-The third page centers around constructing sentences based on the words introduced in page 2. Lastly, the fourth page involves testing the knowledge acquired from pages 1, 2, and 3.
-                
-The app ensures a guided learning experience, eliminating the need for external guidance or someone to read aloud.
-If a user forgets how to read a word or letter, a simple click of a button prompts the app to pronounce it.
-The app is entirely free, allowing anyone interested in learning or improving reading skills in Dha Anywaa to access and utilize it without any cost.
-   
-Best Wishes!
+---
 
+## Features
 
+| Screen | What it does |
+|---|---|
+| Alphabet | 29 letters, large card view, audio playback, mark as learned |
+| Words | 29 illustrated words with audio |
+| Reading | 29 sentences with audio |
+| Colors | 8 color cards with pictures |
+| Shapes | 4 shape cards |
+| Body | 18 body parts with pictures |
+| Clothes | 10 clothing items |
+| Birds | 12 birds |
+| Animals | 14 animals |
+| Fish | 10 fish (Dha Anywaa names, English labels pending) |
+| Numbers | 1 to 10 |
+| Quiz | 31 questions, live score, confirm before quitting |
+| Settings | Sound toggle, name change, update check, Privacy Policy, Terms |
 
-## Some dha anywaa app screen shots
+---
 
-![Screenshot_20231225_151908](https://github.com/oriemiobang/Dha-Anywaa-application/assets/148628989/43f7a37e-6f95-4051-bbe2-bbaea30302c0)
-![Screenshot_20231225_151929](https://github.com/oriemiobang/Dha-Anywaa-application/assets/148628989/e5bdb55c-b5ff-407a-ae37-8bc49ed830b2)
-![Screenshot_20231225_151940](https://github.com/oriemiobang/Dha-Anywaa-application/assets/148628989/ca79a20f-d917-45fc-a106-47f10f9ae62d)
-![Screenshot_20231225_151957](https://github.com/oriemiobang/Dha-Anywaa-application/assets/148628989/cc76e134-3a8a-479d-a73a-a1dbc9a21d57)
-![Screenshot_20231225_152007](https://github.com/oriemiobang/Dha-Anywaa-application/assets/148628989/8a4aa9ba-d30e-406f-9a19-e14fcd7f1460)
-![Screenshot_20231225_152002](https://github.com/oriemiobang/Dha-Anywaa-application/assets/148628989/ae18dbd1-e279-42e8-b32b-654937b4228d)
-![Screenshot_20231225_090614](https://github.com/oriemiobang/Dha-Anywaa-application/assets/148628989/78c3350e-57ba-4723-9b34-2023f593a53a)
-![Screenshot_20231225_152017](https://github.com/oriemiobang/Dha-Anywaa-application/assets/148628989/39b9aa20-a3ce-4a22-b34f-9764f50f7c03)
-![Screenshot_20231225_152013](https://github.com/oriemiobang/Dha-Anywaa-application/assets/148628989/e2ae7d04-3f8d-4830-b4b2-96df4608173f)
-# Dha-Anywaa-application
+## Project structure
+
+```
+lib/
+  main.dart               App entry point
+  wraper.dart             Startup: loads name, shows spinner
+  home_page.dart          Home screen, drawer, bottom nav
+  nameEntry.dart          First-run name entry
+  pages/
+    page1.dart            Alphabet
+    page2.dart            Words
+    page3.dart            Reading
+    page4.dart            Quiz
+  components/
+    detail_screen.dart    Reusable grid and detail screen
+    number.dart           Numbers screen
+    savedData.dart        SharedPreferences helpers
+    audio_helper.dart     Safe audio playback helper
+  services/
+    ota_service.dart      GitHub Releases update checker
+  theme/
+    app_theme.dart        Color tokens and ThemeData
+  privacy_policy_page.dart
+  terms_page.dart
+  about.dart
+  help.dart
+assets/
+  sound/                  Alphabet audio (29 files)
+  word_sound/             Word audio (30 files)
+  sentence_sound/         Reading audio (29 files, Voice6.mp3 missing)
+  word_images/            Word and category images
+  category_image/         Home grid images
+  animals/                Animal images
+  birds/                  Bird images
+  fish/                   Fish images
+  body_part/              Body part images
+  cloth/                  Clothing images
+android/
+  app/build.gradle        Package: com.kornellaotf.learn_dha_anywaa
+  app/src/main/
+    AndroidManifest.xml
+    res/xml/network_security_config.xml
+```
+
+---
+
+## Build and run
+
+Requirements: Flutter 3.47+, Android SDK, a connected device or emulator.
+
+```bash
+# Install dependencies
+flutter pub get
+
+# Run in debug mode
+flutter run
+
+# Build release APK
+flutter build apk --release
+# Output: build/app/outputs/flutter-apk/app-release.apk
+```
+
+The release keystore is configured in `android/key.properties` (not committed).
+For CI, the keystore is stored as a GitHub Actions secret.
+
+---
+
+## Permissions
+
+| Permission | Why |
+|---|---|
+| INTERNET | Update check via GitHub Releases API |
+| ACCESS_NETWORK_STATE | Skip update check when offline |
+| REQUEST_INSTALL_PACKAGES | Install downloaded update APK |
+
+---
+
+## Privacy summary
+
+All user data (name, progress, preferences) is stored only on the device.
+The only outbound request is one HTTPS call to api.github.com to check for
+updates. No analytics, no advertising, no account required.
+
+Full policy: see PRIVACY.md or Settings in the app.
+
+---
+
+## Content gaps (for the developer)
+
+These are known issues in the content, listed here and left untouched in code:
+
+- `sentence_sound/Voice6.mp3` is missing. The "Dh / Dhieng" reading item plays silently.
+- All 10 fish entries have no English label.
+- "Öök" in Words has no English label.
+- Suspected typos to review: "Crocdile", "Hayna", "Quitar", "Three Angle".
+- Orphan file: `word_sound/Ec.mp3` (not referenced by any word entry).
+- Stray file: `assets/body_part/lion.png` (not a body part image).
+
+---
+
+## Credits
+
+Developed by Kornella Otf
+Contact: Kornellaotf@gmail.com
+
+---
+
+## License
+
+All rights reserved. The Dha Anywaa language content, audio recordings
+and illustrations are the property of their respective creators and are
+provided for educational use only.
