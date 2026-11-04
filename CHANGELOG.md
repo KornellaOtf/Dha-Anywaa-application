@@ -1,0 +1,50 @@
+# Changelog
+
+## 1.1.0 (build 4)
+
+Released: 2025
+
+### Added
+- In-app Privacy Policy screen (no website link needed)
+- In-app Terms of Use screen
+- Open-source licences screen via showLicensePage
+- Privacy Policy and Terms of Use linked from Settings and the drawer
+- network_security_config.xml: HTTPS only, no cleartext traffic
+
+### Changed
+- App version now read from package_info_plus in About and Settings
+- Drawer: closes before navigating to any sub-screen
+- Drawer: Website tile replaced with Privacy Policy and Terms of Use
+- Home: _load() runs once only (removed double call from didChangeDependencies)
+- Home: update check runs after first frame with offline guard
+- About: external Privacy Policy and Read More links replaced with in-app screens
+- About: version number now reads from pubspec.yaml via package_info_plus
+- Help: removed "visit the website" instruction, updated quiz description
+- Name entry: removed gradient header band
+- Name entry: fixed extra space in "Get started" button text
+- Package name updated to com.kornellaotf.learn_dha_anywaa
+- Developer credit updated to Kornella Otf, Kornellaotf@gmail.com
+
+### Fixed
+- android:allowBackup set to false (was missing, defaulted to true)
+- Audio helper: getDuration() result handled as Duration? throughout
+- Home category tiles now show images
+
+### Content gaps (not changed, listed for review)
+- sentence_sound/Voice6.mp3 is missing. Reading item "Dh / Dhieng" plays silently.
+- Fish screen: all 10 items have no English label.
+- Words screen: "Öök" has no English label.
+- Suspected typos: "Crocdile", "Hayna", "Quitar", "Three Angle".
+- Orphan file: word_sound/Ec.mp3 (not referenced by any word entry).
+- Stray file: assets/body_part/lion.png (not a body part).
+
+---
+
+## 1.0.2 (build 3)
+
+- New UI design applied across all screens
+- Progress tracking with SharedPreferences
+- Settings screen: sound toggle, name change
+- OTA update check via GitHub Releases API
+- Quiz: live score, confirm-quit dialog, swipe disabled
+- Result screen: percentage, share to clipboard
