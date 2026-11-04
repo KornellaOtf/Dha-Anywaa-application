@@ -8,6 +8,7 @@ import 'package:dha_anywaaa/privacy_policy_page.dart';
 import 'package:dha_anywaaa/services/ota_service.dart';
 import 'package:dha_anywaaa/terms_page.dart';
 import 'package:dha_anywaaa/widgets/anywaa_ai_logo.dart';
+import 'package:dha_anywaaa/widgets/update_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:open_file/open_file.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -83,152 +84,8 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _showUpdateDialog(OtaCheckResult result) {
-    showDialog(
-      context: context,
-      barrierDismissible: !result.mandatory,
-      builder: (ctx) {
-        final c = ctx.c;
-        final sizeMb =
-            result.sizeBytes > 0 ? '${(result.sizeBytes / 1024 / 1024).toStringAsFixed(1)} MB' : '';
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 24),
-          child: TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.92, end: 1.0),
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeOutBack,
-            builder: (_, scale, child) => Transform.scale(scale: scale, child: child),
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(24, 28, 24, 22),
-              decoration: BoxDecoration(
-                color: c.card,
-                borderRadius: BorderRadius.circular(26),
-                boxShadow: const [kShadowCard],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 70,
-                      height: 70,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: c.accent.withValues(alpha: 0.12),
-                        border: Border.all(color: c.accent.withValues(alpha: 0.18)),
-                      ),
-                      child: Icon(Icons.system_update_rounded,
-                          color: c.accent, size: 32),
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  Text('Update available',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                          color: c.text,
-                          height: 1.25)),
-                  const SizedBox(height: 8),
-                  Text('Version ${result.latestVersion} is ready to install.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 14, height: 1.5, color: c.textSub)),
-                  if (result.releaseNotes.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: c.bg,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: c.border),
-                      ),
-                      constraints: const BoxConstraints(maxHeight: 160),
-                      child: SingleChildScrollView(
-                        child: Text(result.releaseNotes,
-                            style: TextStyle(
-                                fontSize: 13, height: 1.5, color: c.textSub)),
-                      ),
-                    ),
-                  ],
-                  if (sizeMb.isNotEmpty || result.mandatory) ...[
-                    const SizedBox(height: 14),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      alignment: WrapAlignment.center,
-                      children: [
-                        if (sizeMb.isNotEmpty)
-                          _pill(c, Icons.download_rounded, sizeMb, c.textSub,
-                              c.bg, c.border),
-                        if (result.mandatory)
-                          _pill(c, Icons.priority_high_rounded, 'Required update',
-                              kRust, kRust.withValues(alpha: 0.12),
-                              kRust.withValues(alpha: 0.18)),
-                      ],
-                    ),
-                  ],
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: kGreen,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
-                    ),
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      _startDownload(result);
-                    },
-                    child: const Text('Update now',
-                        style:
-                            TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  ),
-                  if (!result.mandatory) ...[
-                    const SizedBox(height: 6),
-                    TextButton(
-                      style: TextButton.styleFrom(
-                        foregroundColor: c.textSub,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14)),
-                      ),
-                      onPressed: () => Navigator.pop(ctx),
-                      child: const Text('Later',
-                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _pill(AppColors c, IconData icon, String label, Color fg, Color bg,
-          Color border) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: border),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 15, color: fg),
-          const SizedBox(width: 6),
-          Text(label,
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: fg)),
-        ],
-      ),
-    );
+    showAnywaaUpdateDialog(context, result,
+        onUpdate: () => _startDownload(result));
   }
 
   void _startDownload(OtaCheckResult result) {
