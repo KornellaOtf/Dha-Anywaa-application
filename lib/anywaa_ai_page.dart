@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:dha_anywaaa/services/anywaa_ai_service.dart';
@@ -24,15 +26,11 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
   final List<_Msg> _msgs = [];
   bool _loading = true;
   bool _thinking = false;
+  Timer? _rotate;
 
-  static const _examples = [
-    'How do you say water in Dha Anywaa?',
-    'What does wic mean?',
-    'translate house to Anywaa',
-    'meaning of spider',
-    'Say 2026 in Dha Anywaa',
-    'How do you say thank you?',
-  ];
+  // Hero suggestions are generated fresh from the dictionary and rotated while
+  // the empty (hero) screen is showing, so the prompts change between visits.
+  List<String> _examples = const [];
 
   @override
   void initState() {
@@ -43,11 +41,20 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
   Future<void> _start() async {
     await _ai.load();
     if (!mounted) return;
-    setState(() => _loading = false);
+    setState(() {
+      _loading = false;
+      _examples = _ai.sampleQuestions(count: 6);
+    });
+    // Rotate the hero prompts every 10s, but only while no chat has started.
+    _rotate = Timer.periodic(const Duration(seconds: 10), (_) {
+      if (!mounted || _msgs.isNotEmpty) return;
+      setState(() => _examples = _ai.sampleQuestions(count: 6));
+    });
   }
 
   @override
   void dispose() {
+    _rotate?.cancel();
     _ctrl.dispose();
     _scroll.dispose();
     super.dispose();
@@ -123,7 +130,10 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
                 color: Colors.white, size: 24),
             onPressed: () {
               _ai.newChat();
-              setState(() => _msgs.clear());
+              setState(() {
+                _msgs.clear();
+                _examples = _ai.sampleQuestions(count: 6);
+              });
             },
           ),
           Padding(
@@ -192,7 +202,7 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
         ),
         const SizedBox(height: 18),
         Text(
-          'Bare mo! Ask me anything in Dha Anywaa',
+          'Dëëri jööt? Ask me anything in Dha Anywaa',
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 22,

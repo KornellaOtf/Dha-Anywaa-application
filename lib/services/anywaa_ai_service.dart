@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:flutter/services.dart' show rootBundle;
 
 /// One dictionary entry loaded from the bundled local data.
@@ -64,6 +65,84 @@ class AnywaaAiService {
 
   /// Forgets the current conversational subject (start a fresh thread).
   void newChat() => _last = null;
+
+  // ── Dynamic hero suggestions ───────────────────────────────────────────────
+  static const _enAskTemplates = [
+    'How do you say %s in Dha Anywaa?',
+    'Translate %s to Anywaa',
+    'How do you say %s?',
+    'What is %s in Dha Anywaa?',
+  ];
+  static const _dhaAskTemplates = [
+    'What does %s mean?',
+    'Meaning of %s',
+  ];
+
+  /// A fresh, shuffled set of example questions drawn from the real bundled
+  /// dictionary. It mixes English->Dha lookups, Dha->English lookups and a
+  /// number so every call (and every 10s rotation) shows different prompts that
+  /// are always answerable, because they are built from entries that exist.
+  List<String> sampleQuestions({int count = 6, math.Random? rng}) {
+    if (!ready) return const [];
+    final r = rng ?? math.Random();
+    // English labels: strip any parenthetical, keep short single/two-word ones.
+    final enLabels = _words
+        .map((e) => e.en.split('(').first.trim())
+        .where(_cleanEnglishLabel)
+        .toSet()
+        .toList();
+    final dhaLabels = _words
+        .map((e) => e.dha.trim())
+        .where(_cleanDhaLabel)
+        .toSet()
+        .toList();
+
+    final out = <String>[];
+    void addFrom(List<String> pool, List<String> templates) {
+      if (pool.isEmpty) return;
+      final w = pool[r.nextInt(pool.length)];
+      out.add(templates[r.nextInt(templates.length)].replaceAll('%s', w));
+    }
+
+    // Balanced mix: 2 English, 2 Dha, 1 number, then top up randomly.
+    for (var i = 0; i < 2; i++) {
+      addFrom(enLabels, _enAskTemplates);
+    }
+    for (var i = 0; i < 2; i++) {
+      addFrom(dhaLabels, _dhaAskTemplates);
+    }
+    out.add('Say ${1 + r.nextInt(9998)} in Dha Anywaa');
+    while (out.length < count) {
+      addFrom(r.nextBool() ? enLabels : dhaLabels,
+          r.nextBool() ? _enAskTemplates : _dhaAskTemplates);
+    }
+
+    out.shuffle(r);
+    final seen = <String>{};
+    final dedup = <String>[];
+    for (final q in out) {
+      if (seen.add(q)) dedup.add(q);
+    }
+    return dedup.take(count).toList();
+  }
+
+  static bool _cleanEnglishLabel(String s) {
+    final t = s.trim();
+    if (t.isEmpty || t.length > 16) return false;
+    if (t.contains('(') || t.contains(')') || t.contains(',')) return false;
+    final words = t.split(RegExp(r'\s+'));
+    if (words.length > 2) return false;
+    return words.every((w) => RegExp("^[A-Za-z']+\$").hasMatch(w));
+  }
+
+  static bool _cleanDhaLabel(String s) {
+    final t = s.trim();
+    if (t.isEmpty || t.length > 14) return false;
+    if (t.contains('(') || t.contains(')') || t.contains(',') || t.contains('.')) {
+      return false;
+    }
+    return t.split(' ').length <= 2;
+  }
 
   /// Loads the bundled dictionary once. Safe to call repeatedly.
   Future<void> load() async {
@@ -147,7 +226,7 @@ class AnywaaAiService {
     if (term.isEmpty) {
       return const AnywaaAnswer(
         text: 'Ask me about a word, for example: "how do you say water in '
-            'Dha Anywaa" or "what does wic mean".',
+            'Dha Anywaa" or "what does Wich mean".',
         matches: [],
       );
     }
@@ -530,7 +609,7 @@ class AnywaaAiService {
       return const AnywaaAnswer(
         text: 'I can translate between English and Dha Anywaa, tell you what a '
             'word means, and show how to say any number up to 9999. Try '
-            '"how do you say water" or "what does wic mean".',
+            '"how do you say water" or "what does Wich mean".',
         matches: [],
       );
     }
