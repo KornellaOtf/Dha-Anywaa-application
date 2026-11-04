@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:dha_anywaaa/services/anywaa_ai_service.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
-import 'package:dha_anywaaa/widgets/anywaa_ai_logo.dart';
 
 class AnywaaAiPage extends StatefulWidget {
   const AnywaaAiPage({super.key});
@@ -100,7 +99,10 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
         titleSpacing: 0,
         title: Row(
           children: [
-            const AnywaaAiLogo(size: 32),
+            const _EcoMark(
+                size: 30,
+                bg: Color(0x33FFFFFF),
+                iconColor: Colors.white),
             const SizedBox(width: 10),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -115,6 +117,15 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
           ],
         ),
         actions: [
+          IconButton(
+            tooltip: 'New chat',
+            icon: const Icon(Icons.add_rounded,
+                color: Colors.white, size: 24),
+            onPressed: () {
+              _ai.newChat();
+              setState(() => _msgs.clear());
+            },
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 14),
             child: Container(
@@ -176,7 +187,7 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
             curve: Curves.easeOutBack,
             builder: (_, scale, child) =>
                 Transform.scale(scale: scale, child: child),
-            child: const AnywaaAiLogo(size: 96),
+            child: const _EcoMark(size: 92),
           ),
         ),
         const SizedBox(height: 18),
@@ -312,7 +323,7 @@ class _Bubble extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!user) ...[
-            const AnywaaAiLogo(size: 26),
+            const _EcoMark(size: 26),
             const SizedBox(width: 8),
           ],
           Flexible(
@@ -476,7 +487,7 @@ class _ThinkingBubble extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         children: [
-          const AnywaaAiLogo(size: 26),
+          const _EcoMark(size: 26),
           const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -493,6 +504,31 @@ class _ThinkingBubble extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// The screen's mark: the leaf badge this chat used before the redesign,
+/// restored. Drawn as a soft circle with the Material `eco` leaf so it stays
+/// crisp and legible in both light and dark themes.
+class _EcoMark extends StatelessWidget {
+  final double size;
+  final Color? bg;
+  final Color? iconColor;
+  const _EcoMark({required this.size, this.bg, this.iconColor});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.c;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: bg ?? kGreen.withValues(alpha: 0.14),
+        boxShadow: const [kShadowSoft],
+      ),
+      child: Icon(Icons.eco_rounded, size: size * 0.6, color: iconColor ?? c.accent),
     );
   }
 }
