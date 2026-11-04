@@ -1,17 +1,16 @@
-// ignore_for_file: prefer_const_constructors
 import 'package:dha_anywaaa/about.dart';
 import 'package:dha_anywaaa/components/savedData.dart';
 import 'package:dha_anywaaa/help.dart';
+import 'package:dha_anywaaa/privacy_policy_page.dart';
 import 'package:dha_anywaaa/services/ota_service.dart';
 import 'package:dha_anywaaa/settings_page.dart';
+import 'package:dha_anywaaa/terms_page.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:dha_anywaaa/vowelLetter.dart';
 import 'package:dha_anywaaa/widgets/body.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-final Uri _webUrl = Uri.parse('https://dha-anywaa-app.netlify.app/');
 
 // Items per category: used to calculate progress %.
 const Map<String, int> _categoryTotals = {
@@ -80,13 +79,19 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _load();
-    _checkForUpdate();
+    // Run update check after the first frame so it never blocks the UI.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkForUpdate());
   }
 
   Future<void> _checkForUpdate() async {
-    final result = await OtaService().checkForUpdate();
-    if (result == null || !mounted) return;
-    _showUpdateDialog(result);
+    // Skip if offline.
+    try {
+      final result = await OtaService().checkForUpdate();
+      if (result == null || !mounted) return;
+      _showUpdateDialog(result);
+    } catch (_) {
+      // Network unavailable or timeout: fail silently.
+    }
   }
 
   void _showUpdateDialog(OtaCheckResult result) {
@@ -145,12 +150,6 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _load();
   }
 
   Future<void> _load() async {
@@ -530,39 +529,57 @@ class _HomePageState extends State<HomePage> {
           child: ListView(padding: EdgeInsets.zero, children: [
             const SizedBox(height: 8),
             _drawerTile(context, Icons.abc_rounded, 'Göörë moo cïp dwøl',
-                () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => const VowelLetter()))),
+                () {
+              Navigator.pop(context);
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const VowelLetter()));
+            }),
             _drawerTile(context, Icons.face_retouching_natural_rounded,
-                'Jap dëël',
-                () => Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const Body()))),
+                'Jap dëël', () {
+              Navigator.pop(context);
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const Body()));
+            }),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Divider(),
             ),
             _drawerTile(context, Icons.settings_outlined, 'Settings',
-                () => Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const SettingsPage()))),
+                () {
+              Navigator.pop(context);
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const SettingsPage()));
+            }),
+            _drawerTile(context, Icons.privacy_tip_outlined, 'Privacy Policy',
+                () {
+              Navigator.pop(context);
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const PrivacyPolicyPage()));
+            }),
+            _drawerTile(context, Icons.gavel_outlined, 'Terms of Use',
+                () {
+              Navigator.pop(context);
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const TermsPage()));
+            }),
             _drawerTile(context, Icons.info_outline_rounded, 'About',
-                () => Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const About()))),
+                () {
+              Navigator.pop(context);
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const About()));
+            }),
             _drawerTile(context, Icons.help_outline_rounded, 'Help',
-                () => Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const Help()))),
-            _drawerTile(context, Icons.language_rounded, 'Website',
-                () async {
-              try {
-                await launchUrl(_webUrl,
-                    mode: LaunchMode.externalApplication);
-              } catch (_) {}
+                () {
+              Navigator.pop(context);
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const Help()));
             }),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Divider(),
             ),
             _drawerTile(context, Icons.logout_rounded, 'Log out', () async {
+              Navigator.pop(context);
               await _savedData.setName('guess');
               if (!mounted) return;
               Navigator.pushReplacementNamed(context, '/');

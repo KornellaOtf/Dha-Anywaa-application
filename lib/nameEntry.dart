@@ -40,47 +40,22 @@ class _NameEntryState extends State<NameEntry> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── Gradient header band ──────────────────────────────────
+                // ── Header ───────────────────────────────────────────────
                 Container(
                   margin: const EdgeInsets.only(top: 40, bottom: 8),
                   padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        kGold.withOpacity(0.12),
-                        kGreen.withOpacity(0.06),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // App icon
-                      Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: kGreen.withOpacity(0.22),
-                              blurRadius: 16,
-                              spreadRadius: 2,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: ClipOval(
-                          child: Image.asset(
-                            'assets/word_images/awal_icon.jpeg',
-                            width: 72,
-                            height: 72,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => const Icon(
-                                Icons.eco_rounded, color: kGreen, size: 44),
-                          ),
+                      ClipOval(
+                        child: Image.asset(
+                          'assets/word_images/awal_icon.jpeg',
+                          width: 72,
+                          height: 72,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const Icon(
+                              Icons.eco_rounded, color: kGreen, size: 44),
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -188,7 +163,7 @@ class _NameEntryState extends State<NameEntry> {
                                 context, 'home_page');
                           }
                         },
-                        child: const Text('Get started  →',
+                        child: const Text('Get started →',
                             style: TextStyle(
                                 fontWeight: FontWeight.bold, fontSize: 16)),
                       ),
