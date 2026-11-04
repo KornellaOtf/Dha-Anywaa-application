@@ -111,17 +111,17 @@ class _HomePageState extends State<HomePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Version ${result.latestVersion} is ready.',
-                style: const TextStyle(fontSize: 14, color: kTextSub)),
+                style: TextStyle(fontSize: 14, color: context.c.textSub)),
             const SizedBox(height: 8),
             if (result.releaseNotes.isNotEmpty)
               Text(result.releaseNotes,
-                  style: const TextStyle(
-                      fontSize: 13, color: kTextMuted, height: 1.5)),
+                  style: TextStyle(
+                      fontSize: 13, color: context.c.textSub, height: 1.5)),
             if (result.sizeBytes > 0) ...[
               const SizedBox(height: 8),
               Text(
                 'Size: ${(result.sizeBytes / 1024 / 1024).toStringAsFixed(1)} MB',
-                style: const TextStyle(fontSize: 12, color: kTextMuted),
+                style: TextStyle(fontSize: 12, color: context.c.textSub),
               ),
             ],
           ],
@@ -130,7 +130,7 @@ class _HomePageState extends State<HomePage> {
           if (!result.mandatory)
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Later', style: TextStyle(color: kTextMuted)),
+              child: Text('Later', style: TextStyle(color: context.c.textSub)),
             ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -185,7 +185,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: kBg,
+      backgroundColor: context.c.bg,
       appBar: AppBar(
         forceMaterialTransparency: true,
         backgroundColor: Colors.transparent,
@@ -194,13 +194,13 @@ class _HomePageState extends State<HomePage> {
           child: Material(
             elevation: 3,
             shape: const CircleBorder(),
-            color: Colors.white,
+            color: context.c.card,
             child: InkWell(
               customBorder: const CircleBorder(),
               onTap: () => _scaffoldKey.currentState?.openDrawer(),
-              child: const Padding(
-                padding: EdgeInsets.all(8),
-                child: Icon(Icons.menu_rounded, color: kText, size: 20),
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Icon(Icons.menu_rounded, color: context.c.text, size: 20),
               ),
             ),
           ),
@@ -209,7 +209,7 @@ class _HomePageState extends State<HomePage> {
       drawer: _buildDrawer(context),
       bottomNavigationBar: _buildBottomNav(),
       body: RefreshIndicator(
-        color: kGreen,
+        color: context.c.accent,
         onRefresh: _load,
         child: CustomScrollView(
           slivers: [
@@ -233,7 +233,7 @@ class _HomePageState extends State<HomePage> {
                     style: GoogleFonts.playfairDisplay(
                         fontSize: 22,
                         fontWeight: FontWeight.w700,
-                        color: kText)),
+                        color: context.c.text)),
               ),
             ),
             // ── Category grid ───────────────────────────────────────────────
@@ -260,13 +260,13 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildGreeting() {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('Welcome back',
-          style: TextStyle(fontSize: 13, color: kTextSub)),
+      Text('Welcome back',
+          style: TextStyle(fontSize: 13, color: context.c.textSub)),
       const SizedBox(height: 2),
       Text(
         _name.isEmpty ? 'Learner' : _name,
         style: GoogleFonts.playfairDisplay(
-            fontSize: 32, fontWeight: FontWeight.w700, color: kText),
+            fontSize: 32, fontWeight: FontWeight.w700, color: context.c.text),
       ),
     ]);
   }
@@ -276,7 +276,7 @@ class _HomePageState extends State<HomePage> {
         ? _lastRouteProgress / _lastRouteTotal
         : 0.0;
     return DecoratedBox(
-      decoration: cardDeco(color: Colors.white),
+      decoration: cardDeco(context),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -295,14 +295,14 @@ class _HomePageState extends State<HomePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Continue',
-                          style: TextStyle(fontSize: 12, color: kTextSub)),
+                      Text('Continue',
+                          style: TextStyle(fontSize: 12, color: context.c.textSub)),
                       const SizedBox(height: 2),
                       Text(_lastRouteName,
                           style: GoogleFonts.playfairDisplay(
                               fontSize: 20,
                               fontWeight: FontWeight.w700,
-                              color: kText)),
+                              color: context.c.text)),
                       if (_lastRouteProgress > 0) ...[
                         const SizedBox(height: 10),
                         ClipRRect(
@@ -310,21 +310,21 @@ class _HomePageState extends State<HomePage> {
                           child: LinearProgressIndicator(
                             value: progress,
                             minHeight: 5,
-                            backgroundColor: kBorder,
-                            color: kGreen,
+                            backgroundColor: context.c.border,
+                            color: context.c.accent,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                             '$_lastRouteProgress / $_lastRouteTotal learned',
-                            style: const TextStyle(
-                                fontSize: 11, color: kTextMuted)),
+                            style: TextStyle(
+                                fontSize: 11, color: context.c.textSub)),
                       ],
                     ],
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Icon(Icons.chevron_right_rounded, color: kTextSub),
+                Icon(Icons.chevron_right_rounded, color: context.c.textSub),
               ],
             ),
           ),
@@ -350,7 +350,7 @@ class _HomePageState extends State<HomePage> {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.c.card,
           borderRadius: BorderRadius.circular(18),
           boxShadow: const [kShadowSoft],
         ),
@@ -364,7 +364,7 @@ class _HomePageState extends State<HomePage> {
                     top: Radius.circular(18)),
                 child: Container(
                   width: double.infinity,
-                  color: Colors.white,
+                  color: context.c.card,
                   child: Padding(
                     padding: const EdgeInsets.all(12),
                     child: Image.asset(
@@ -390,15 +390,15 @@ class _HomePageState extends State<HomePage> {
                   Text(cat['engName']!,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: kText)),
+                          color: context.c.text)),
                   const SizedBox(height: 1),
                   Text(cat['anyName']!,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 11, color: kTextSub)),
+                      style: TextStyle(fontSize: 11, color: context.c.textSub)),
                   if (hasProgress) ...[
                     const SizedBox(height: 6),
                     ClipRRect(
@@ -406,7 +406,7 @@ class _HomePageState extends State<HomePage> {
                       child: LinearProgressIndicator(
                         value: learned / total,
                         minHeight: 3,
-                        backgroundColor: const Color(0xFFE8E8E8),
+                        backgroundColor: context.c.border,
                         color: accentColor,
                       ),
                     ),
@@ -422,10 +422,10 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildBottomNav() {
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: kBorder)),
-        boxShadow: [
+      decoration: BoxDecoration(
+        color: context.c.card,
+        border: Border(top: BorderSide(color: context.c.border)),
+        boxShadow: const [
           BoxShadow(
             color: Color(0x0A000000),
             blurRadius: 10,
@@ -437,9 +437,9 @@ class _HomePageState extends State<HomePage> {
         top: false,
         child: BottomNavigationBar(
           currentIndex: _bottomNavIndex,
-          backgroundColor: Colors.white,
-          selectedItemColor: kGreen,
-          unselectedItemColor: kTextSub,
+          backgroundColor: context.c.card,
+          selectedItemColor: context.c.accent,
+          unselectedItemColor: context.c.textSub,
           selectedLabelStyle:
               const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
           unselectedLabelStyle: const TextStyle(fontSize: 11),
@@ -478,7 +478,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildDrawer(BuildContext context) {
     return Drawer(
-      backgroundColor: Colors.white,
+      backgroundColor: context.c.card,
       child: Column(children: [
         // ── Header ──────────────────────────────────────────────────────────
         Container(
@@ -601,22 +601,23 @@ class _HomePageState extends State<HomePage> {
     VoidCallback onTap, {
     Color color = kGreen,
   }) {
+    final iconColor = color == kGreen ? context.c.accent : color;
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
       leading: Container(
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
+          color: iconColor.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(icon, color: color, size: 19),
+        child: Icon(icon, color: iconColor, size: 19),
       ),
       title: Text(label,
           style: TextStyle(
               fontWeight: FontWeight.w600,
               fontSize: 15,
-              color: color == kRust ? color : kText)),
+              color: color == kRust ? color : context.c.text)),
       onTap: onTap,
     );
   }

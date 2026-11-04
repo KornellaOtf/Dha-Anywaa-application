@@ -33,7 +33,7 @@ class _AboutState extends State<About> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kBg,
+      backgroundColor: context.c.bg,
       appBar: AppBar(
         backgroundColor: kGreen,
         foregroundColor: Colors.white,
@@ -52,7 +52,7 @@ class _AboutState extends State<About> {
               width: double.infinity,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.c.card,
                   borderRadius: BorderRadius.circular(16)),
               child: Column(children: [
                 SizedBox(
@@ -60,23 +60,22 @@ class _AboutState extends State<About> {
                   child: Image.asset(
                     'assets/word_images/awal_icon.jpeg',
                     fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => const Icon(
-                        Icons.eco_rounded,
-                        color: kGreen,
-                        size: 64),
+                    errorBuilder: (_, __, ___) =>
+                        Icon(Icons.eco_rounded, color: context.c.accent,
+                            size: 64),
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text('Learn Dha Anywaa',
+                Text('Learn Dha Anywaa',
                     style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: kText)),
+                        color: context.c.text)),
                 const SizedBox(height: 4),
                 if (_version.isNotEmpty)
                   Text(_version,
-                      style: const TextStyle(
-                          fontSize: 14, color: kTextSub)),
+                      style: TextStyle(
+                          fontSize: 14, color: context.c.textSub)),
               ]),
             ),
             const SizedBox(height: 16),
@@ -85,21 +84,21 @@ class _AboutState extends State<About> {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.c.card,
                   borderRadius: BorderRadius.circular(16)),
-              child: const Text(
+              child: Text(
                 'Learn Dha Anywaa is a language learning app for the Anywaa (Anuak) language. '
                 'It contains alphabet lessons, vocabulary with audio, reading exercises and a quiz. '
                 'All content works fully offline.',
                 style: TextStyle(
-                    fontSize: 15, color: kTextSub, height: 1.6),
+                    fontSize: 15, color: context.c.textSub, height: 1.6),
               ),
             ),
             const SizedBox(height: 16),
             // ── Links card ────────────────────────────────────────────────
             Container(
               decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.c.card,
                   borderRadius: BorderRadius.circular(16)),
               child: Column(children: [
                 _navTile(
@@ -118,22 +117,22 @@ class _AboutState extends State<About> {
                 const Divider(height: 1, indent: 56),
                 ListTile(
                   leading:
-                      const Icon(Icons.email_outlined, color: kGreen),
+                      Icon(Icons.email_outlined, color: context.c.accent),
                   title: const Text('Contact',
                       style: TextStyle(
                           fontSize: 15, fontWeight: FontWeight.w500)),
-                  subtitle: const Text('Kornellaotf@gmail.com',
-                      style: TextStyle(fontSize: 12, color: kTextMuted)),
-                  trailing: const Icon(Icons.chevron_right,
-                      color: kBorder),
+                  subtitle: Text('Kornellaotf@gmail.com',
+                      style: TextStyle(fontSize: 12, color: context.c.textSub)),
+                  trailing: Icon(Icons.chevron_right,
+                      color: context.c.border),
                   onTap: _email,
                 ),
               ]),
             ),
             const SizedBox(height: 24),
-            const Center(
+            Center(
               child: Text('Developed by Kornella Otf',
-                  style: TextStyle(fontSize: 13, color: kTextMuted)),
+                  style: TextStyle(fontSize: 13, color: context.c.textSub)),
             ),
             const SizedBox(height: 8),
           ],
@@ -145,12 +144,12 @@ class _AboutState extends State<About> {
   Widget _navTile(
       BuildContext context, IconData icon, String label, Widget page) {
     return ListTile(
-      leading: Icon(icon, color: kGreen),
+      leading: Icon(icon, color: context.c.accent),
       title: Text(label,
           style: const TextStyle(
               fontSize: 15, fontWeight: FontWeight.w500)),
       trailing:
-          const Icon(Icons.chevron_right, color: kBorder),
+          Icon(Icons.chevron_right, color: context.c.border),
       onTap: () => Navigator.push(
           context, MaterialPageRoute(builder: (_) => page)),
     );

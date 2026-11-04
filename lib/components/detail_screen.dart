@@ -96,7 +96,7 @@ class _DetailScreenState extends State<DetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kBg,
+      backgroundColor: context.c.bg,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
@@ -106,9 +106,9 @@ class _DetailScreenState extends State<DetailScreen> {
           child: Material(
             elevation: 3,
             shape: const CircleBorder(),
-            color: Colors.white,
+            color: context.c.card,
             child: IconButton(
-              icon: const Icon(Icons.chevron_left_rounded, color: kText),
+              icon: Icon(Icons.chevron_left_rounded, color: context.c.text),
               onPressed: () {
                 if (_zoom) {
                   setState(() => _zoom = false);
@@ -120,8 +120,8 @@ class _DetailScreenState extends State<DetailScreen> {
           ),
         ),
         title: Text(widget.title,
-            style: const TextStyle(
-                fontWeight: FontWeight.bold, fontSize: 18, color: kText)),
+            style: TextStyle(
+                fontWeight: FontWeight.bold, fontSize: 18, color: context.c.text)),
         centerTitle: true,
         actions: [
           Padding(
@@ -131,16 +131,17 @@ class _DetailScreenState extends State<DetailScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                 decoration: BoxDecoration(
-                  color: kGreen.withValues(alpha: 0.12),
+                  color: context.c.accent.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: kGreen.withValues(alpha: 0.2)),
+                  border: Border.all(
+                      color: context.c.accent.withValues(alpha: 0.2)),
                 ),
                 child: Text(
                   '$_learnedCount/${widget.items.length}',
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
-                      color: kGreen),
+                      color: context.c.accent),
                 ),
               ),
             ),
@@ -263,7 +264,7 @@ class _GridCellState extends State<_GridCell> {
         duration: const Duration(milliseconds: 120),
         curve: Curves.easeOut,
         child: Container(
-          decoration: gridCellDeco(learned: widget.learned),
+          decoration: gridCellDeco(context, learned: widget.learned),
           child: Stack(children: [
             Column(children: [
               Expanded(
@@ -285,16 +286,16 @@ class _GridCellState extends State<_GridCell> {
                     Text(widget.item['anyName']!,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
-                            color: kText)),
+                            color: context.c.text)),
                     if ((widget.item['engName'] ?? '').isNotEmpty)
                       Text(widget.item['engName']!,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style:
-                              const TextStyle(fontSize: 12, color: kTextSub)),
+                              TextStyle(fontSize: 12, color: context.c.textSub)),
                   ],
                 ),
               ),
@@ -306,11 +307,11 @@ class _GridCellState extends State<_GridCell> {
                 child: Container(
                   padding: const EdgeInsets.all(3),
                   decoration: BoxDecoration(
-                    color: kGreen.withValues(alpha: 0.14),
+                    color: context.c.accent.withValues(alpha: 0.14),
                     shape: BoxShape.circle,
                   ),
                   child:
-                      const Icon(Icons.check_rounded, color: kGreen, size: 14),
+                      Icon(Icons.check_rounded, color: context.c.accent, size: 14),
                 ),
               ),
           ]),
@@ -360,7 +361,7 @@ class _DetailPanel extends StatelessWidget {
           child: Container(
             width: double.infinity,
             padding: const EdgeInsets.all(24),
-            decoration: detailCardDeco(learned: learned),
+            decoration: detailCardDeco(context, learned: learned),
             child: Column(children: [
               // Subtle bg tint behind image
               Container(
@@ -386,11 +387,11 @@ class _DetailPanel extends StatelessWidget {
                   style: GoogleFonts.playfairDisplay(
                       fontSize: 28,
                       fontWeight: FontWeight.w700,
-                      color: learned ? kGreen : kText)),
+                      color: learned ? context.c.accent : context.c.text)),
               if ((item['engName'] ?? '').isNotEmpty) ...[
                 const SizedBox(height: 4),
                 Text(item['engName']!,
-                    style: const TextStyle(fontSize: 16, color: kTextSub)),
+                    style: TextStyle(fontSize: 16, color: context.c.textSub)),
               ],
               if (learned) ...[
                 const SizedBox(height: 12),
@@ -398,18 +399,19 @@ class _DetailPanel extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   decoration: BoxDecoration(
-                    color: kGreen.withValues(alpha: 0.12),
+                    color: context.c.accent.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: kGreen.withValues(alpha: 0.25)),
+                    border: Border.all(
+                        color: context.c.accent.withValues(alpha: 0.25)),
                   ),
-                  child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
                     Icon(Icons.check_circle_rounded,
-                        color: kGreen, size: 15),
-                    SizedBox(width: 5),
+                        color: context.c.accent, size: 15),
+                    const SizedBox(width: 5),
                     Text('Learned',
                         style: TextStyle(
                             fontSize: 13,
-                            color: kGreen,
+                            color: context.c.accent,
                             fontWeight: FontWeight.w700)),
                   ]),
                 ),
@@ -467,7 +469,7 @@ class _DetailPanel extends StatelessWidget {
         // Position indicator
         const SizedBox(height: 12),
         Text('${index + 1} / $total',
-            style: const TextStyle(fontSize: 12, color: kTextMuted)),
+            style: TextStyle(fontSize: 12, color: context.c.textSub)),
         const SizedBox(height: 20),
 
         // ── Mark as learned ──────────────────────────────────────────────────
@@ -508,8 +510,8 @@ class _DetailPanel extends StatelessWidget {
                       icon: const Icon(Icons.add_task_outlined, size: 18),
                       label: const Text('Mark as learned'),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: kGreen,
-                        side: const BorderSide(color: kGreen, width: 1.5),
+                        foregroundColor: context.c.accent,
+                        side: BorderSide(color: context.c.accent, width: 1.5),
                         padding: const EdgeInsets.symmetric(vertical: 15),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14)),
@@ -536,7 +538,7 @@ class _NavButton extends StatelessWidget {
     return Material(
       elevation: enabled ? 4 : 0,
       shape: const CircleBorder(),
-      color: Colors.white,
+      color: context.c.card,
       shadowColor: kGreen.withValues(alpha: 0.2),
       child: InkWell(
         customBorder: const CircleBorder(),
@@ -545,7 +547,7 @@ class _NavButton extends StatelessWidget {
           width: 56,
           height: 56,
           child: Icon(icon,
-              color: enabled ? kText : Colors.grey[400], size: 26),
+              color: enabled ? context.c.text : Colors.grey[400], size: 26),
         ),
       ),
     );

@@ -6,7 +6,6 @@ class Help extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const bg    = Color(0xFFF6EFE3);
     const green = Color(0xFF1F4D3A);
 
     const sections = [
@@ -43,7 +42,7 @@ class Help extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor: bg,
+      backgroundColor: context.c.bg,
       appBar: AppBar(
         backgroundColor: green,
         foregroundColor: Colors.white,
@@ -58,14 +57,14 @@ class Help extends StatelessWidget {
         itemBuilder: (_, i) {
           final s = sections[i];
           return Container(
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+            decoration: BoxDecoration(color: context.c.card, borderRadius: BorderRadius.circular(16)),
             padding: const EdgeInsets.all(20),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CircleAvatar(
-                  backgroundColor: const Color(0xFFE8F0EB),
-                  child: Icon(s.icon, color: green, size: 20),
+                  backgroundColor: context.c.accent.withValues(alpha: 0.12),
+                  child: Icon(s.icon, color: context.c.accent, size: 20),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -73,11 +72,11 @@ class Help extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(s.title,
-                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold,
-                              color: kText)),
+                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold,
+                              color: context.c.text)),
                       const SizedBox(height: 6),
                       Text(s.body,
-                          style: const TextStyle(fontSize: 14, color: kTextSub, height: 1.5)),
+                          style: TextStyle(fontSize: 14, color: context.c.textSub, height: 1.5)),
                     ],
                   ),
                 ),

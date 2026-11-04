@@ -44,7 +44,7 @@ class Result extends StatelessWidget {
     final pct = total > 0 ? (finalResult / total * 100).round() : 0;
 
     return Scaffold(
-      backgroundColor: kBg,
+      backgroundColor: context.c.bg,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -82,10 +82,10 @@ class Result extends StatelessWidget {
               // ── Message ───────────────────────────────────────────────────
               Text(
                 _message(),
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: kText,
+                    color: context.c.text,
                     height: 1.3),
                 textAlign: TextAlign.center,
               ),
@@ -148,8 +148,8 @@ class Result extends StatelessWidget {
                     icon: const Icon(Icons.share_outlined, size: 18),
                     label: const Text('Share score'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: kGreen,
-                      side: const BorderSide(color: kGreen, width: 1.5),
+                      foregroundColor: context.c.accent,
+                      side: BorderSide(color: context.c.accent, width: 1.5),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14)),
                       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -218,7 +218,7 @@ class Result extends StatelessWidget {
                   onPressed: () => Navigator.pushNamedAndRemoveUntil(
                       context, 'home_page', (_) => false),
                   style: TextButton.styleFrom(
-                    foregroundColor: kTextSub,
+                    foregroundColor: context.c.textSub,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                   child: const Text('Back to home',

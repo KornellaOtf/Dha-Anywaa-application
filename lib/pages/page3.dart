@@ -80,7 +80,7 @@ class _Page3State extends State<Page3> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kBg,
+      backgroundColor: context.c.bg,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
@@ -90,16 +90,16 @@ class _Page3State extends State<Page3> {
           child: Material(
             elevation: 3,
             shape: const CircleBorder(),
-            color: Colors.white,
+            color: context.c.card,
             child: IconButton(
-              icon: const Icon(Icons.chevron_left_rounded, color: kText),
+              icon: Icon(Icons.chevron_left_rounded, color: context.c.text),
               onPressed: () => Navigator.pop(context),
             ),
           ),
         ),
-        title: const Text('Reading',
+        title: Text('Reading',
             style: TextStyle(
-                fontWeight: FontWeight.bold, fontSize: 18, color: kText)),
+                fontWeight: FontWeight.bold, fontSize: 18, color: context.c.text)),
         centerTitle: true,
         actions: [
           Padding(
@@ -145,7 +145,7 @@ class _Page3State extends State<Page3> {
                 decoration: BoxDecoration(
                   color: isActive
                       ? kGreen.withValues(alpha: 0.06)
-                      : Colors.white,
+                      : context.c.card,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: isActive
@@ -200,12 +200,12 @@ class _Page3State extends State<Page3> {
                                 style: TextStyle(
                                     fontSize: 17,
                                     fontWeight: FontWeight.bold,
-                                    color: isActive ? kGreen : kText)),
+                                    color: isActive ? context.c.accent : context.c.text)),
                             const SizedBox(height: 4),
                             Text(s.sentence.trim(),
-                                style: const TextStyle(
+                                style: TextStyle(
                                     fontSize: 14,
-                                    color: kTextSub,
+                                    color: context.c.textSub,
                                     height: 1.5)),
                           ],
                         ),
@@ -226,7 +226,7 @@ class _Page3State extends State<Page3> {
                           isActive
                               ? Icons.pause_rounded
                               : Icons.play_arrow_rounded,
-                          color: kGreen,
+                          color: context.c.accent,
                           size: 22,
                         ),
                       ),

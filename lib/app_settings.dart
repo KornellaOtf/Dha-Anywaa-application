@@ -21,18 +21,39 @@ class AppSettingsNotifier extends ChangeNotifier {
   bool _soundEnabled = true;
   bool get soundEnabled => _soundEnabled;
 
+  ThemeMode _themeMode = ThemeMode.system;
+  ThemeMode get themeMode => _themeMode;
+
   AppSettingsNotifier() {
     _load();
   }
 
   Future<void> _load() async {
     _soundEnabled = await _savedData.getSoundEnabled();
+    _themeMode = _modeFromIndex(await _savedData.getThemeMode());
     notifyListeners();
+  }
+
+  static ThemeMode _modeFromIndex(int i) {
+    switch (i) {
+      case 1:
+        return ThemeMode.light;
+      case 2:
+        return ThemeMode.dark;
+      default:
+        return ThemeMode.system;
+    }
   }
 
   Future<void> setSoundEnabled(bool value) async {
     _soundEnabled = value;
     notifyListeners();
     await _savedData.setSoundEnabled(value);
+  }
+
+  Future<void> setThemeMode(ThemeMode mode) async {
+    _themeMode = mode;
+    notifyListeners();
+    await _savedData.setThemeMode(mode.index);
   }
 }

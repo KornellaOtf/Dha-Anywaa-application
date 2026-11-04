@@ -55,6 +55,17 @@ class SavedData {
     await prefs.setBool('sound_enabled', value);
   }
 
+  // ── Theme mode (0 = system, 1 = light, 2 = dark) ────────────────────────
+  Future<int> getThemeMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('theme_mode') ?? 0;
+  }
+
+  Future<void> setThemeMode(int value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('theme_mode', value);
+  }
+
   // ── Clear all progress (used on log-out if desired) ──────────────────────
   Future<void> clearProgress() async {
     final prefs = await SharedPreferences.getInstance();
