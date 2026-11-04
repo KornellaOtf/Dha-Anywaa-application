@@ -145,12 +145,12 @@ class AnywaaAiService {
     if (matches.isEmpty) {
       final sugg = _suggest(term, p);
       final buf = StringBuffer(
-          'I only know the words in the local Anywaa dictionary, and I '
-          'could not find "$term".');
+          'I looked through the local Anywaa dictionary on your device, but '
+          'I could not find "$term".');
       if (sugg.isNotEmpty) {
         buf.write(' Did you mean: ${sugg.take(5).join(', ')}?');
       } else {
-        buf.write(' Try a single word in English or Dha Anywaa.');
+        buf.write(' Try asking about a single word in English or Dha Anywaa.');
       }
       return AnywaaAnswer(text: buf.toString(), matches: [], suggestions: sugg);
     }
@@ -335,20 +335,46 @@ class AnywaaAiService {
 
   String _compose(List<AnywaaMatch> m, _Parsed p) {
     final top = m.first;
-    String lead;
+    final en = top.entry.en;
+    final dha = top.entry.dha;
+
+    // Work out which way the user is asking, then phrase it like a helpful
+    // assistant instead of a dictionary line. The pick is deterministic (seeded
+    // by the question) so it adds variety without ever changing the answer.
+    final bool toEnglish;
     if (p.wantsEnglish) {
-      lead = '${top.entry.dha} means "${top.entry.en}" in English.';
+      toEnglish = true;
     } else if (p.wantsAnywaa) {
-      lead = '"${top.entry.en}" in Dha Anywaa is ${top.entry.dha}.';
-    } else if (top.source == 'dha') {
-      // No explicit direction, but the hit came from the Anywaa side, so the
-      // user most likely typed a Dha word and wants the English meaning.
-      lead = '${top.entry.dha} means "${top.entry.en}" in English.';
+      toEnglish = false;
     } else {
-      // Hit came from the English side: give the Dha translation.
-      lead = '${top.entry.en} is ${top.entry.dha} in Dha Anywaa.';
+      // No explicit direction: a hit on the Anywaa side means they typed a Dha
+      // word and want the English meaning, and vice versa.
+      toEnglish = top.source == 'dha';
     }
-    return lead;
+
+    final toDha = [
+      'Sure! The Dha Anywaa word for "$en" is $dha.',
+      'In Dha Anywaa, "$en" is $dha.',
+      'You can say $dha in Dha Anywaa for "$en".',
+      'Good question! "$en" becomes $dha in Dha Anywaa.',
+    ];
+    final toEng = [
+      'Sure! "$dha" means "$en" in English.',
+      'That one means "$en" in English.',
+      '"$dha" translates to "$en" in English.',
+      'In English, "$dha" means "$en".',
+    ];
+    final opts = toEnglish ? toEng : toDha;
+    return opts[_pick(p.raw, opts.length)];
+  }
+
+  /// Stable hash so the same question always gets the same friendly wording.
+  static int _pick(String seed, int n) {
+    var h = 0;
+    for (final cu in seed.codeUnits) {
+      h = (h * 31 + cu) & 0x7fffffff;
+    }
+    return h % n;
   }
 
   // ── Conversational intents ──────────────────────────────────────────────
@@ -357,15 +383,17 @@ class AnywaaAiService {
     bool has(String s) => raw.contains(s);
     if (has('who are you') || has('what are you') || has('your name')) {
       return const AnywaaAnswer(
-        text: 'Nyëënga Anywaa AI. I am Anywaa AI, an offline helper that '
-            'answers from Dha Anywaa words stored on your device.',
+        text: "I'm Anywaa AI, your offline Dha Anywaa helper. I answer using "
+            'words stored right here on your device, so I never guess or make '
+            'up a translation.',
         matches: [],
       );
     }
     if (has('where are you from') || has('where do you come')) {
       return const AnywaaAnswer(
-        text: 'I run entirely on your device, built for the Anywaa people '
-            'along the rivers of South Sudan and Ethiopia. No internet needed.',
+        text: 'I live entirely on your device, made for the Anywaa community '
+            'along the rivers of South Sudan and Ethiopia. No internet needed, '
+            'and nothing ever leaves your phone.',
         matches: [],
       );
     }
@@ -373,18 +401,17 @@ class AnywaaAiService {
         has('how can you help') ||
         has('what do you do')) {
       return const AnywaaAnswer(
-        text: 'I translate between English and Dha Anywaa, explain a word '
-            'meaning, and tell you how to say a number up to 9999. Every '
-            'answer comes from the on-device dictionary, and I never invent '
-            'one.',
+        text: 'I can translate between English and Dha Anywaa, tell you what a '
+            'word means, and show how to say any number up to 9999. Try '
+            '"how do you say water" or "what does wic mean".',
         matches: [],
       );
     }
     const greetings = {'hi', 'hey', 'yo', 'sasa', 'moring'};
     if (p.core.length == 1 && greetings.contains(p.core.first)) {
       return const AnywaaAnswer(
-        text: 'Määdhe! Ask me a word in English or Dha Anywaa, or give me a '
-            'number up to 9999.',
+        text: 'Hey there! Ask me any word in English or Dha Anywaa, or give '
+            'me a number up to 9999 and I will tell you how to say it.',
         matches: [],
       );
     }
@@ -426,7 +453,7 @@ class AnywaaAiService {
       );
     }
     return AnywaaAnswer(
-      text: '$n in Dha Anywaa is $word.',
+      text: 'Sure! $n in Dha Anywaa is $word.',
       matches: const [],
     );
   }
