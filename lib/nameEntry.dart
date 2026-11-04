@@ -74,10 +74,12 @@ class _NameEntryState extends State<NameEntry> {
                         ),
                         child: ClipOval(
                           child: Image.asset(
-                            'assets/word_images/awal_icon.png',
+                            'assets/word_images/awal_icon.jpeg',
                             width: 72,
                             height: 72,
                             fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => const Icon(
+                                Icons.eco_rounded, color: kGreen, size: 44),
                           ),
                         ),
                       ),
