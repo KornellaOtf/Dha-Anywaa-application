@@ -66,7 +66,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _showUpdateDialog(OtaCheckResult result) {
-    const green = Color(0xFF1B4332);
+    const green = Color(0xFF1F4D3A);
     const gold  = Color(0xFFC9993A);
 
     showDialog(
@@ -176,7 +176,7 @@ class _SettingsPageState extends State<SettingsPage> {
       _otaStatus   = 'Download complete. Tap to install.';
     });
 
-    // Open the APK — Android will prompt the user to install it
+    // Open the APK. Android will prompt the user to install it
     await OpenFile.open(file.path);
   }
 
@@ -184,8 +184,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    const bg    = Color(0xFFF5F0E8);
-    const green = Color(0xFF1B4332);
+    const bg    = Color(0xFFF6EFE3);
+    const green = Color(0xFF1F4D3A);
     final settings = AppSettings.of(context);
 
     return Scaffold(
@@ -373,7 +373,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget _navTile(
       BuildContext context, IconData icon, String label, Widget page) {
     return ListTile(
-      leading: Icon(icon, color: const Color(0xFF1B4332)),
+      leading: Icon(icon, color: const Color(0xFF1F4D3A)),
       title: Text(label,
           style: const TextStyle(fontWeight: FontWeight.w500)),
       trailing: const Icon(Icons.chevron_right, color: Color(0xFFBBBBBB)),

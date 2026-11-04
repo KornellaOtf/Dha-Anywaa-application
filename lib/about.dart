@@ -19,8 +19,8 @@ class About extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const bg    = Color(0xFFF5F0E8);
-    const green = Color(0xFF1B4332);
+    const bg    = Color(0xFFF6EFE3);
+    const green = Color(0xFF1F4D3A);
 
     return Scaffold(
       backgroundColor: bg,
@@ -44,7 +44,12 @@ class About extends StatelessWidget {
               child: Column(children: [
                 SizedBox(
                   height: 80,
-                  child: Image.asset('assets/word_images/awal_icon.png', fit: BoxFit.contain),
+                  child: Image.asset(
+                    'assets/word_images/awal_icon.jpeg',
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => const Icon(
+                        Icons.eco_rounded, color: Color(0xFF1F4D3A), size: 64),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 const Text('Dha Anywaa',

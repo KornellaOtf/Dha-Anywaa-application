@@ -101,7 +101,7 @@ class OtaService {
   /// manifest) and returns the local [File]. Returns `null` if the download
   /// fails or the file is corrupt/truncated so the caller can retry instead of
   /// handing an invalid APK to the Android installer.
-  /// [onProgress] is called with 0.0–1.0 as bytes arrive.
+  /// [onProgress] is called with a value from 0.0 to 1.0 as bytes arrive.
   Future<File?> downloadApk(
     OtaCheckResult result, {
     void Function(double progress)? onProgress,

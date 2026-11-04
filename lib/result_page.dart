@@ -10,7 +10,7 @@ class Result extends StatelessWidget {
 
   String _message() {
     final pct = total > 0 ? (finalResult / total * 100).round() : 0;
-    if (pct < 40) return "Keep practising —\nyou'll get there!";
+    if (pct < 40) return "Keep practising.\nYou'll get there!";
     if (pct < 60) return 'Good effort!\nKeep going.';
     if (pct < 80) return 'Well done!\nAlmost there.';
     return 'Excellent!\nYou nailed it.';

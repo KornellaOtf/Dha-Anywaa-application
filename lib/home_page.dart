@@ -13,7 +13,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 final Uri _webUrl = Uri.parse('https://dha-anywaa-app.netlify.app/');
 
-// Items per category — used to calculate progress %.
+// Items per category: used to calculate progress %.
 const Map<String, int> _categoryTotals = {
   'alphabet': 29,
   'number': 10,

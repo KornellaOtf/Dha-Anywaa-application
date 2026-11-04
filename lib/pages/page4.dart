@@ -475,6 +475,20 @@ class _OptionTileState extends State<_OptionTile> {
                     fontWeight: FontWeight.w600,
                     fontSize: 15,
                     color: kText)),
+            subtitle: widget.answered && (widget.selected || widget.correct)
+                ? Text(
+                    widget.selected
+                        ? (widget.correct ? 'Correct' : 'Not quite')
+                        : 'Correct answer',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: widget.correct
+                          ? const Color(0xFF28A745)
+                          : kRust,
+                    ),
+                  )
+                : null,
             trailing: widget.answered
                 ? (widget.selected
                     ? Icon(
