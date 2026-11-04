@@ -38,15 +38,26 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      # ── 5. Build debug APK (use release when signing is configured) ────────
+      # ── 4b. Restore signing keystore from secrets ─────────────────────────
+      - name: Setup signing keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/upload-keystore.jks
+          cat > android/key.properties <<EOF
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          storeFile=upload-keystore.jks
+          EOF
+
+      # ── 5. Build signed release APK ────────────────────────────────────────
       - name: Build APK
-        run: flutter build apk --debug --build-number=${{ github.run_number }}
+        run: flutter build apk --release --build-number=${{ github.run_number }}
 
       # ── 6. Rename APK to include version tag ──────────────────────────────
       - name: Rename APK
         run: |
           TAG=${GITHUB_REF_NAME:-v1.0.0}
-          mv build/app/outputs/flutter-apk/app-debug.apk \
+          mv build/app/outputs/flutter-apk/app-release.apk \
              build/app/outputs/flutter-apk/dha-anywaa-${TAG}.apk
           echo "APK_PATH=build/app/outputs/flutter-apk/dha-anywaa-${TAG}.apk" >> $GITHUB_ENV
           echo "TAG=${TAG}" >> $GITHUB_ENV
