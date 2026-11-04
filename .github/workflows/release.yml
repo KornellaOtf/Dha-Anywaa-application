@@ -79,14 +79,19 @@ jobs:
           }
           EOF
 
-      # ── 9. Create GitHub Release and upload assets ────────────────────────
-      - name: Create GitHub Release
+      # ── 9. Ensure release exists and attach assets (idempotent) ───────────
+      - name: Publish release assets
         run: |
+          # Create the release if it doesn't already exist; ignore if it does.
           gh release create "$TAG" \
-            "$APK_PATH" \
-            manifest.json \
             --title "Dha Anywaa $TAG" \
             --generate-notes \
-            --latest
+            --latest 2>/dev/null \
+            || echo "Release '$TAG' already exists — attaching assets to it."
+          # Always (re)attach the freshly built APK + manifest.
+          gh release upload "$TAG" \
+            "$APK_PATH" \
+            manifest.json \
+            --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
