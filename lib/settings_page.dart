@@ -93,14 +93,14 @@ class _SettingsPageState extends State<SettingsPage> {
             if (result.releaseNotes.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(result.releaseNotes,
-                  style: const TextStyle(
-                      fontSize: 13, color: kTextSub, height: 1.5)),
+                  style: TextStyle(
+                      fontSize: 13, color: context.c.textSub, height: 1.5)),
             ],
             if (result.sizeBytes > 0) ...[
               const SizedBox(height: 8),
               Text(
                 'Size: ${(result.sizeBytes / 1024 / 1024).toStringAsFixed(1)} MB',
-                style: const TextStyle(fontSize: 12, color: kTextSub)),
+                style: TextStyle(fontSize: 12, color: context.c.textSub)),
             ],
             if (result.mandatory) ...[
               const SizedBox(height: 10),
@@ -123,8 +123,8 @@ class _SettingsPageState extends State<SettingsPage> {
           if (!result.mandatory)
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Later',
-                  style: TextStyle(color: kTextSub)),
+              child: Text('Later',
+                  style: TextStyle(color: context.c.textSub)),
             ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -187,7 +187,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    const bg    = Color(0xFFF6EFE3);
+    final bg    = context.c.bg;
     const green = Color(0xFF1F4D3A);
     final settings = AppSettings.of(context);
 
@@ -213,22 +213,73 @@ class _SettingsPageState extends State<SettingsPage> {
                 settings.soundEnabled
                     ? Icons.volume_up_rounded
                     : Icons.volume_off_rounded,
-                color: green,
+                color: context.c.accent,
               ),
               title: const Text('Sound effects',
                   style: TextStyle(fontWeight: FontWeight.w600)),
               subtitle: Text(settings.soundEnabled ? 'On' : 'Off',
-                  style: TextStyle(color: kTextSub)),
+                  style: TextStyle(color: context.c.textSub)),
               trailing: Switch(
                 value: settings.soundEnabled,
-                activeThumbColor: green,
+                activeThumbColor: context.c.accent,
                 onChanged: (v) => settings.setSoundEnabled(v),
               ),
             ),
           ]),
           const SizedBox(height: 20),
 
-          // ── Profile ─────────────────────────────────────────────────────
+          // ── Appearance ──────────────────────────────────────────────────
+          _sectionHeader('Appearance'),
+          _card(children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.dark_mode_rounded, color: context.c.accent),
+                      const SizedBox(width: 12),
+                      Text('Theme',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: context.c.text)),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  SizedBox(
+                    width: double.infinity,
+                    child: SegmentedButton<ThemeMode>(
+                      segments: const [
+                        ButtonSegment<ThemeMode>(
+                          value: ThemeMode.system,
+                          label: Text('System'),
+                          icon: Icon(Icons.brightness_auto_outlined),
+                        ),
+                        ButtonSegment<ThemeMode>(
+                          value: ThemeMode.light,
+                          label: Text('Light'),
+                          icon: Icon(Icons.light_mode_outlined),
+                        ),
+                        ButtonSegment<ThemeMode>(
+                          value: ThemeMode.dark,
+                          label: Text('Dark'),
+                          icon: Icon(Icons.dark_mode_outlined),
+                        ),
+                      ],
+                      selected: {settings.themeMode},
+                      showSelectedIcon: false,
+                      onSelectionChanged: (s) =>
+                          settings.setThemeMode(s.first),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ]),
+          const SizedBox(height: 20),
+
+          // ── Profile ────────────────────────────────────────────────────
           _sectionHeader('Profile'),
           _card(children: [
             Padding(
@@ -245,11 +296,11 @@ class _SettingsPageState extends State<SettingsPage> {
                   enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide:
-                          const BorderSide(color: Color(0xFFE0E0E0))),
+                          BorderSide(color: context.c.border)),
                   focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide:
-                          const BorderSide(color: green, width: 2)),
+                          BorderSide(color: context.c.accent, width: 2)),
                 ),
               ),
             ),
@@ -289,8 +340,8 @@ class _SettingsPageState extends State<SettingsPage> {
           _sectionHeader('App Update'),
           _card(children: [
             ListTile(
-              leading: const Icon(Icons.system_update_rounded,
-                  color: green),
+              leading: Icon(Icons.system_update_rounded,
+                  color: context.c.accent),
               title: const Text('Check for update',
                   style: TextStyle(fontWeight: FontWeight.w600)),
               subtitle: Column(
@@ -298,8 +349,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 children: [
                   if (_appVersion.isNotEmpty)
                     Text(_appVersion,
-                        style: const TextStyle(
-                            fontSize: 12, color: kTextSub)),
+                        style: TextStyle(
+                            fontSize: 12, color: context.c.textSub)),
                   if (_otaStatus.isNotEmpty)
                     Text(_otaStatus,
                         style: TextStyle(
@@ -308,8 +359,8 @@ class _SettingsPageState extends State<SettingsPage> {
                                 ? const Color(0xFF8B3A2A)
                                 : _otaStatus.contains('up to date') ||
                                         _otaStatus.contains('complete')
-                                    ? green
-                                    : kTextSub)),
+                                    ? context.c.accent
+                                    : context.c.textSub)),
                   if (_downloading) ...[
                     const SizedBox(height: 6),
                     ClipRRect(
@@ -317,7 +368,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       child: LinearProgressIndicator(
                         value: _downloadProgress,
                         minHeight: 4,
-                        backgroundColor: const Color(0xFFE0E0E0),
+                        backgroundColor: context.c.border,
                         color: green,
                       ),
                     ),
@@ -330,8 +381,8 @@ class _SettingsPageState extends State<SettingsPage> {
                       height: 20,
                       child: CircularProgressIndicator(
                           strokeWidth: 2, color: green))
-                  : const Icon(Icons.chevron_right,
-                      color: kBorder),
+                  : Icon(Icons.chevron_right,
+                      color: context.c.border),
               onTap: (_checkingUpdate || _downloading)
                   ? null
                   : _checkForUpdate,
@@ -355,12 +406,12 @@ class _SettingsPageState extends State<SettingsPage> {
                 const About()),
             const Divider(height: 1, indent: 56),
             ListTile(
-              leading: const Icon(Icons.source_outlined,
-                  color: Color(0xFF1F4D3A)),
+              leading: Icon(Icons.source_outlined,
+                  color: context.c.accent),
               title: const Text('Open-source licences',
                   style: TextStyle(fontWeight: FontWeight.w500)),
-              trailing: const Icon(Icons.chevron_right,
-                  color: kBorder),
+              trailing: Icon(Icons.chevron_right,
+                  color: context.c.border),
               onTap: () => showLicensePage(
                 context: context,
                 applicationName: 'Learn Dha Anywaa',
@@ -373,8 +424,8 @@ class _SettingsPageState extends State<SettingsPage> {
               padding: const EdgeInsets.only(top: 12, bottom: 8),
               child: Center(
                 child: Text(_appVersion,
-                    style: const TextStyle(
-                        fontSize: 12, color: kTextSub)),
+                    style: TextStyle(
+                        fontSize: 12, color: context.c.textSub)),
               ),
             ),
           const SizedBox(height: 24),
@@ -387,18 +438,18 @@ class _SettingsPageState extends State<SettingsPage> {
     return Padding(
       padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Text(label.toUpperCase(),
-          style: const TextStyle(
+          style: TextStyle(
               fontSize: 11,
               letterSpacing: 1.4,
               fontWeight: FontWeight.bold,
-              color: kTextSub)),
+              color: context.c.textSub)),
     );
   }
 
   Widget _card({required List<Widget> children}) {
     return Container(
       decoration: BoxDecoration(
-          color: Colors.white, borderRadius: BorderRadius.circular(16)),
+          color: context.c.card, borderRadius: BorderRadius.circular(16)),
       child: Column(children: children),
     );
   }
@@ -406,10 +457,10 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget _navTile(
       BuildContext context, IconData icon, String label, Widget page) {
     return ListTile(
-      leading: Icon(icon, color: const Color(0xFF1F4D3A)),
+      leading: Icon(icon, color: context.c.accent),
       title: Text(label,
           style: const TextStyle(fontWeight: FontWeight.w500)),
-      trailing: const Icon(Icons.chevron_right, color: kBorder),
+      trailing: Icon(Icons.chevron_right, color: context.c.border),
       onTap: () => Navigator.push(
           context, MaterialPageRoute(builder: (_) => page)),
     );

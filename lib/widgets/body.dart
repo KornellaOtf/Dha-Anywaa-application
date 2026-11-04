@@ -7,10 +7,9 @@ class Body extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const green = kGreen;
-    const bg    = kBg;
 
     return Scaffold(
-      backgroundColor: bg,
+      backgroundColor: context.c.bg,
       appBar: AppBar(
         backgroundColor: green,
         foregroundColor: Colors.white,
@@ -25,7 +24,7 @@ class Body extends StatelessWidget {
           Container(
             width: double.infinity,
             decoration: BoxDecoration(
-                color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                color: context.c.card, borderRadius: BorderRadius.circular(16)),
             padding: const EdgeInsets.all(16),
             child: Image.asset(
               'assets/word_images/body.jpg',
@@ -43,12 +42,12 @@ class Body extends StatelessWidget {
           ..._parts.map((p) => Container(
                 margin: const EdgeInsets.only(bottom: 8),
                 decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.c.card,
                     borderRadius: BorderRadius.circular(12)),
                 child: ListTile(
                   leading: CircleAvatar(
                     radius: 26,
-                    backgroundColor: green.withValues(alpha: 0.1),
+                    backgroundColor: context.c.accent.withValues(alpha: 0.12),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 7),
                       child: FittedBox(
@@ -57,17 +56,19 @@ class Body extends StatelessWidget {
                             maxLines: 1,
                             style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: green,
+                                color: context.c.accent,
                                 fontSize: 13)),
                       ),
                     ),
                   ),
                   title: Text(p['anyName']!,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 15)),
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: context.c.text)),
                   trailing: Text(p['engName']!,
-                      style: const TextStyle(
-                          fontSize: 13, color: kTextSub)),
+                      style: TextStyle(
+                          fontSize: 13, color: context.c.textSub)),
                 ),
               )),
         ]),

@@ -50,13 +50,10 @@ class _VowelLetterState extends State<VowelLetter> {
 
   @override
   Widget build(BuildContext context) {
-    const bg    = kBg;
-    const green = kGreen;
-
     return Scaffold(
-      backgroundColor: bg,
+      backgroundColor: context.c.bg,
       appBar: AppBar(
-        backgroundColor: green,
+        backgroundColor: kGreen,
         foregroundColor: Colors.white,
         elevation: 0,
         title: const Text('Göörë moo cïp dwøl',
@@ -69,11 +66,11 @@ class _VowelLetterState extends State<VowelLetter> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _sectionHeader('Göörë moo cwøl ni cwaak ojabø', green),
+              _sectionHeader('Göörë moo cwøl ni cwaak ojabø'),
               const SizedBox(height: 8),
               _vowelGrid(vowelLetters, 0, 5),
               const SizedBox(height: 24),
-              _sectionHeader('Göörë moo cwøl ni cwaak odiyyø', green),
+              _sectionHeader('Göörë moo cwøl ni cwaak odiyyø'),
               const SizedBox(height: 8),
               _vowelGrid(vowelLetters, 5, 5),
             ],
@@ -83,9 +80,9 @@ class _VowelLetterState extends State<VowelLetter> {
     );
   }
 
-  Widget _sectionHeader(String title, Color green) {
+  Widget _sectionHeader(String title) {
     return Text(title,
-        style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: green));
+        style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: context.c.accent));
   }
 
   Widget _vowelGrid(List<Vowel> items, int offset, int count) {
@@ -103,7 +100,7 @@ class _VowelLetterState extends State<VowelLetter> {
           onTap: () => _play(v.sound),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.c.card,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4, offset: const Offset(0, 2))],
             ),
@@ -111,9 +108,9 @@ class _VowelLetterState extends State<VowelLetter> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(v.capitalLetter,
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: kText)),
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: context.c.text)),
                 Text(v.smallLetter,
-                    style: const TextStyle(fontSize: 14, color: kTextSub)),
+                    style: TextStyle(fontSize: 14, color: context.c.textSub)),
               ],
             ),
           ),

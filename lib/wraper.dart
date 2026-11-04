@@ -34,7 +34,7 @@ class _WrapperState extends State<Wrapper> {
   Widget build(BuildContext context) {
     if (_loading) {
       return Scaffold(
-        backgroundColor: kBg,
+        backgroundColor: context.c.bg,
         body: Center(
           child: TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: 1),
@@ -70,18 +70,18 @@ class _WrapperState extends State<Wrapper> {
                         color: kGreen.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.eco_rounded,
-                          color: kGreen, size: 48),
+                      child: Icon(Icons.eco_rounded,
+                          color: context.c.accent, size: 48),
                     ),
                   ),
                 ),
                 const SizedBox(height: 28),
-                const Text(
+                Text(
                   'Dha Anywaa',
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: kGreen,
+                    color: context.c.accent,
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -91,8 +91,8 @@ class _WrapperState extends State<Wrapper> {
                   height: 28,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.5,
-                    color: kGreen,
-                    backgroundColor: kGreen.withValues(alpha: 0.1),
+                    color: context.c.accent,
+                    backgroundColor: context.c.accent.withValues(alpha: 0.1),
                   ),
                 ),
               ],

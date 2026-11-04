@@ -60,7 +60,7 @@ class _NumberState extends State<Number> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kBg,
+      backgroundColor: context.c.bg,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
@@ -70,9 +70,9 @@ class _NumberState extends State<Number> {
           child: Material(
             elevation: 3,
             shape: const CircleBorder(),
-            color: Colors.white,
+            color: context.c.card,
             child: IconButton(
-              icon: const Icon(Icons.chevron_left_rounded, color: kText),
+              icon: Icon(Icons.chevron_left_rounded, color: context.c.text),
               onPressed: () {
                 if (_zoom) {
                   setState(() => _zoom = false);
@@ -83,9 +83,9 @@ class _NumberState extends State<Number> {
             ),
           ),
         ),
-        title: const Text('Numbers',
+        title: Text('Numbers',
             style: TextStyle(
-                fontWeight: FontWeight.bold, fontSize: 18, color: kText)),
+                fontWeight: FontWeight.bold, fontSize: 18, color: context.c.text)),
         centerTitle: true,
         actions: [
           Padding(
@@ -95,15 +95,16 @@ class _NumberState extends State<Number> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                 decoration: BoxDecoration(
-                  color: kGreen.withValues(alpha: 0.12),
+                  color: context.c.accent.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: kGreen.withValues(alpha: 0.2)),
+                  border: Border.all(
+                      color: context.c.accent.withValues(alpha: 0.2)),
                 ),
                 child: Text('$_learnedCount/${_numbers.length}',
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
-                        color: kGreen)),
+                        color: context.c.accent)),
               ),
             ),
           ),
@@ -148,7 +149,7 @@ class _NumberState extends State<Number> {
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
-              decoration: detailCardDeco(learned: learned),
+              decoration: detailCardDeco(context, learned: learned),
               child: Column(children: [
                 // Number circle
                 Container(
@@ -156,7 +157,9 @@ class _NumberState extends State<Number> {
                   height: 140,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: learned ? kGreen : kGreen.withValues(alpha: 0.10),
+                    color: learned
+                        ? kGreen
+                        : context.c.accent.withValues(alpha: 0.12),
                     boxShadow: [
                       BoxShadow(
                         color: (learned ? kGreen : kGold).withValues(alpha: 0.25),
@@ -171,7 +174,7 @@ class _NumberState extends State<Number> {
                       style: TextStyle(
                         fontSize: 72,
                         fontWeight: FontWeight.bold,
-                        color: learned ? Colors.white : kGreen,
+                        color: learned ? Colors.white : context.c.accent,
                       ),
                     ),
                   ),
@@ -181,28 +184,29 @@ class _NumberState extends State<Number> {
                     style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
-                        color: learned ? kGreen : kText)),
+                        color: learned ? context.c.accent : context.c.text)),
                 const SizedBox(height: 4),
                 Text(item['description']!,
-                    style: const TextStyle(fontSize: 16, color: kTextSub)),
+                    style: TextStyle(fontSize: 16, color: context.c.textSub)),
                 if (learned) ...[
                   const SizedBox(height: 14),
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 6),
                     decoration: BoxDecoration(
-                      color: kGreen.withValues(alpha: 0.12),
+                      color: context.c.accent.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: kGreen.withValues(alpha: 0.25)),
+                      border: Border.all(
+                          color: context.c.accent.withValues(alpha: 0.25)),
                     ),
-                    child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
                       Icon(Icons.check_circle_rounded,
-                          color: kGreen, size: 15),
-                      SizedBox(width: 5),
+                          color: context.c.accent, size: 15),
+                      const SizedBox(width: 5),
                       Text('Learned',
                           style: TextStyle(
                               fontSize: 13,
-                              color: kGreen,
+                              color: context.c.accent,
                               fontWeight: FontWeight.w700)),
                     ]),
                   ),
@@ -224,13 +228,15 @@ class _NumberState extends State<Number> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.c.card,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: const [kShadowSoft],
               ),
               child: Text('${_index + 1} / ${_numbers.length}',
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w600, fontSize: 13)),
+                  style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      color: context.c.text)),
             ),
             const SizedBox(width: 16),
             _NumNavBtn(
@@ -279,8 +285,8 @@ class _NumberState extends State<Number> {
                         icon: const Icon(Icons.add_task_outlined, size: 18),
                         label: const Text('Mark as learned'),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: kGreen,
-                          side: const BorderSide(color: kGreen, width: 1.5),
+                          foregroundColor: context.c.accent,
+                          side: BorderSide(color: context.c.accent, width: 1.5),
                           padding: const EdgeInsets.symmetric(vertical: 15),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14)),
@@ -353,7 +359,7 @@ class _NumGridCellState extends State<_NumGridCell> {
         duration: const Duration(milliseconds: 120),
         curve: Curves.easeOut,
         child: Container(
-          decoration: gridCellDeco(learned: widget.learned),
+          decoration: gridCellDeco(context, learned: widget.learned),
           child: Stack(alignment: Alignment.center, children: [
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -364,9 +370,8 @@ class _NumGridCellState extends State<_NumGridCell> {
                   height: 64,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: widget.learned
-                        ? kGreen.withValues(alpha: 0.15)
-                        : kGreen.withValues(alpha: 0.08),
+                    color: context.c.accent
+                        .withValues(alpha: widget.learned ? 0.15 : 0.08),
                   ),
                   child: Center(
                     child: Text(
@@ -374,19 +379,18 @@ class _NumGridCellState extends State<_NumGridCell> {
                       style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
-                          color: widget.learned ? kGreen : kGreen),
+                          color: context.c.accent),
                     ),
                   ),
                 ),
                 const SizedBox(height: 10),
                 Text(widget.item['anyDis']!,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
-                        color: kText)),
+                        color: context.c.text)),
                 Text(widget.item['description']!,
-                    style: const TextStyle(
-                        fontSize: 12, color: kTextSub)),
+                    style: TextStyle(fontSize: 12, color: context.c.textSub)),
               ],
             ),
             if (widget.learned)
@@ -396,11 +400,11 @@ class _NumGridCellState extends State<_NumGridCell> {
                 child: Container(
                   padding: const EdgeInsets.all(3),
                   decoration: BoxDecoration(
-                    color: kGreen.withValues(alpha: 0.14),
+                    color: context.c.accent.withValues(alpha: 0.14),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.check_rounded,
-                      color: kGreen, size: 14),
+                  child: Icon(Icons.check_rounded,
+                      color: context.c.accent, size: 14),
                 ),
               ),
           ]),
@@ -424,7 +428,7 @@ class _NumNavBtn extends StatelessWidget {
     return Material(
       elevation: enabled ? 4 : 0,
       shape: const CircleBorder(),
-      color: Colors.white,
+      color: context.c.card,
       shadowColor: kGreen.withValues(alpha: 0.2),
       child: InkWell(
         customBorder: const CircleBorder(),
@@ -433,7 +437,7 @@ class _NumNavBtn extends StatelessWidget {
           width: 56,
           height: 56,
           child: Icon(icon,
-              color: enabled ? kText : Colors.grey[400], size: 26),
+              color: enabled ? context.c.text : Colors.grey[400], size: 26),
         ),
       ),
     );

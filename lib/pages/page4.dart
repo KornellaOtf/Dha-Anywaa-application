@@ -44,14 +44,14 @@ class _Page4State extends State<Page4> {
           Text('Quit quiz?',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         ]),
-        content: const Text('Your progress will be lost.',
-            style: TextStyle(color: kTextSub)),
+        content: Text('Your progress will be lost.',
+            style: TextStyle(color: context.c.textSub)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Keep going',
+            child: Text('Keep going',
                 style: TextStyle(
-                    color: kGreen, fontWeight: FontWeight.w600)),
+                    color: context.c.accent, fontWeight: FontWeight.w600)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -105,25 +105,25 @@ class _Page4State extends State<Page4> {
   ]..shuffle();
 
   Color _optionBgColor(int pageIdx, int listIdx) {
-    if (_pageSelectedIndex != pageIdx) return Colors.white;
+    if (_pageSelectedIndex != pageIdx) return context.c.card;
     final q        = _questionsList[pageIdx];
     final correct  = q.options[listIdx] == q.answer_index;
     final selected = _selectedIndex == listIdx;
-    if (selected && correct)  return const Color(0xFFD4EDDA);
-    if (selected && !correct) return const Color(0xFFFFE5E5);
-    if (correct)              return const Color(0xFFD4EDDA).withValues(alpha: 0.5);
-    return Colors.white;
+    if (selected && correct)  return const Color(0xFF28A745).withValues(alpha: 0.20);
+    if (selected && !correct) return const Color(0xFFDC3545).withValues(alpha: 0.20);
+    if (correct)              return const Color(0xFF28A745).withValues(alpha: 0.10);
+    return context.c.card;
   }
 
   Color _optionBorderColor(int pageIdx, int listIdx) {
-    if (_pageSelectedIndex != pageIdx) return kBorder;
+    if (_pageSelectedIndex != pageIdx) return context.c.border;
     final q        = _questionsList[pageIdx];
     final correct  = q.options[listIdx] == q.answer_index;
     final selected = _selectedIndex == listIdx;
     if (selected && correct)  return const Color(0xFF28A745);
     if (selected && !correct) return const Color(0xFFDC3545);
     if (correct)              return const Color(0xFF28A745).withValues(alpha: 0.5);
-    return kBorder;
+    return context.c.border;
   }
 
   @override
@@ -136,7 +136,7 @@ class _Page4State extends State<Page4> {
         if (should && context.mounted) Navigator.pop(context);
       },
       child: Scaffold(
-        backgroundColor: kBg,
+        backgroundColor: context.c.bg,
         body: PageView.builder(
           controller: _controller,
           physics: const NeverScrollableScrollPhysics(),
@@ -154,10 +154,10 @@ class _Page4State extends State<Page4> {
                     Material(
                       elevation: 3,
                       shape: const CircleBorder(),
-                      color: Colors.white,
+                      color: context.c.card,
                       child: IconButton(
-                        icon: const Icon(Icons.close_rounded,
-                            size: 18, color: kText),
+                        icon: Icon(Icons.close_rounded,
+                            size: 18, color: context.c.text),
                         onPressed: () async {
                           final should = await _onWillPop();
                           if (should && context.mounted) {
@@ -187,10 +187,10 @@ class _Page4State extends State<Page4> {
                       ),
                       child: Text(
                         '$_finalResult/${_questionsList.length}',
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: kGreen),
+                            color: context.c.accent),
                       ),
                     ),
                   ]),
@@ -211,7 +211,7 @@ class _Page4State extends State<Page4> {
                       builder: (_, val, __) => LinearProgressIndicator(
                         value: val,
                         minHeight: 6,
-                        backgroundColor: const Color(0xFFE8E8E8),
+                        backgroundColor: context.c.border,
                         color: kGold,
                       ),
                     ),
@@ -227,7 +227,7 @@ class _Page4State extends State<Page4> {
                       width: double.infinity,
                       constraints: const BoxConstraints(maxHeight: 200),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: context.c.card,
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: const [kShadowCard],
                       ),
@@ -477,7 +477,7 @@ class _OptionTileState extends State<_OptionTile> {
                   ? widget.correct
                       ? const Color(0xFF28A745).withValues(alpha: 0.15)
                       : const Color(0xFFDC3545).withValues(alpha: 0.15)
-                  : const Color(0xFFF0F0F0),
+                  : context.c.border,
               child: Text(
                 widget.letter,
                 style: TextStyle(
@@ -487,15 +487,15 @@ class _OptionTileState extends State<_OptionTile> {
                       ? widget.correct
                           ? const Color(0xFF28A745)
                           : const Color(0xFFDC3545)
-                      : kTextSub,
+                      : context.c.textSub,
                 ),
               ),
             ),
             title: Text(widget.label,
-                style: const TextStyle(
+                style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 15,
-                    color: kText)),
+                    color: context.c.text)),
             subtitle: widget.answered && (widget.selected || widget.correct)
                 ? Text(
                     widget.selected

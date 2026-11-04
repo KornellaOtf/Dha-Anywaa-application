@@ -126,7 +126,7 @@ class _Page1State extends State<Page1> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kBg,
+      backgroundColor: context.c.bg,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
@@ -136,9 +136,9 @@ class _Page1State extends State<Page1> with SingleTickerProviderStateMixin {
           child: Material(
             elevation: 3,
             shape: const CircleBorder(),
-            color: Colors.white,
+            color: context.c.card,
             child: IconButton(
-              icon: const Icon(Icons.chevron_left_rounded, color: kText),
+              icon: Icon(Icons.chevron_left_rounded, color: context.c.text),
               onPressed: () {
                 if (_zoom) {
                   setState(() => _zoom = false);
@@ -149,9 +149,9 @@ class _Page1State extends State<Page1> with SingleTickerProviderStateMixin {
             ),
           ),
         ),
-        title: const Text('Alphabet',
+        title: Text('Alphabet',
             style: TextStyle(
-                fontWeight: FontWeight.bold, fontSize: 18, color: kText)),
+                fontWeight: FontWeight.bold, fontSize: 18, color: context.c.text)),
         centerTitle: true,
         actions: [
           Padding(
@@ -167,10 +167,10 @@ class _Page1State extends State<Page1> with SingleTickerProviderStateMixin {
                 ),
                 child: Text(
                   '$_learnedCount/${_letters.length}',
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
-                      color: kGreen),
+                      color: context.c.accent),
                 ),
               ),
             ),
@@ -224,10 +224,10 @@ class _Page1State extends State<Page1> with SingleTickerProviderStateMixin {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 36),
                     decoration: BoxDecoration(
-                      color: learned ? kGreen.withValues(alpha: 0.07) : Colors.white,
+                      color: learned ? kGreen.withValues(alpha: 0.07) : context.c.card,
                       borderRadius: BorderRadius.circular(24),
                       border: learned
-                          ? Border.all(color: kGreen, width: 1.5)
+                          ? Border.all(color: context.c.accent, width: 1.5)
                           : null,
                       boxShadow: [
                         BoxShadow(
@@ -253,7 +253,7 @@ class _Page1State extends State<Page1> with SingleTickerProviderStateMixin {
                             style: TextStyle(
                                 fontSize: 72,
                                 fontWeight: FontWeight.bold,
-                                color: learned ? kGreen : kText),
+                                color: learned ? context.c.accent : context.c.text),
                           ),
                         ),
                       ),
@@ -261,15 +261,15 @@ class _Page1State extends State<Page1> with SingleTickerProviderStateMixin {
                       // Upper + lower
                       Text(
                         '${letter.capitalLetter}  /  ${letter.smallLetter}',
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w600,
-                            color: kText),
+                            color: context.c.text),
                       ),
                       const SizedBox(height: 6),
                       Text('Sound: ${letter.sound.split('/').last}',
-                          style: const TextStyle(
-                              fontSize: 12, color: kTextMuted)),
+                          style: TextStyle(
+                              fontSize: 12, color: context.c.textSub)),
                       if (learned) ...[
                         const SizedBox(height: 14),
                         Container(
@@ -281,14 +281,14 @@ class _Page1State extends State<Page1> with SingleTickerProviderStateMixin {
                             border:
                                 Border.all(color: kGreen.withValues(alpha: 0.25)),
                           ),
-                          child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                          child: Row(mainAxisSize: MainAxisSize.min, children: [
                             Icon(Icons.check_circle_rounded,
-                                color: kGreen, size: 15),
-                            SizedBox(width: 5),
+                                color: context.c.accent, size: 15),
+                            const SizedBox(width: 5),
                             Text('Learned',
                                 style: TextStyle(
                                     fontSize: 13,
-                                    color: kGreen,
+                                    color: context.c.accent,
                                     fontWeight: FontWeight.w700)),
                           ]),
                         ),
@@ -348,7 +348,7 @@ class _Page1State extends State<Page1> with SingleTickerProviderStateMixin {
           ]),
           const SizedBox(height: 12),
           Text('${_index + 1} of ${_letters.length}',
-              style: const TextStyle(fontSize: 12, color: kTextMuted)),
+              style: TextStyle(fontSize: 12, color: context.c.textSub)),
           const SizedBox(height: 16),
 
           // ── Mark as learned ───────────────────────────────────────────────
@@ -389,8 +389,8 @@ class _Page1State extends State<Page1> with SingleTickerProviderStateMixin {
                         icon: const Icon(Icons.add_task_outlined, size: 18),
                         label: const Text('Mark as learned'),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: kGreen,
-                          side: const BorderSide(color: kGreen, width: 1.5),
+                          foregroundColor: context.c.accent,
+                          side: BorderSide(color: context.c.accent, width: 1.5),
                           padding: const EdgeInsets.symmetric(vertical: 15),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14)),
@@ -447,7 +447,7 @@ class _Page1State extends State<Page1> with SingleTickerProviderStateMixin {
             decoration: BoxDecoration(
               color: selected
                   ? kGreen
-                  : (learned ? kGreen.withValues(alpha: 0.12) : Colors.white),
+                  : (learned ? kGreen.withValues(alpha: 0.12) : context.c.card),
               borderRadius: BorderRadius.circular(12),
               boxShadow: selected
                   ? [
@@ -468,7 +468,7 @@ class _Page1State extends State<Page1> with SingleTickerProviderStateMixin {
                   child: Text(
                     _letters[i].capitalLetter,
                     style: TextStyle(
-                      color: selected ? Colors.white : kText,
+                      color: selected ? Colors.white : context.c.text,
                       fontWeight: FontWeight.bold,
                       fontSize: _letters[i].capitalLetter.length > 1 ? 14 : 18,
                     ),
@@ -482,7 +482,7 @@ class _Page1State extends State<Page1> with SingleTickerProviderStateMixin {
                       width: 10,
                       height: 10,
                       decoration: BoxDecoration(
-                          color: kGreen,
+                          color: context.c.accent,
                           borderRadius: BorderRadius.circular(5)),
                     ),
                   ),
@@ -548,7 +548,7 @@ class _LetterCellState extends State<_LetterCell> {
         curve: Curves.easeOut,
         child: Container(
           decoration: BoxDecoration(
-            color: widget.learned ? kGreen.withValues(alpha: 0.12) : Colors.white,
+            color: widget.learned ? kGreen.withValues(alpha: 0.12) : context.c.card,
             borderRadius: BorderRadius.circular(14),
             border: widget.learned
                 ? Border.all(color: kGreen.withValues(alpha: 0.35))
@@ -562,7 +562,7 @@ class _LetterCellState extends State<_LetterCell> {
                 child: Text(
                   widget.letter,
                   style: TextStyle(
-                    color: widget.learned ? kGreen : kText,
+                    color: widget.learned ? context.c.accent : context.c.text,
                     fontWeight: FontWeight.bold,
                     fontSize: widget.letter.length > 1 ? 14 : 18,
                   ),
@@ -576,7 +576,7 @@ class _LetterCellState extends State<_LetterCell> {
                     width: 8,
                     height: 8,
                     decoration: BoxDecoration(
-                        color: kGreen,
+                        color: context.c.accent,
                         borderRadius: BorderRadius.circular(4)),
                   ),
                 ),
@@ -602,7 +602,7 @@ class _AlphaNavBtn extends StatelessWidget {
     return Material(
       elevation: enabled ? 4 : 0,
       shape: const CircleBorder(),
-      color: Colors.white,
+      color: context.c.card,
       shadowColor: kGreen.withValues(alpha: 0.2),
       child: InkWell(
         customBorder: const CircleBorder(),
@@ -611,7 +611,7 @@ class _AlphaNavBtn extends StatelessWidget {
           width: 56,
           height: 56,
           child: Icon(icon,
-              color: enabled ? kText : Colors.grey[400], size: 26),
+              color: enabled ? context.c.text : Colors.grey[400], size: 26),
         ),
       ),
     );

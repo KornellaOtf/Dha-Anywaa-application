@@ -32,7 +32,7 @@ class _NameEntryState extends State<NameEntry> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kBg,
+      backgroundColor: context.c.bg,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 28),
@@ -55,40 +55,40 @@ class _NameEntryState extends State<NameEntry> {
                           width: 72,
                           height: 72,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const Icon(
-                              Icons.eco_rounded, color: kGreen, size: 44),
+                          errorBuilder: (_, __, ___) =>
+                              Icon(Icons.eco_rounded, color: context.c.accent, size: 44),
                         ),
                       ),
                       const SizedBox(height: 20),
-                      const Text('Welcome to',
-                          style: TextStyle(fontSize: 16, color: kTextSub)),
+                      Text('Welcome to',
+                          style: TextStyle(fontSize: 16, color: context.c.textSub)),
                       const SizedBox(height: 4),
-                      const Text('Obwöc paac',
+                      Text('Obwöc paac',
                           style: TextStyle(
                               fontSize: 34,
                               fontWeight: FontWeight.bold,
-                              color: kText)),
+                              color: context.c.text)),
                       const SizedBox(height: 4),
-                      const Text('Dha Anywaa learning hub',
-                          style: TextStyle(fontSize: 15, color: kTextSub)),
+                      Text('Dha Anywaa learning hub',
+                          style: TextStyle(fontSize: 15, color: context.c.textSub)),
                     ],
                   ),
                 ),
                 const SizedBox(height: 40),
 
                 // ── Label ─────────────────────────────────────────────────
-                const Text('What\'s your name?',
+                Text('What\'s your name?',
                     style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: kText)),
+                        color: context.c.text)),
                 const SizedBox(height: 14),
 
                 // ── Input with animated shadow ────────────────────────────
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.c.card,
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: _focused
                         ? [
@@ -110,12 +110,12 @@ class _NameEntryState extends State<NameEntry> {
                     decoration: InputDecoration(
                       hintText: 'Enter your name',
                       hintStyle:
-                          const TextStyle(color: kTextMuted, fontSize: 16),
+                          TextStyle(color: context.c.textSub, fontSize: 16),
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: context.c.card,
                       prefixIcon: Icon(
                         Icons.person_outline_rounded,
-                        color: _focused ? kGreen : kTextMuted,
+                        color: _focused ? context.c.accent : context.c.textSub,
                         size: 22,
                       ),
                       border: OutlineInputBorder(
@@ -124,11 +124,11 @@ class _NameEntryState extends State<NameEntry> {
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(color: kBorder),
+                        borderSide: BorderSide(color: context.c.border),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(color: kGreen, width: 2),
+                        borderSide: BorderSide(color: context.c.accent, width: 2),
                       ),
                     ),
                   ),
