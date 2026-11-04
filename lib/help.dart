@@ -5,14 +5,14 @@ class Help extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const bg    = Color(0xFFF5F0E8);
-    const green = Color(0xFF1B4332);
+    const bg    = Color(0xFFF6EFE3);
+    const green = Color(0xFF1F4D3A);
 
     const sections = [
       _HelpSection(
         icon: Icons.abc,
         title: 'Alphabet (Göörë)',
-        body: 'The first page contains Dha Anywaa alphabets — both small and capital letters. '
+        body: 'The first page contains Dha Anywaa alphabets, both small and capital letters. '
               'Tap any letter and the app will read it aloud.',
       ),
       _HelpSection(
@@ -28,7 +28,7 @@ class Help extends StatelessWidget {
       _HelpSection(
         icon: Icons.quiz_outlined,
         title: 'Quiz (Päärö)',
-        body: 'The fourth page tests comprehension. Choose an answer — green means correct, red means wrong. '
+        body: 'The fourth page tests comprehension. Choose an answer. Green means correct, red means wrong. '
               'Tap "Next question" (Pöödhï) to advance, or "Back" (Døø Køøri) to go back.',
       ),
       _HelpSection(

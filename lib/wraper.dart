@@ -60,9 +60,19 @@ class _WrapperState extends State<Wrapper> {
                     ],
                   ),
                   child: Image.asset(
-                    'assets/word_images/awal_icon.png',
+                    'assets/word_images/awal_icon.jpeg',
                     width: 100,
                     height: 100,
+                    errorBuilder: (_, __, ___) => Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: kGreen.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.eco_rounded,
+                          color: kGreen, size: 48),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 28),
