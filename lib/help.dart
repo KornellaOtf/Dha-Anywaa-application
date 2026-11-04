@@ -28,14 +28,16 @@ class Help extends StatelessWidget {
       _HelpSection(
         icon: Icons.quiz_outlined,
         title: 'Quiz (Päärö)',
-        body: 'The fourth page tests comprehension. Choose an answer. Green means correct, red means wrong. '
-              'Tap "Next question" (Pöödhï) to advance, or "Back" (Døø Køøri) to go back.',
+        body: 'The fourth page tests comprehension. Choose an answer. '
+              'Correct answers show a check mark and the word "Correct". '
+              'Wrong answers show a cross and the words "Not quite". '
+              'Tap "Next question" to advance.',
       ),
       _HelpSection(
         icon: Icons.menu_outlined,
         title: 'Sidebar',
         body: 'The sidebar (hamburger menu) gives access to Dha Anywaa vowels (Göörë moo cïp dwøl), '
-              'Help, and About. Tap "More" to visit the website.',
+              'Privacy Policy, Terms of Use, Help, About and Settings.',
       ),
     ];
 

@@ -2,7 +2,9 @@ import 'package:dha_anywaaa/about.dart';
 import 'package:dha_anywaaa/app_settings.dart';
 import 'package:dha_anywaaa/components/savedData.dart';
 import 'package:dha_anywaaa/help.dart';
+import 'package:dha_anywaaa/privacy_policy_page.dart';
 import 'package:dha_anywaaa/services/ota_service.dart';
+import 'package:dha_anywaaa/terms_page.dart';
 import 'package:flutter/material.dart';
 import 'package:open_file/open_file.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -338,13 +340,42 @@ class _SettingsPageState extends State<SettingsPage> {
           // ── Info ────────────────────────────────────────────────────────
           _sectionHeader('Info'),
           _card(children: [
+            _navTile(context, Icons.privacy_tip_outlined, 'Privacy Policy',
+                const PrivacyPolicyPage()),
+            const Divider(height: 1, indent: 56),
+            _navTile(context, Icons.gavel_outlined, 'Terms of Use',
+                const TermsPage()),
+            const Divider(height: 1, indent: 56),
             _navTile(context, Icons.help_outline_rounded, 'Help',
                 const Help()),
             const Divider(height: 1, indent: 56),
             _navTile(context, Icons.info_outline_rounded, 'About',
                 const About()),
+            const Divider(height: 1, indent: 56),
+            ListTile(
+              leading: const Icon(Icons.source_outlined,
+                  color: Color(0xFF1F4D3A)),
+              title: const Text('Open-source licences',
+                  style: TextStyle(fontWeight: FontWeight.w500)),
+              trailing: const Icon(Icons.chevron_right,
+                  color: Color(0xFFBBBBBB)),
+              onTap: () => showLicensePage(
+                context: context,
+                applicationName: 'Learn Dha Anywaa',
+                applicationVersion: _appVersion,
+              ),
+            ),
           ]),
-          const SizedBox(height: 32),
+          if (_appVersion.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 12, bottom: 8),
+              child: Center(
+                child: Text(_appVersion,
+                    style: const TextStyle(
+                        fontSize: 12, color: Color(0xFF888888))),
+              ),
+            ),
+          const SizedBox(height: 24),
         ],
       ),
     );
