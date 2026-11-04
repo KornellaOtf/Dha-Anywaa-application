@@ -75,11 +75,16 @@ jobs:
         run: |
           OWNER=$(echo "${{ github.repository }}" | cut -d/ -f1)
           REPO=$(echo "${{ github.repository }}" | cut -d/ -f2)
-          VERSION=${TAG#v}   # strip leading 'v'
+          # Version + versionCode come from pubspec.yaml (e.g. "1.1.0+4"),
+          # so the manifest matches the versionCode baked into the APK.
+          PV=$(grep '^version:' pubspec.yaml | awk '{print $2}')   # 1.1.0+4
+          VERSION=${PV%%+*}                                         # 1.1.0
+          VCODE=${PV##*+}                                           # 4
+          [ -z "$VCODE" ] && VCODE=${{ github.run_number }}
           cat > manifest.json <<EOF
           {
             "version": "${VERSION}",
-            "versionCode": ${{ github.run_number }},
+            "versionCode": ${VCODE},
             "apkUrl": "https://github.com/${OWNER}/${REPO}/releases/download/${TAG}/dha-anywaa-${TAG}.apk",
             "sha256": "${SHA256}",
             "sizeBytes": ${SIZE},
