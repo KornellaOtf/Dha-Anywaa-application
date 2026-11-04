@@ -27,7 +27,7 @@ class Body extends StatelessWidget {
                 color: Colors.white, borderRadius: BorderRadius.circular(16)),
             padding: const EdgeInsets.all(16),
             child: Image.asset(
-              'assets/body_part/body.png',
+              'assets/word_images/body.jpg',
               fit: BoxFit.contain,
               errorBuilder: (_, __, ___) => const SizedBox(
                 height: 300,
