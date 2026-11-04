@@ -1,7 +1,7 @@
 import 'package:dha_anywaaa/about.dart';
 import 'package:dha_anywaaa/anywaa_ai_page.dart';
 import 'package:dha_anywaaa/widgets/anywaa_ai_logo.dart';
-import 'package:dha_anywaaa/widgets/update_dialog.dart';
+import 'package:dha_anywaaa/ota_update_page.dart';
 import 'package:dha_anywaaa/components/savedData.dart';
 import 'package:dha_anywaaa/help.dart';
 import 'package:dha_anywaaa/privacy_policy_page.dart';
@@ -97,18 +97,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _showUpdateDialog(OtaCheckResult result) {
-    showAnywaaUpdateDialog(
-      context,
-      result,
-      // Use the same resumable in-app download as Settings, then open Settings
-      // so the progress bar and "Install update" action are visible.
-      onUpdate: () {
-        OtaService().startDownload(result);
-        if (!mounted) return;
-        Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const SettingsPage()));
-      },
-    );
+    Navigator.push(
+        context, MaterialPageRoute(builder: (_) => OtaUpdatePage(result: result)));
   }
 
   Future<void> _load() async {

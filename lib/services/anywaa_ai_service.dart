@@ -58,6 +58,13 @@ class AnywaaAiService {
   bool get ready => _words.isNotEmpty;
   int get wordCount => _words.length;
 
+  /// The entry from the last successful lookup. Short follow-ups resolve
+  /// against it so the chat behaves like a conversation. Cleared by [newChat].
+  _Context? _last;
+
+  /// Forgets the current conversational subject (start a fresh thread).
+  void newChat() => _last = null;
+
   /// Loads the bundled dictionary once. Safe to call repeatedly.
   Future<void> load() async {
     if (ready) return;
@@ -122,8 +129,13 @@ class AnywaaAiService {
     }
     final p = _parse(query);
 
+    // Follow-ups resolve against the last looked-up entry first, so the chat
+    // reads as a conversation. Returns null for a fresh question.
+    final follow = _followUp(p);
+    if (follow != null) return follow;
+
     // Conversational intents (identity, capability, origin, bare greeting)
-    // run first so they read like a chat, not a failed lookup.
+    // run next so they read like a chat, not a failed lookup.
     final intent = _intent(p);
     if (intent != null) return intent;
 
@@ -140,8 +152,14 @@ class AnywaaAiService {
       );
     }
 
-    final matches = _lookup(term, p);
+    // Dictionary first; the taught memory (numbers) was handled above.
+    return _translate(term, p);
+  }
 
+  /// Runs a dictionary lookup and, on a hit, remembers the entry as the current
+  /// conversational subject so short follow-ups can resolve against it.
+  AnywaaAnswer _translate(String term, _Parsed p) {
+    final matches = _lookup(term, p);
     if (matches.isEmpty) {
       final sugg = _suggest(term, p);
       final buf = StringBuffer(
@@ -154,8 +172,23 @@ class AnywaaAiService {
       }
       return AnywaaAnswer(text: buf.toString(), matches: [], suggestions: sugg);
     }
+    final text = _compose(matches, p);
+    _last = _Context(
+      match: matches.first,
+      matches: matches,
+      toEnglish: _direction(matches.first, p),
+      replyText: text,
+    );
+    return AnywaaAnswer(text: text, matches: matches);
+  }
 
-    return AnywaaAnswer(text: _compose(matches, p), matches: matches);
+  /// Which way the user is asking: true = give the English meaning.
+  bool _direction(AnywaaMatch top, _Parsed p) {
+    if (p.wantsEnglish) return true;
+    if (p.wantsAnywaa) return false;
+    // No explicit hint: a hit on the Anywaa side means they want English, and a
+    // hit on the English side means they want the Dha word.
+    return top.source == 'dha';
   }
 
   // ── Matching ────────────────────────────────────────────────────────────────
@@ -333,6 +366,109 @@ class AnywaaAiService {
     return entries.map((e) => e.key).take(5).toList();
   }
 
+  // ── Conversational follow-ups ──────────────────────────────────────────────
+
+  /// Resolves short follow-up questions against the last looked-up entry.
+  /// Returns null when the query is a fresh question, so the caller continues
+  /// through intents, numbers and a normal dictionary lookup.
+  AnywaaAnswer? _followUp(_Parsed p) {
+    final raw = p.raw;
+    bool has(String s) => raw.contains(s);
+
+    final isPlural = has('plural');
+    final isPossessive = has('possessive');
+    final isRepeat = has('again') || has('repeat') || has('once more');
+    final isExample = has('example') || has('in a sentence') || has('use it');
+    final isMeaning = has('it mean') || has('its meaning') ||
+        has('meaning of it') || has('what does it mean');
+    final isAbout = has('what about') || has('how about');
+    // "and <word>" is a follow-up only when it is not one of the specific
+    // field questions above (those also begin with "and the").
+    final isAndWord = raw.startsWith('and ') && !isPlural && !isPossessive;
+
+    final needsSubject = isPlural || isPossessive || isRepeat ||
+        isExample || isMeaning;
+    if (needsSubject && _last == null) {
+      return const AnywaaAnswer(
+        text: 'Which word do you mean? Ask me about a word first, then you '
+            'can follow up on it.',
+        matches: [],
+      );
+    }
+
+    if (isPlural) return _fieldFallback('plural');
+    if (isPossessive) return _fieldFallback('possessive');
+    if (isRepeat) return _repeatLast();
+    if (isExample) {
+      return const AnywaaAnswer(
+        text: "I don't have an example sentence for that word yet.",
+        matches: [],
+      );
+    }
+    if (isMeaning) return _meaning();
+
+    if (isAbout || isAndWord) {
+      final term = _extractTerm(raw, isAbout: isAbout);
+      if (term.isEmpty) return null; // fall through as a normal query
+      // A new lookup asked in the same direction as the previous one.
+      final p2 = _Parsed(
+        raw: term,
+        core: term.split(' '),
+        corePhrase: term,
+        wantsEnglish: _last?.toEnglish == true,
+        wantsAnywaa: _last != null && _last!.toEnglish == false,
+      );
+      return _translate(term, p2);
+    }
+    return null;
+  }
+
+  /// The data has no plural or possessive field, and we never invent one, so
+  /// report the gap honestly while re-grounding on the base word we do have.
+  AnywaaAnswer _fieldFallback(String field) {
+    final c = _last!;
+    final en = c.match.entry.en;
+    final dha = c.match.entry.dha;
+    return AnywaaAnswer(
+      text: 'I don\'t have a separate $field form for "$en" in the local '
+          'dictionary. Its base Dha Anywaa word is $dha.',
+      matches: const [],
+    );
+  }
+
+  AnywaaAnswer _repeatLast() {
+    final c = _last!;
+    // There is no per-word audio in the local data, so "say it again" repeats
+    // the last translation verbatim rather than inventing a recording.
+    return AnywaaAnswer(text: c.replyText, matches: c.matches);
+  }
+
+  AnywaaAnswer _meaning() {
+    final c = _last!;
+    final defs = c.match.entry.defs.trim();
+    if (defs.isEmpty) {
+      return const AnywaaAnswer(
+        text: "I don't have a stored meaning for that word yet.",
+        matches: [],
+      );
+    }
+    return AnywaaAnswer(
+      text: '"${c.match.entry.dha}" means $defs',
+      matches: [c.match],
+    );
+  }
+
+  String _extractTerm(String raw, {required bool isAbout}) {
+    var s = raw;
+    if (isAbout) {
+      final i = s.indexOf('about');
+      if (i >= 0) s = s.substring(i + 'about'.length);
+    } else if (s.startsWith('and ')) {
+      s = s.substring(4);
+    }
+    return fold(s).trim();
+  }
+
   String _compose(List<AnywaaMatch> m, _Parsed p) {
     final top = m.first;
     final en = top.entry.en;
@@ -341,16 +477,7 @@ class AnywaaAiService {
     // Work out which way the user is asking, then phrase it like a helpful
     // assistant instead of a dictionary line. The pick is deterministic (seeded
     // by the question) so it adds variety without ever changing the answer.
-    final bool toEnglish;
-    if (p.wantsEnglish) {
-      toEnglish = true;
-    } else if (p.wantsAnywaa) {
-      toEnglish = false;
-    } else {
-      // No explicit direction: a hit on the Anywaa side means they typed a Dha
-      // word and want the English meaning, and vice versa.
-      toEnglish = top.source == 'dha';
-    }
+    final toEnglish = _direction(top, p);
 
     final toDha = [
       'Sure! The Dha Anywaa word for "$en" is $dha.',
@@ -490,6 +617,19 @@ class AnywaaAiService {
 
   static String _capitaliseFirst(String s) =>
       s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
+}
+
+class _Context {
+  final AnywaaMatch match;
+  final List<AnywaaMatch> matches;
+  final bool toEnglish;
+  final String replyText;
+  const _Context({
+    required this.match,
+    required this.matches,
+    required this.toEnglish,
+    required this.replyText,
+  });
 }
 
 class _Parsed {

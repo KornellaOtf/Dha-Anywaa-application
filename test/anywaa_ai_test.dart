@@ -10,6 +10,10 @@ import 'package:dha_anywaaa/services/anywaa_ai_service.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  // Each test starts a fresh thread so conversational context never leaks
+  // from one test into the next.
+  setUp(() => AnywaaAiService.instance.newChat());
+
   test('offline assistant answers only from the bundled dictionary', () async {
     final ai = AnywaaAiService.instance;
     await ai.load();
@@ -211,5 +215,63 @@ void main() {
     final enOnly = ai.answer('water');
     expect(enOnly.found, isTrue);
     expect(enOnly.text, contains('Dha Anywaa'));
+  });
+
+  test('conversation: follow-ups resolve against the last word', () async {
+    final ai = AnywaaAiService.instance;
+    await ai.load();
+
+    final t1 = ai.answer('How do you say water');
+    expect(t1.found, isTrue);
+    expect(t1.text, contains('Pïï'));
+
+    // "and the plural?" is about the same word. No plural data exists, so it
+    // must say so honestly instead of inventing one.
+    final t2 = ai.answer('and the plural?');
+    expect(t2.found, isFalse);
+    expect(t2.text, contains('plural'));
+    expect(t2.text, contains('Pïï'));
+
+    // "say it again" replays the last translation (still about water).
+    final t3 = ai.answer('say it again');
+    expect(t3.found, isTrue);
+    expect(t3.text, contains('Pïï'));
+    expect(t3.text, contains('Dha Anywaa'));
+  });
+
+  test('conversation: example sentence is refused, not invented', () async {
+    final ai = AnywaaAiService.instance;
+    await ai.load();
+
+    expect(ai.answer('What does wic mean').found, isTrue);
+    final ex = ai.answer('use it in a sentence');
+    expect(ex.found, isFalse);
+    expect(ex.text, "I don't have an example sentence for that word yet.");
+  });
+
+  test('conversation: "what about X" runs a new lookup in the same direction',
+      () async {
+    final ai = AnywaaAiService.instance;
+    await ai.load();
+
+    final t1 = ai.answer('translate house');
+    expect(t1.found, isTrue);
+    expect(t1.text, contains('Dha Anywaa'));
+
+    final t2 = ai.answer('what about spider?');
+    expect(t2.found, isTrue);
+    expect(t2.matches.first.entry.en, 'spider');
+    expect(t2.matches.first.entry.dha, 'Othïënø');
+    // Same kind of question as "translate house": answered in Dha Anywaa.
+    expect(t2.text, contains('Dha Anywaa'));
+  });
+
+  test('conversation: a follow-up with no subject asks which word', () async {
+    final ai = AnywaaAiService.instance;
+    await ai.load();
+
+    final first = ai.answer('and the plural?');
+    expect(first.found, isFalse);
+    expect(first.text, contains('Which word'));
   });
 }

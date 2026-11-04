@@ -5,12 +5,10 @@ import 'package:dha_anywaaa/app_settings.dart';
 import 'package:dha_anywaaa/components/savedData.dart';
 import 'package:dha_anywaaa/help.dart';
 import 'package:dha_anywaaa/privacy_policy_page.dart';
+import 'package:dha_anywaaa/ota_update_page.dart';
 import 'package:dha_anywaaa/services/ota_service.dart';
 import 'package:dha_anywaaa/terms_page.dart';
-import 'package:dha_anywaaa/widgets/anywaa_ai_logo.dart';
-import 'package:dha_anywaaa/widgets/update_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:open_file/open_file.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -21,37 +19,25 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   final SavedData _savedData = SavedData();
-  final _nameCtrl            = TextEditingController();
-  String _appVersion         = '';
-
-  // OTA state. The download itself lives in the OtaService singleton so it
-  // keeps running when this screen is left, rebuilt, or a progress tick fires.
+  final _nameCtrl = TextEditingController();
   final OtaService _ota = OtaService();
-  bool   _checkingUpdate = false;
-  String _otaStatus      = '';   // transient "checking / up to date" message
-  bool   _apkOpened      = false;
+
+  String _appVersion = '';
+  String _name       = '';
+  bool   _checking   = false;
 
   @override
   void initState() {
     super.initState();
     _loadName();
     _loadVersion();
-    _ota.download.addListener(_onDownloadChanged);
-  }
-
-  // Auto-launch the installer the moment a download completes.
-  void _onDownloadChanged() {
-    final s = _ota.download.value;
-    if (s.phase == OtaPhase.success && s.filePath != null && !_apkOpened) {
-      _apkOpened = true;
-      OpenFile.open(s.filePath!);
-    }
   }
 
   Future<void> _loadName() async {
     final n = await _savedData.getName();
     if (!mounted) return;
-    _nameCtrl.text = n == 'guess' ? '' : n;
+    setState(() => _name = n == 'guess' ? '' : n);
+    _nameCtrl.text = _name;
   }
 
   Future<void> _loadVersion() async {
@@ -62,308 +48,123 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   void dispose() {
-    _ota.download.removeListener(_onDownloadChanged);
     _nameCtrl.dispose();
     super.dispose();
   }
 
   // ── OTA ──────────────────────────────────────────────────────────────────
-
-  Future<void> _checkForUpdate() async {
-    setState(() { _checkingUpdate = true; _otaStatus = 'Checking…'; });
-    final result = await OtaService().checkForUpdate(forceCheck: true);
+  Future<void> _checkForUpdates() async {
+    setState(() => _checking = true);
+    final result = await _ota.checkForUpdate(forceCheck: true);
     if (!mounted) return;
+    setState(() => _checking = false);
 
     if (result == null) {
-      setState(() { _checkingUpdate = false; _otaStatus = 'You\'re up to date'; });
+      _toast('You\'re up to date');
       return;
     }
-
-    setState(() { _checkingUpdate = false; _otaStatus = ''; });
-    _showUpdateDialog(result);
+    Navigator.push(
+        context, MaterialPageRoute(builder: (_) => OtaUpdatePage(result: result)));
   }
 
-  void _showUpdateDialog(OtaCheckResult result) {
-    showAnywaaUpdateDialog(context, result,
-        onUpdate: () => _startDownload(result));
-  }
-
-  void _startDownload(OtaCheckResult result) {
-    _apkOpened = false;
-    _ota.startDownload(result);
-  }
+  void _toast(String msg) => ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating));
 
   // ── Build ─────────────────────────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
-    final bg    = context.c.bg;
-    const green = Color(0xFF1F4D3A);
     final settings = AppSettings.of(context);
+    final modeLabel = switch (settings.themeMode) {
+      ThemeMode.system => 'System',
+      ThemeMode.light  => 'Light',
+      ThemeMode.dark   => 'Dark',
+    };
 
     return Scaffold(
-      backgroundColor: bg,
+      backgroundColor: context.c.bg,
       appBar: AppBar(
-        backgroundColor: green,
+        backgroundColor: kGreen,
         foregroundColor: Colors.white,
         elevation: 0,
+        centerTitle: false,
+        titleSpacing: 4,
         title: const Text('Settings',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-        centerTitle: true,
+            style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 22,
+                color: Colors.white)),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
         children: [
-
-          // ── Audio ───────────────────────────────────────────────────────
-          _sectionHeader('Audio'),
-          _card(children: [
-            ListTile(
-              leading: Icon(
-                settings.soundEnabled
-                    ? Icons.volume_up_rounded
-                    : Icons.volume_off_rounded,
-                color: context.c.accent,
-              ),
-              title: const Text('Sound effects',
-                  style: TextStyle(fontWeight: FontWeight.w600)),
-              subtitle: Text(settings.soundEnabled ? 'On' : 'Off',
-                  style: TextStyle(color: context.c.textSub)),
+          _section('General', [
+            _row(
+              title: 'Theme',
+              trailing: _valueChevron(modeLabel),
+              onTap: () => _pickTheme(settings),
+            ),
+            _row(
+              title: 'Sound effects',
               trailing: Switch(
                 value: settings.soundEnabled,
-                onChanged: (v) => settings.setSoundEnabled(v),
+                onChanged: settings.setSoundEnabled,
               ),
             ),
-          ]),
-          const SizedBox(height: 20),
-
-          // ── Appearance ──────────────────────────────────────────────────
-          _sectionHeader('Appearance'),
-          _card(children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.dark_mode_rounded, color: context.c.accent),
-                      const SizedBox(width: 12),
-                      Text('Theme',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: context.c.text)),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  SizedBox(
-                    width: double.infinity,
-                    child: SegmentedButton<ThemeMode>(
-                      segments: const [
-                        ButtonSegment<ThemeMode>(
-                          value: ThemeMode.system,
-                          label: Text('System'),
-                          icon: Icon(Icons.brightness_auto_outlined),
-                        ),
-                        ButtonSegment<ThemeMode>(
-                          value: ThemeMode.light,
-                          label: Text('Light'),
-                          icon: Icon(Icons.light_mode_outlined),
-                        ),
-                        ButtonSegment<ThemeMode>(
-                          value: ThemeMode.dark,
-                          label: Text('Dark'),
-                          icon: Icon(Icons.dark_mode_outlined),
-                        ),
-                      ],
-                      selected: {settings.themeMode},
-                      showSelectedIcon: false,
-                      onSelectionChanged: (s) =>
-                          settings.setThemeMode(s.first),
-                    ),
-                  ),
-                ],
-              ),
+            _row(
+              title: 'Name',
+              trailing: _valueChevron(_name.isEmpty ? 'Not set' : _name),
+              onTap: _editName,
             ),
           ]),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
 
-          // ── Profile ────────────────────────────────────────────────────
-          _sectionHeader('Profile'),
-          _card(children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-              child: TextField(
-                controller: _nameCtrl,
-                decoration: InputDecoration(
-                  labelText: 'Your name',
-                  filled: true,
-                  fillColor: bg,
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none),
-                  enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide:
-                          BorderSide(color: context.c.border)),
-                  focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide:
-                          BorderSide(color: context.c.accent, width: 2)),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: green,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  onPressed: () async {
-                    final n = _nameCtrl.text.trim();
-                    if (n.isEmpty) return;
-                    await _savedData.setName(n);
-                    if (!mounted) return;
-                    // ignore: use_build_context_synchronously
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('Name saved'),
-                          behavior: SnackBarBehavior.floating),
-                    );
-                  },
-                  child: const Text('Save name',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
-              ),
+          _section('Updates', [
+            _row(title: 'Version', trailing: _plainValue(_appVersion)),
+            _row(
+              title: 'Check for updates',
+              trailing: _checking
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: kGreen))
+                  : Icon(Icons.chevron_right, color: context.c.border),
+              onTap: _checking ? null : _checkForUpdates,
             ),
           ]),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
 
-          // ── App Update ──────────────────────────────────────────────────
-          _sectionHeader('App Update'),
-          _card(children: [
-            ValueListenableBuilder<OtaDownloadState>(
-              valueListenable: _ota.download,
-              builder: (context, dl, _) {
-                final showDl = dl.phase == OtaPhase.running ||
-                    dl.phase == OtaPhase.success ||
-                    dl.phase == OtaPhase.error;
-                final status = showDl ? dl.message : _otaStatus;
-                final busy = _checkingUpdate || dl.phase == OtaPhase.running;
-                final failed = status.contains('failed') ||
-                    status.contains('incomplete') ||
-                    status.contains('verification');
-                return ListTile(
-                  leading: Icon(Icons.system_update_rounded,
-                      color: context.c.accent),
-                  title: Text(
-                      dl.phase == OtaPhase.success
-                          ? 'Install update'
-                          : 'Check for update',
-                      style: const TextStyle(fontWeight: FontWeight.w600)),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (_appVersion.isNotEmpty)
-                        Text(_appVersion,
-                            style: TextStyle(
-                                fontSize: 12, color: context.c.textSub)),
-                      if (status.isNotEmpty)
-                        Text(status,
-                            style: TextStyle(
-                                fontSize: 12,
-                                color: failed
-                                    ? const Color(0xFF8B3A2A)
-                                    : (status.contains('up to date') ||
-                                            status.contains('complete'))
-                                        ? context.c.accent
-                                        : context.c.textSub)),
-                      if (dl.phase == OtaPhase.running) ...[
-                        const SizedBox(height: 6),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: LinearProgressIndicator(
-                            value: dl.progress,
-                            minHeight: 4,
-                            backgroundColor: context.c.border,
-                            color: green,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  trailing: busy
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: green))
-                      : Icon(Icons.chevron_right,
-                          color: context.c.border),
-                  onTap: busy
-                      ? null
-                      : () {
-                          if (dl.phase == OtaPhase.success &&
-                              dl.filePath != null) {
-                            _apkOpened = false;
-                            OpenFile.open(dl.filePath!);
-                          } else if (dl.phase == OtaPhase.error) {
-                            _ota.clearDownload();
-                          } else {
-                            _checkForUpdate();
-                          }
-                        },
-                );
-              },
-            ),
-          ]),
-          const SizedBox(height: 20),
-
-          // ── Assistant ───────────────────────────────────────────────────
-          _sectionHeader('Assistant'),
-          _card(children: [
-            ListTile(
-              leading: const AnywaaAiLogo(size: 38),
-              title: const Text('Anywaa AI',
-                  style: TextStyle(fontWeight: FontWeight.w600)),
-              subtitle: Text(
-                  'Offline word helper. Ask a word, a meaning, or a number.',
-                  style: TextStyle(color: context.c.textSub)),
+          _section('Assistant', [
+            _row(
+              title: 'Anywaa AI',
+              subtitle: 'Offline word helper. Ask a word, a meaning, or a number.',
               trailing: Icon(Icons.chevron_right, color: context.c.border),
-              onTap: () => Navigator.push(
-                  context, MaterialPageRoute(builder: (_) => const AnywaaAiPage())),
+              onTap: () => Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const AnywaaAiPage())),
             ),
           ]),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
 
-          // ── Info ────────────────────────────────────────────────────────
-          _sectionHeader('Info'),
-          _card(children: [
-            _navTile(context, Icons.privacy_tip_outlined, 'Privacy Policy',
-                const PrivacyPolicyPage()),
-            const Divider(height: 1, indent: 56),
-            _navTile(context, Icons.gavel_outlined, 'Terms of Use',
-                const TermsPage()),
-            const Divider(height: 1, indent: 56),
-            _navTile(context, Icons.help_outline_rounded, 'Help',
-                const Help()),
-            const Divider(height: 1, indent: 56),
-            _navTile(context, Icons.info_outline_rounded, 'About',
-                const About()),
-            const Divider(height: 1, indent: 56),
-            ListTile(
-              leading: Icon(Icons.source_outlined,
-                  color: context.c.accent),
-              title: const Text('Open-source licences',
-                  style: TextStyle(fontWeight: FontWeight.w500)),
-              trailing: Icon(Icons.chevron_right,
-                  color: context.c.border),
+          _section('About', [
+            _row(
+                title: 'Privacy Policy',
+                trailing: Icon(Icons.chevron_right, color: context.c.border),
+                onTap: () => _push(const PrivacyPolicyPage())),
+            _row(
+                title: 'Terms of Use',
+                trailing: Icon(Icons.chevron_right, color: context.c.border),
+                onTap: () => _push(const TermsPage())),
+            _row(
+                title: 'Help',
+                trailing: Icon(Icons.chevron_right, color: context.c.border),
+                onTap: () => _push(const Help())),
+            _row(
+                title: 'About',
+                trailing: Icon(Icons.chevron_right, color: context.c.border),
+                onTap: () => _push(const About())),
+            _row(
+              title: 'Open-source licences',
+              trailing: Icon(Icons.chevron_right, color: context.c.border),
               onTap: () => showLicensePage(
                 context: context,
                 applicationName: 'Learn Dha Anywaa',
@@ -371,50 +172,145 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
           ]),
+
           if (_appVersion.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(top: 12, bottom: 8),
+              padding: const EdgeInsets.only(top: 20, bottom: 8),
               child: Center(
                 child: Text(_appVersion,
-                    style: TextStyle(
-                        fontSize: 12, color: context.c.textSub)),
+                    style: TextStyle(fontSize: 12, color: context.c.textSub)),
               ),
             ),
-          const SizedBox(height: 24),
         ],
       ),
     );
   }
 
-  Widget _sectionHeader(String label) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 8),
-      child: Text(label.toUpperCase(),
-          style: TextStyle(
-              fontSize: 11,
-              letterSpacing: 1.4,
-              fontWeight: FontWeight.bold,
-              color: context.c.textSub)),
+  void _push(Widget page) => Navigator.push(
+      context, MaterialPageRoute(builder: (_) => page));
+
+  // ── Theme picker ────────────────────────────────────────────────────────
+  Future<void> _pickTheme(AppSettingsNotifier settings) async {
+    final picked = await showDialog<ThemeMode>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: const Text('Theme'),
+        children: [
+          RadioGroup<ThemeMode>(
+            groupValue: settings.themeMode,
+            onChanged: (v) => Navigator.pop(ctx, v),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final e in const {
+                  ThemeMode.system: 'System',
+                  ThemeMode.light: 'Light',
+                  ThemeMode.dark: 'Dark',
+                }.entries)
+                  RadioListTile<ThemeMode>(
+                    value: e.key,
+                    title: Text(e.value),
+                    activeColor: kGreen,
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+    if (picked != null) settings.setThemeMode(picked);
+  }
+
+  // ── Name editor ───────────────────────────────────────────────────────────
+  Future<void> _editName() async {
+    _nameCtrl.text = _name;
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Your name'),
+        content: TextField(
+          controller: _nameCtrl,
+          autofocus: true,
+          decoration: const InputDecoration(labelText: 'Name'),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Save')),
+        ],
+      ),
+    );
+    if (saved == true) {
+      final n = _nameCtrl.text.trim();
+      await _savedData.setName(n);
+      if (!mounted) return;
+      setState(() => _name = n);
+    }
+  }
+
+  // ── Row primitives (plain, hairline dividers, no icon circles) ─────────────
+  Widget _section(String title, List<Widget> rows) {
+    final withDividers = <Widget>[];
+    for (var i = 0; i < rows.length; i++) {
+      if (i > 0) {
+        withDividers.add(Container(
+            height: 1, margin: const EdgeInsets.only(left: 16), color: context.c.border));
+      }
+      withDividers.add(rows[i]);
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(title.toUpperCase(),
+              style: TextStyle(
+                  fontSize: 11,
+                  letterSpacing: 1.4,
+                  fontWeight: FontWeight.w700,
+                  color: context.c.textSub)),
+        ),
+        Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: context.c.card,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: context.c.border),
+          ),
+          child: Column(children: withDividers),
+        ),
+      ],
     );
   }
 
-  Widget _card({required List<Widget> children}) {
-    return Container(
-      decoration: BoxDecoration(
-          color: context.c.card, borderRadius: BorderRadius.circular(16)),
-      child: Column(children: children),
-    );
-  }
-
-  Widget _navTile(
-      BuildContext context, IconData icon, String label, Widget page) {
+  Widget _row({
+    required String title,
+    String? subtitle,
+    required Widget trailing,
+    VoidCallback? onTap,
+  }) {
     return ListTile(
-      leading: Icon(icon, color: context.c.accent),
-      title: Text(label,
-          style: const TextStyle(fontWeight: FontWeight.w500)),
-      trailing: Icon(Icons.chevron_right, color: context.c.border),
-      onTap: () => Navigator.push(
-          context, MaterialPageRoute(builder: (_) => page)),
+      onTap: onTap,
+      title: Text(title,
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: context.c.text)),
+      subtitle: subtitle == null
+          ? null
+          : Text(subtitle, style: TextStyle(fontSize: 13, color: context.c.textSub)),
+      trailing: trailing,
     );
   }
+
+  Widget _valueChevron(String value) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(value, style: TextStyle(fontSize: 14, color: context.c.textSub)),
+          Icon(Icons.chevron_right, color: context.c.border),
+        ],
+      );
+
+  Widget _plainValue(String value) => Text(value,
+      style: TextStyle(fontSize: 14, color: context.c.textSub));
 }
