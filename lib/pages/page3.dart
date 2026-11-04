@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 class Page3 extends StatefulWidget {
   const Page3({super.key});
+  @override
   State<Page3> createState() => _Page3State();
 }
 
@@ -108,9 +109,9 @@ class _Page3State extends State<Page3> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                 decoration: BoxDecoration(
-                  color: kRust.withOpacity(0.12),
+                  color: kRust.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: kRust.withOpacity(0.2)),
+                  border: Border.all(color: kRust.withValues(alpha: 0.2)),
                 ),
                 child: Row(children: const [
                   Icon(Icons.record_voice_over_outlined,
@@ -143,19 +144,19 @@ class _Page3State extends State<Page3> {
                 curve: Curves.easeOut,
                 decoration: BoxDecoration(
                   color: isActive
-                      ? kGreen.withOpacity(0.06)
+                      ? kGreen.withValues(alpha: 0.06)
                       : Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: isActive
-                        ? kGreen.withOpacity(0.4)
+                        ? kGreen.withValues(alpha: 0.4)
                         : Colors.transparent,
                     width: 1.5,
                   ),
                   boxShadow: [
                     if (isActive)
                       BoxShadow(
-                        color: kGreen.withOpacity(0.18),
+                        color: kGreen.withValues(alpha: 0.18),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       )
@@ -176,7 +177,7 @@ class _Page3State extends State<Page3> {
                         decoration: BoxDecoration(
                           color: isActive
                               ? kGreen
-                              : kRust.withOpacity(0.1),
+                              : kRust.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Center(
@@ -217,8 +218,8 @@ class _Page3State extends State<Page3> {
                         height: 38,
                         decoration: BoxDecoration(
                           color: isActive
-                              ? kGreen.withOpacity(0.15)
-                              : kGreen.withOpacity(0.07),
+                              ? kGreen.withValues(alpha: 0.15)
+                              : kGreen.withValues(alpha: 0.07),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(

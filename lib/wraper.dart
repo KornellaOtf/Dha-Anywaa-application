@@ -53,7 +53,7 @@ class _WrapperState extends State<Wrapper> {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: kGreen.withOpacity(0.18),
+                        color: kGreen.withValues(alpha: 0.18),
                         blurRadius: 24,
                         spreadRadius: 4,
                       ),
@@ -67,7 +67,7 @@ class _WrapperState extends State<Wrapper> {
                       width: 100,
                       height: 100,
                       decoration: BoxDecoration(
-                        color: kGreen.withOpacity(0.1),
+                        color: kGreen.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(Icons.eco_rounded,
@@ -92,7 +92,7 @@ class _WrapperState extends State<Wrapper> {
                   child: CircularProgressIndicator(
                     strokeWidth: 2.5,
                     color: kGreen,
-                    backgroundColor: kGreen.withOpacity(0.1),
+                    backgroundColor: kGreen.withValues(alpha: 0.1),
                   ),
                 ),
               ],

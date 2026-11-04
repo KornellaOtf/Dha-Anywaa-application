@@ -111,7 +111,7 @@ class _Page4State extends State<Page4> {
     final selected = _selectedIndex == listIdx;
     if (selected && correct)  return const Color(0xFFD4EDDA);
     if (selected && !correct) return const Color(0xFFFFE5E5);
-    if (correct)              return const Color(0xFFD4EDDA).withOpacity(0.5);
+    if (correct)              return const Color(0xFFD4EDDA).withValues(alpha: 0.5);
     return Colors.white;
   }
 
@@ -122,7 +122,7 @@ class _Page4State extends State<Page4> {
     final selected = _selectedIndex == listIdx;
     if (selected && correct)  return const Color(0xFF28A745);
     if (selected && !correct) return const Color(0xFFDC3545);
-    if (correct)              return const Color(0xFF28A745).withOpacity(0.5);
+    if (correct)              return const Color(0xFF28A745).withValues(alpha: 0.5);
     return kBorder;
   }
 
@@ -130,7 +130,7 @@ class _Page4State extends State<Page4> {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvoked: (didPop) async {
+      onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
         final should = await _onWillPop();
         if (should && context.mounted) Navigator.pop(context);
@@ -179,10 +179,10 @@ class _Page4State extends State<Page4> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 5),
                       decoration: BoxDecoration(
-                        color: kGreen.withOpacity(0.12),
+                        color: kGreen.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(20),
                         border:
-                            Border.all(color: kGreen.withOpacity(0.2)),
+                            Border.all(color: kGreen.withValues(alpha: 0.2)),
                       ),
                       child: Text(
                         '$_finalResult/${_questionsList.length}',
@@ -225,14 +225,10 @@ class _Page4State extends State<Page4> {
                     width: double.infinity,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
-                      gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [kGreen, kGreenMid],
-                      ),
+                      color: kGreen,
                       boxShadow: [
                         BoxShadow(
-                          color: kGreen.withOpacity(0.32),
+                          color: kGreen.withValues(alpha: 0.32),
                           blurRadius: 16,
                           offset: const Offset(0, 6),
                         ),
@@ -318,7 +314,7 @@ class _Page4State extends State<Page4> {
                         boxShadow: isAnswered
                             ? [
                                 BoxShadow(
-                                  color: kGreen.withOpacity(0.3),
+                                  color: kGreen.withValues(alpha: 0.3),
                                   blurRadius: 12,
                                   offset: const Offset(0, 4),
                                 )
@@ -330,7 +326,7 @@ class _Page4State extends State<Page4> {
                           backgroundColor: kGreen,
                           foregroundColor: Colors.white,
                           disabledBackgroundColor:
-                              kGreen.withOpacity(0.35),
+                              kGreen.withValues(alpha: 0.35),
                           elevation: 0,
                           padding:
                               const EdgeInsets.symmetric(vertical: 16),
@@ -454,8 +450,8 @@ class _OptionTileState extends State<_OptionTile> {
               radius: 17,
               backgroundColor: widget.answered && widget.selected
                   ? widget.correct
-                      ? const Color(0xFF28A745).withOpacity(0.15)
-                      : const Color(0xFFDC3545).withOpacity(0.15)
+                      ? const Color(0xFF28A745).withValues(alpha: 0.15)
+                      : const Color(0xFFDC3545).withValues(alpha: 0.15)
                   : const Color(0xFFF0F0F0),
               child: Text(
                 widget.letter,

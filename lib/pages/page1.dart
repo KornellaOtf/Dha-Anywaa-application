@@ -161,9 +161,9 @@ class _Page1State extends State<Page1> with SingleTickerProviderStateMixin {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                 decoration: BoxDecoration(
-                  color: kGreen.withOpacity(0.12),
+                  color: kGreen.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: kGreen.withOpacity(0.2)),
+                  border: Border.all(color: kGreen.withValues(alpha: 0.2)),
                 ),
                 child: Text(
                   '$_learnedCount/${_letters.length}',
@@ -224,7 +224,7 @@ class _Page1State extends State<Page1> with SingleTickerProviderStateMixin {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 36),
                     decoration: BoxDecoration(
-                      color: learned ? kGreen.withOpacity(0.07) : Colors.white,
+                      color: learned ? kGreen.withValues(alpha: 0.07) : Colors.white,
                       borderRadius: BorderRadius.circular(24),
                       border: learned
                           ? Border.all(color: kGreen, width: 1.5)
@@ -232,7 +232,7 @@ class _Page1State extends State<Page1> with SingleTickerProviderStateMixin {
                       boxShadow: [
                         BoxShadow(
                           color:
-                              (learned ? kGreen : kGold).withOpacity(0.12),
+                              (learned ? kGreen : kGold).withValues(alpha: 0.12),
                           blurRadius: 16,
                           offset: const Offset(0, 6),
                         ),
@@ -244,7 +244,7 @@ class _Page1State extends State<Page1> with SingleTickerProviderStateMixin {
                         width: 120,
                         height: 120,
                         decoration: BoxDecoration(
-                          color: (learned ? kGreen : kGold).withOpacity(0.1),
+                          color: (learned ? kGreen : kGold).withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Center(
@@ -276,10 +276,10 @@ class _Page1State extends State<Page1> with SingleTickerProviderStateMixin {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 14, vertical: 6),
                           decoration: BoxDecoration(
-                            color: kGreen.withOpacity(0.12),
+                            color: kGreen.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(20),
                             border:
-                                Border.all(color: kGreen.withOpacity(0.25)),
+                                Border.all(color: kGreen.withValues(alpha: 0.25)),
                           ),
                           child: const Row(mainAxisSize: MainAxisSize.min, children: [
                             Icon(Icons.check_circle_rounded,
@@ -317,7 +317,7 @@ class _Page1State extends State<Page1> with SingleTickerProviderStateMixin {
               elevation: 6,
               shape: const CircleBorder(),
               color: kRust,
-              shadowColor: kRust.withOpacity(0.4),
+              shadowColor: kRust.withValues(alpha: 0.4),
               child: SizedBox(
                 width: 72,
                 height: 72,
@@ -362,7 +362,7 @@ class _Page1State extends State<Page1> with SingleTickerProviderStateMixin {
                           borderRadius: BorderRadius.circular(14),
                           boxShadow: [
                             BoxShadow(
-                                color: kGreen.withOpacity(0.28),
+                                color: kGreen.withValues(alpha: 0.28),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4))
                           ]),
@@ -447,18 +447,18 @@ class _Page1State extends State<Page1> with SingleTickerProviderStateMixin {
             decoration: BoxDecoration(
               color: selected
                   ? kGreen
-                  : (learned ? kGreen.withOpacity(0.12) : Colors.white),
+                  : (learned ? kGreen.withValues(alpha: 0.12) : Colors.white),
               borderRadius: BorderRadius.circular(12),
               boxShadow: selected
                   ? [
                       BoxShadow(
-                          color: kGreen.withOpacity(0.35),
+                          color: kGreen.withValues(alpha: 0.35),
                           blurRadius: 8,
                           offset: const Offset(0, 3))
                     ]
                   : const [kShadowSoft],
               border: learned && !selected
-                  ? Border.all(color: kGreen.withOpacity(0.35))
+                  ? Border.all(color: kGreen.withValues(alpha: 0.35))
                   : null,
             ),
             child: Stack(
@@ -548,10 +548,10 @@ class _LetterCellState extends State<_LetterCell> {
         curve: Curves.easeOut,
         child: Container(
           decoration: BoxDecoration(
-            color: widget.learned ? kGreen.withOpacity(0.12) : Colors.white,
+            color: widget.learned ? kGreen.withValues(alpha: 0.12) : Colors.white,
             borderRadius: BorderRadius.circular(14),
             border: widget.learned
-                ? Border.all(color: kGreen.withOpacity(0.35))
+                ? Border.all(color: kGreen.withValues(alpha: 0.35))
                 : null,
             boxShadow: const [kShadowSoft],
           ),
@@ -603,7 +603,7 @@ class _AlphaNavBtn extends StatelessWidget {
       elevation: enabled ? 4 : 0,
       shape: const CircleBorder(),
       color: Colors.white,
-      shadowColor: kGreen.withOpacity(0.2),
+      shadowColor: kGreen.withValues(alpha: 0.2),
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: enabled ? onTap : null,

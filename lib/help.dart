@@ -1,3 +1,4 @@
+import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 class Help extends StatelessWidget {
@@ -73,10 +74,10 @@ class Help extends StatelessWidget {
                     children: [
                       Text(s.title,
                           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold,
-                              color: Color(0xFF1C1C1C))),
+                              color: kText)),
                       const SizedBox(height: 6),
                       Text(s.body,
-                          style: const TextStyle(fontSize: 14, color: Color(0xFF555555), height: 1.5)),
+                          style: const TextStyle(fontSize: 14, color: kTextSub, height: 1.5)),
                     ],
                   ),
                 ),
