@@ -219,6 +219,29 @@ class _Page4State extends State<Page4> {
                 ),
                 const SizedBox(height: 14),
 
+                // ── Question image (picture questions only) ─────────────
+                if (!q.image.contains('blank_image')) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Container(
+                      width: double.infinity,
+                      constraints: const BoxConstraints(maxHeight: 200),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: const [kShadowCard],
+                      ),
+                      padding: const EdgeInsets.all(12),
+                      child: Image.asset(
+                        q.image,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                ],
+
                 // ── Question card ───────────────────────────────────────
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
