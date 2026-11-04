@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 // ── Colour tokens ─────────────────────────────────────────────────────────────
-const kBg       = Color(0xFFF5F0E8);
-const kGreen    = Color(0xFF1B4332);
+const kBg       = Color(0xFFF6EFE3); // sand
+const kGreen    = Color(0xFF1F4D3A); // forest green
 const kGreenMid = Color(0xFF2D6A4F);
 const kGold     = Color(0xFFC9993A);
-const kRust     = Color(0xFF8B3A2A);
-const kText     = Color(0xFF1C1C1C);
-const kTextSub  = Color(0xFF666666);
-const kTextMuted= Color(0xFF888888);
-const kBorder   = Color(0xFFE0E0E0);
+const kRust     = Color(0xFFA8472A); // terracotta, play buttons
+const kText     = Color(0xFF1B1F1C);
+const kTextSub  = Color(0xFF5B625D);
+const kTextMuted= Color(0xFF5B625D);
+const kBorder   = Color(0xFFE4DACB);
 
 // ── Shared shadows ─────────────────────────────────────────────────────────────
 const kShadowSoft = BoxShadow(
@@ -63,7 +63,7 @@ class AppTheme {
   AppTheme._();
 
   static ThemeData get data {
-    final textTheme = GoogleFonts.nunitoTextTheme(
+    final sansTextTheme = GoogleFonts.nunitoTextTheme(
       const TextTheme(
         displayLarge: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: kText),
         displayMedium: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: kText),
@@ -80,6 +80,19 @@ class AppTheme {
         labelMedium: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
         labelSmall: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 1.2),
       ),
+    );
+
+    // Serif display face for titles and the big Anywaa words, matching the
+    // new UI mockups. Body and labels stay on the rounded sans.
+    final textTheme = sansTextTheme.copyWith(
+      displayLarge: GoogleFonts.playfairDisplay(
+          fontSize: 40, fontWeight: FontWeight.w700, color: kText),
+      displayMedium: GoogleFonts.playfairDisplay(
+          fontSize: 32, fontWeight: FontWeight.w700, color: kText),
+      headlineLarge: GoogleFonts.playfairDisplay(
+          fontSize: 28, fontWeight: FontWeight.w700, color: kText),
+      headlineMedium: GoogleFonts.playfairDisplay(
+          fontSize: 24, fontWeight: FontWeight.w700, color: kText),
     );
 
     return ThemeData(
