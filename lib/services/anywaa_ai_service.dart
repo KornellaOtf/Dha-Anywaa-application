@@ -173,7 +173,7 @@ class AnywaaAiService {
   static const _stop = {
     'how', 'do', 'you', 'i', 'we', 'they', 'say', 'spell', 'in', 'into',
     'english', 'anywaa', 'anuak', 'dha', 'the', 'a', 'an', 'word', 'words',
-    'what', 'is', 'are', 'means', 'meaning', 'of', 'to', 'for', 'please',
+    'what', 'is', 'are', 'means', 'meaning', 'mean', 'of', 'to', 'for', 'please',
     'can', 'tell', 'me', 'this', 'that', 'translate', 'translation', 'call',
     'called', 'would', 'will', 'did', 'does',
   };
@@ -272,45 +272,85 @@ class AnywaaAiService {
 
   // ── Matching ────────────────────────────────────────────────────────────────
 
+  /// Maximum number of result cards to show. A tight cap keeps the answer
+  /// focused instead of dumping every loose match ("the slop").
+  static const int _maxResults = 3;
+
+  /// Anywaa-side values longer than this many words are descriptive sentences,
+  /// not vocabulary terms, so they are ignored for token matching.
+  static const int _maxTermWords = 4;
+
   List<AnywaaMatch> _lookup(String term, _Parsed p) {
     final q = fold(term);
     final qTokens = q.split(' ').where((t) => t.isNotEmpty).toList();
     final rawTokens = p.raw.split(' ').where((t) => t.isNotEmpty).toList();
-    final scored = <AnywaaMatch>[];
 
+    // Tier 1: an exact whole-phrase match wins outright. If the typed phrase is
+    // itself a dictionary entry, return only that entry and stop. This is what
+    // fixes "teek ec" showing Doubt and then a pile of unrelated terms.
+    final exact = <AnywaaMatch>[];
+    final exactSeen = <String>{};
+    for (final e in _words) {
+      if (fold(e.en) == q) {
+        if (exactSeen.add(e.en)) exact.add(AnywaaMatch(e, 5, 'en'));
+        continue;
+      }
+      final terms = e.syn.isEmpty ? [e.dha] : e.syn;
+      if (terms.any((s) => fold(s) == q) && exactSeen.add(e.en)) {
+        exact.add(AnywaaMatch(e, 5, 'dha'));
+      }
+    }
+    if (exact.isNotEmpty) return exact.take(_maxResults).toList();
+
+    // Tier 2: partial matching (start-of-word / stem / typo), capped.
+    final scored = <AnywaaMatch>[];
     for (final e in _words) {
       double best = 0;
       String src = p.wantsEnglish ? 'dha' : 'en';
 
-      // 1. Whole-word, stem, prefix and typo tolerance on each side.
-      void consider(String hay, String side) {
+      // Whole-word, stem, prefix and typo tolerance on each side. Anywaa-side
+      // long sentences are skipped so a stray shared word can't trigger a match.
+      void consider(String hay, String side, {bool skipLong = false}) {
         if (hay.isEmpty) return;
         final hayTokens = hay.split(' ');
+        if (skipLong && hayTokens.length > _maxTermWords) return;
         double s = 0;
+        int matched = 0;
         if (hay == q) {
           s = 3; // whole string exact
         } else {
           // Compare on word boundaries only. This stops a short term like
           // "here" from matching inside "nothinghere".
           for (final qt in qTokens) {
+            double t = 0;
             for (final ht in hayTokens) {
-              double t = 0;
+              double c;
               if (qt == ht) {
-                t = 2.4; // same whole word
+                c = 2.4; // same whole word
               } else if (qt.length > 3 &&
                   ht.length > 3 &&
                   _stem(qt) == _stem(ht)) {
-                t = 2.2; // same word, different plural form
+                c = 2.2; // same word, different plural form
               } else if (qt.length >= 4 &&
                   ht.length >= 4 &&
                   (qt.startsWith(ht) || ht.startsWith(qt))) {
-                t = 1.5; // partial typing of a longer word
+                c = 1.5; // partial typing of a longer word
               } else if (_isClose(qt, ht)) {
-                t = 1.4; // typo of a real word
+                c = 1.4; // typo of a real word
+              } else {
+                c = 0;
               }
-              if (t > s) s = t;
+              if (c > t) t = c;
             }
+            if (t >= 2.2) matched++;
+            if (t > s) s = t;
           }
+        }
+        // A multi-word question must match the whole phrase, not one stray word
+        // buried inside a longer term. This stops "teek ec"-style queries from
+        // returning every entry that merely contains "teek" or "ec".
+        if (qTokens.length >= 2 && hay != q && matched < qTokens.length) {
+          s = 0;
         }
         if (s > best) {
           best = s;
@@ -321,13 +361,11 @@ class AnywaaAiService {
       consider(fold(e.en), 'en');
       // also score each synonym on the Anywaa side
       for (final s in (e.syn.isEmpty ? [e.dha] : e.syn)) {
-        consider(fold(s), 'dha');
+        consider(fold(s), 'dha', skipLong: true);
       }
 
-      // 2. Phrase containment: a multi-word key found as a contiguous run in
-      //    the raw question. This lets "how do you say how are you in Dha
-      //    Anywaa" still resolve, even though its content words are all stop
-      //    words that the core parser strips away.
+      // Phrase containment: a multi-word key found as a contiguous run in
+      // the raw question, so stop-word-wrapped phrases still resolve.
       final phrase = _phraseScore([fold(e.en), ...e.syn.map(fold)], rawTokens);
       if (phrase > best) {
         best = phrase;
@@ -338,7 +376,7 @@ class AnywaaAiService {
     }
 
     scored.sort((a, b) => b.score.compareTo(a.score));
-    return scored.take(6).toList();
+    return scored.take(_maxResults).toList();
   }
 
   /// Highest score for any multi-word key appearing contiguously in the query.

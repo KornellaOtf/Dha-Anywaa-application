@@ -275,6 +275,31 @@ void main() {
     expect(first.text, contains('Which word'));
   });
 
+  test('exact-phrase search returns only the match, no slop', () async {
+    final ai = AnywaaAiService.instance;
+    await ai.load();
+
+    // "teek ec" is itself the dictionary entry for Doubt. The old matcher also
+    // returned every long sentence that merely contained "teek" or "ec".
+    final doubt = ai.answer('teek ec');
+    expect(doubt.found, isTrue);
+    expect(doubt.matches.length, 1);
+    expect(doubt.matches.first.entry.en, 'Doubt');
+    final heads = doubt.matches.map((m) => m.entry.en).toList();
+    for (final junk in ['Belt', 'Coerce', 'Forgive', 'Backstroke']) {
+      expect(heads, isNot(contains(junk)));
+    }
+
+    // A multi-word query must match the whole phrase, not one shared word.
+    final partial = ai.answer('teek cwïny');
+    expect(partial.matches.map((m) => m.entry.en), isNot(contains('Belt')));
+
+    // A single-word exact hit stays focused (Abdomen == "ec").
+    final ec = ai.answer('ec');
+    expect(ec.found, isTrue);
+    expect(ec.matches.first.entry.en.toLowerCase(), 'abdomen');
+  });
+
   test('hero suggestions are dynamic and always answerable', () async {
     final ai = AnywaaAiService.instance;
     await ai.load();
