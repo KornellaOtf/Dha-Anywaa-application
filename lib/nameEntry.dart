@@ -1,6 +1,8 @@
 import 'package:dha_anywaaa/components/savedData.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
+import 'package:dha_anywaaa/widgets/brand_leaf.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class NameEntry extends StatefulWidget {
   const NameEntry({super.key});
@@ -48,33 +50,30 @@ class _NameEntryState extends State<NameEntry> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // App icon
-                      ClipOval(
-                        child: Image.asset(
-                          'assets/word_images/awal_icon.jpeg',
-                          width: 72,
-                          height: 72,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
-                              Icon(Icons.eco_rounded, color: context.c.accent, size: 44),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
+                      const BrandLeaf(size: 84),
+                      const SizedBox(height: 22),
+                      Text('Dëëri jööt?',
+                          style: GoogleFonts.playfairDisplay(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: context.c.accent)),
+                      const SizedBox(height: 6),
                       Text('Welcome to',
                           style: TextStyle(fontSize: 16, color: context.c.textSub)),
                       const SizedBox(height: 4),
                       Text('Obwöc paac',
-                          style: TextStyle(
+                          style: GoogleFonts.playfairDisplay(
                               fontSize: 34,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w700,
                               color: context.c.text)),
-                      const SizedBox(height: 4),
-                      Text('Dha Anywaa learning hub',
-                          style: TextStyle(fontSize: 15, color: context.c.textSub)),
+                      const SizedBox(height: 8),
+                      Text(
+                          'Your Dha Anywaa learning hub. Tell us your name to begin.',
+                          style: TextStyle(fontSize: 15, height: 1.4, color: context.c.textSub)),
                     ],
                   ),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 36),
 
                 // ── Label ─────────────────────────────────────────────────
                 Text('What\'s your name?',

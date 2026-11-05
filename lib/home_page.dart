@@ -1,6 +1,5 @@
 import 'package:dha_anywaaa/about.dart';
 import 'package:dha_anywaaa/anywaa_ai_page.dart';
-import 'package:dha_anywaaa/widgets/anywaa_ai_logo.dart';
 import 'package:dha_anywaaa/ota_update_page.dart';
 import 'package:dha_anywaaa/components/savedData.dart';
 import 'package:dha_anywaaa/help.dart';
@@ -11,6 +10,7 @@ import 'package:dha_anywaaa/terms_page.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:dha_anywaaa/vowelLetter.dart';
 import 'package:dha_anywaaa/widgets/body.dart';
+import 'package:dha_anywaaa/widgets/brand_leaf.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -451,24 +451,30 @@ class _HomePageState extends State<HomePage> {
               alignment: Alignment.bottomLeft,
               child: Padding(
                 padding: const EdgeInsets.all(20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    const Text('Dha Anywaa',
-                        style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            shadows: [
-                              Shadow(
-                                  color: Color(0x40000000),
-                                  blurRadius: 8)
-                            ])),
-                    if (_name.isNotEmpty)
-                      Text(_name,
-                          style: const TextStyle(
-                              fontSize: 14, color: Color(0xDDFFFFFF))),
+                    const BrandLeaf(size: 52),
+                    const SizedBox(width: 14),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Dha Anywaa',
+                            style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                shadows: [
+                                  Shadow(
+                                      color: Color(0x40000000),
+                                      blurRadius: 8)
+                                ])),
+                        if (_name.isNotEmpty)
+                          Text(_name,
+                              style: const TextStyle(
+                                  fontSize: 14, color: Color(0xDDFFFFFF))),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -491,11 +497,11 @@ class _HomePageState extends State<HomePage> {
               Navigator.push(context,
                   MaterialPageRoute(builder: (_) => const Body()));
             }),
-            _drawerTile(context, Icons.smart_display_rounded, 'Anywaa AI', () {
+            _drawerTile(context, Icons.eco_rounded, 'Anywaa AI', () {
               Navigator.pop(context);
               Navigator.push(context,
                   MaterialPageRoute(builder: (_) => const AnywaaAiPage()));
-            }, leading: const AnywaaAiLogo(size: 36)),
+            }, color: kGreen),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Divider(),
