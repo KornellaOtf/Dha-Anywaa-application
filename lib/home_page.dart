@@ -502,6 +502,15 @@ class _HomePageState extends State<HomePage> {
               Navigator.push(context,
                   MaterialPageRoute(builder: (_) => const AnywaaAiPage()));
             }, color: kGreen),
+            _drawerTile(context, Icons.menu_book_rounded, 'Dictionary', () {
+              final messenger = ScaffoldMessenger.of(context);
+              Navigator.pop(context);
+              messenger.showSnackBar(const SnackBar(
+                content: Text('Dictionary is coming soon!!!'),
+                behavior: SnackBarBehavior.floating,
+                duration: Duration(seconds: 2),
+              ));
+            }, trailing: _soonPill(context)),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Divider(),
@@ -561,6 +570,7 @@ class _HomePageState extends State<HomePage> {
     VoidCallback onTap, {
     Color color = kGreen,
     Widget? leading,
+    Widget? trailing,
   }) {
     final iconColor = color == kGreen ? context.c.accent : color;
     return ListTile(
@@ -580,9 +590,22 @@ class _HomePageState extends State<HomePage> {
               fontWeight: FontWeight.w600,
               fontSize: 15,
               color: color == kRust ? color : context.c.text)),
+      trailing: trailing,
       onTap: onTap,
     );
   }
+
+  // Small gold pill used to mark drawer entries that aren't built yet.
+  Widget _soonPill(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+        decoration: BoxDecoration(
+          color: kGold.withValues(alpha: 0.16),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Text('Coming Soon',
+            style: TextStyle(
+                color: kGold, fontSize: 11, fontWeight: FontWeight.bold)),
+      );
 }
 
 // ── Animated press-scale wrapper ─────────────────────────────────────────────

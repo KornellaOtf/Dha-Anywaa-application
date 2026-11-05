@@ -45,7 +45,7 @@ class Body extends StatelessWidget {
               ),
               padding: const EdgeInsets.fromLTRB(16, 18, 16, 14),
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 320),
+                constraints: const BoxConstraints(maxHeight: 480),
                 child: Image.asset(
                   'assets/word_images/body.jpg',
                   fit: BoxFit.contain,
@@ -106,17 +106,19 @@ class Body extends StatelessWidget {
                     height: 46,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(13),
-                      color: chipColor,
-                      boxShadow: [
-                        BoxShadow(
-                          color: chipColor.withValues(alpha: 0.35),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
+                      color: chipColor.withValues(alpha: 0.14),
                     ),
-                    child: const Icon(Icons.accessibility_new_rounded,
-                        color: Colors.white, size: 24),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Image.asset(
+                        p['img']!,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => Icon(
+                            Icons.accessibility_new_rounded,
+                            color: chipColor,
+                            size: 22),
+                      ),
+                    ),
                   ),
                   title: Text(p['anyName']!,
                       style: TextStyle(
@@ -136,23 +138,23 @@ class Body extends StatelessWidget {
   }
 
   static const List<Map<String, String>> _parts = [
-    {'letter': 'Wïc',  'anyName': 'Wïc',          'engName': 'Head'},
-    {'letter': 'Ïth',  'anyName': 'Ïth',           'engName': 'Ear'},
-    {'letter': 'Wang', 'anyName': 'Wang',          'engName': 'Eye'},
-    {'letter': 'Um',   'anyName': 'Um',            'engName': 'Nose'},
-    {'letter': 'Dhøk', 'anyName': 'Dhøk',          'engName': 'Mouth'},
-    {'letter': 'Lak',  'anyName': 'Lak',           'engName': 'Teeth'},
-    {'letter': 'Leep', 'anyName': 'Leep',          'engName': 'Tongue'},
-    {'letter': 'Ngut', 'anyName': 'Ngut',          'engName': 'Neck'},
-    {'letter': 'Göön', 'anyName': 'Göön',          'engName': 'Shoulder'},
-    {'letter': 'Käw',  'anyName': 'Käw',           'engName': 'Chest'},
-    {'letter': 'Cinø', 'anyName': 'Cinø',          'engName': 'Arm'},
-    {'letter': 'Lweedø','anyName': 'Lweedø',       'engName': 'Finger'},
-    {'letter': 'Ääm',  'anyName': 'Ääm',           'engName': 'Thigh'},
-    {'letter': 'Tielø','anyName': 'Tielø',         'engName': 'Leg'},
-    {'letter': 'Wïcuung','anyName': 'Wïcuung',     'engName': 'Knee'},
-    {'letter': 'Adikwala','anyName': 'Adikwala',   'engName': 'Ankle'},
-    {'letter': 'Othäny','anyName': 'Othäny tielø', 'engName': 'Foot'},
-    {'letter': 'Jïër', 'anyName': 'Jïër',          'engName': 'Hair'},
+    {'anyName': 'Wïc',          'engName': 'Head',     'img': 'assets/body_part/head.png'},
+    {'anyName': 'Ïth',           'engName': 'Ear',      'img': 'assets/body_part/ear.png'},
+    {'anyName': 'Wang',          'engName': 'Eye',      'img': 'assets/body_part/eye.png'},
+    {'anyName': 'Um',            'engName': 'Nose',     'img': 'assets/body_part/nose.png'},
+    {'anyName': 'Dhøk',          'engName': 'Mouth',    'img': 'assets/body_part/mouth.png'},
+    {'anyName': 'Lak',           'engName': 'Teeth',    'img': 'assets/body_part/theeth.png'},
+    {'anyName': 'Leep',          'engName': 'Tongue',   'img': 'assets/body_part/toungue.png'},
+    {'anyName': 'Ngut',          'engName': 'Neck',     'img': 'assets/body_part/neck.png'},
+    {'anyName': 'Göön',          'engName': 'Shoulder', 'img': 'assets/body_part/shoulder.png'},
+    {'anyName': 'Käw',           'engName': 'Chest',    'img': 'assets/body_part/chest.png'},
+    {'anyName': 'Cinø',          'engName': 'Arm',      'img': 'assets/body_part/arm.png'},
+    {'anyName': 'Lweedø',        'engName': 'Finger',   'img': 'assets/body_part/finger.png'},
+    {'anyName': 'Ääm',           'engName': 'Thigh',    'img': 'assets/body_part/thigh.png'},
+    {'anyName': 'Tielø',         'engName': 'Leg',      'img': 'assets/body_part/leg.png'},
+    {'anyName': 'Wïcuung',       'engName': 'Knee',     'img': 'assets/body_part/knee.png'},
+    {'anyName': 'Adikwala',      'engName': 'Ankle',    'img': 'assets/body_part/ankle.png'},
+    {'anyName': 'Othäny tielø',  'engName': 'Foot',     'img': 'assets/body_part/foot.png'},
+    {'anyName': 'Jïër',          'engName': 'Hair',     'img': 'assets/body_part/hair.png'},
   ];
 }
