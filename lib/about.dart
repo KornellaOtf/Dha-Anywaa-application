@@ -1,6 +1,7 @@
 import 'package:dha_anywaaa/privacy_policy_page.dart';
 import 'package:dha_anywaaa/terms_page.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
+import 'package:dha_anywaaa/widgets/brand_leaf.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -55,16 +56,7 @@ class _AboutState extends State<About> {
                   color: context.c.card,
                   borderRadius: BorderRadius.circular(16)),
               child: Column(children: [
-                SizedBox(
-                  height: 80,
-                  child: Image.asset(
-                    'assets/word_images/awal_icon.jpeg',
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) =>
-                        Icon(Icons.eco_rounded, color: context.c.accent,
-                            size: 64),
-                  ),
-                ),
+                const BrandLeaf(size: 80),
                 const SizedBox(height: 12),
                 Text('Learn Dha Anywaa',
                     style: TextStyle(

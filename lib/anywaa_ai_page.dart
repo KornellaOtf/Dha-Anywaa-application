@@ -429,12 +429,7 @@ class _AnswerBody extends StatelessWidget {
             decoration: BoxDecoration(
               color: c.card,
               borderRadius: BorderRadius.circular(16),
-              border: Border(
-                left: BorderSide(color: c.accent, width: 3),
-                top: BorderSide(color: c.border.withValues(alpha: 0.6)),
-                right: BorderSide(color: c.border.withValues(alpha: 0.6)),
-                bottom: BorderSide(color: c.border.withValues(alpha: 0.6)),
-              ),
+              border: Border.all(color: c.border.withValues(alpha: 0.6)),
               boxShadow: const [kShadowSoft],
             ),
             child: Column(
