@@ -2,7 +2,9 @@ import 'package:dha_anywaaa/components/savedData.dart';
 import 'package:dha_anywaaa/home_page.dart';
 import 'package:dha_anywaaa/nameEntry.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
+import 'package:dha_anywaaa/widgets/brand_leaf.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class Wrapper extends StatefulWidget {
   const Wrapper({super.key});
@@ -38,61 +40,42 @@ class _WrapperState extends State<Wrapper> {
         body: Center(
           child: TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: 1),
-            duration: const Duration(milliseconds: 600),
+            duration: const Duration(milliseconds: 700),
             curve: Curves.easeOut,
-            builder: (_, opacity, child) => Opacity(
-              opacity: opacity.clamp(0.0, 1.0),
-              child: child,
+            builder: (_, t, child) => Opacity(
+              opacity: t.clamp(0.0, 1.0),
+              child: Transform.translate(
+                offset: Offset(0, (1 - t) * 18),
+                child: child,
+              ),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Logo with subtle shadow
-                Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: kGreen.withValues(alpha: 0.18),
-                        blurRadius: 24,
-                        spreadRadius: 4,
-                      ),
-                    ],
-                  ),
-                  child: Image.asset(
-                    'assets/word_images/awal_icon.jpeg',
-                    width: 100,
-                    height: 100,
-                    errorBuilder: (_, __, ___) => Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        color: kGreen.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(Icons.eco_rounded,
-                          color: context.c.accent, size: 48),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 28),
+                const BrandLeaf(size: 108),
+                const SizedBox(height: 26),
                 Text(
                   'Dha Anywaa',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: context.c.accent,
-                    letterSpacing: 0.5,
+                  style: GoogleFonts.playfairDisplay(
+                    fontSize: 30,
+                    fontWeight: FontWeight.w800,
+                    color: context.c.text,
+                    letterSpacing: 0.3,
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 8),
+                Text(
+                  'Learn the Anywaa language, offline',
+                  style: TextStyle(fontSize: 14, color: context.c.textSub),
+                ),
+                const SizedBox(height: 34),
                 SizedBox(
-                  width: 28,
-                  height: 28,
+                  width: 26,
+                  height: 26,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.5,
                     color: context.c.accent,
-                    backgroundColor: context.c.accent.withValues(alpha: 0.1),
+                    backgroundColor: context.c.accent.withValues(alpha: 0.12),
                   ),
                 ),
               ],

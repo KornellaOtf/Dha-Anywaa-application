@@ -9,6 +9,7 @@ import 'package:dha_anywaaa/ota_update_page.dart';
 import 'package:dha_anywaaa/services/ota_service.dart';
 import 'package:dha_anywaaa/terms_page.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -218,29 +219,26 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> _pickTheme(AppSettingsNotifier settings) async {
     final picked = await showDialog<ThemeMode>(
       context: context,
-      builder: (ctx) => SimpleDialog(
-        title: const Text('Theme'),
-        children: [
-          RadioGroup<ThemeMode>(
-            groupValue: settings.themeMode,
-            onChanged: (v) => Navigator.pop(ctx, v),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                for (final e in const {
-                  ThemeMode.system: 'System',
-                  ThemeMode.light: 'Light',
-                  ThemeMode.dark: 'Dark',
-                }.entries)
-                  RadioListTile<ThemeMode>(
-                    value: e.key,
-                    title: Text(e.value),
-                    activeColor: kGreen,
-                  ),
-              ],
-            ),
-          ),
-        ],
+      builder: (ctx) => _BrandedDialog(
+        icon: Icons.palette_outlined,
+        iconColor: kGreen,
+        title: 'Appearance',
+        subtitle: 'Choose how Dha Anywaa looks',
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final e in const {
+              ThemeMode.system: _Choice('System', 'Match your device', Icons.brightness_auto_rounded),
+              ThemeMode.light:  _Choice('Light', 'Bright sand canvas', Icons.wb_sunny_rounded),
+              ThemeMode.dark:   _Choice('Dark', 'Deep forest canvas', Icons.nightlight_round),
+            }.entries)
+              _ChoiceTile(
+                choice: e.value,
+                selected: settings.themeMode == e.key,
+                onTap: () => Navigator.pop(ctx, e.key),
+              ),
+          ],
+        ),
       ),
     );
     if (picked != null) settings.setThemeMode(picked);
@@ -251,22 +249,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _nameCtrl.text = _name;
     final saved = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Your name'),
-        content: TextField(
-          controller: _nameCtrl,
-          autofocus: true,
-          decoration: const InputDecoration(labelText: 'Name'),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel')),
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Save')),
-        ],
-      ),
+      builder: (_) => _NameDialog(controller: _nameCtrl),
     );
     if (saved == true) {
       final n = _nameCtrl.text.trim();
@@ -359,4 +342,245 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget _plainValue(String value) => Text(value,
       style: TextStyle(fontSize: 14, color: context.c.textSub));
+}
+
+// ── Branded dialog primitives ────────────────────────────────────────────────
+
+/// One selectable option in a picker dialog.
+class _Choice {
+  final String label;
+  final String sub;
+  final IconData icon;
+  const _Choice(this.label, this.sub, this.icon);
+}
+
+/// A rounded, on-brand dialog shell: leaf-coloured icon chip + Playfair title,
+/// then arbitrary content. Shared by the Theme and Name dialogs.
+class _BrandedDialog extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String? subtitle;
+  final Widget child;
+  const _BrandedDialog({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    this.subtitle,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.c;
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+        decoration: BoxDecoration(
+          color: c.card,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: c.border),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: iconColor,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [BoxShadow(color: iconColor.withValues(alpha: 0.30), blurRadius: 8, offset: const Offset(0, 3))],
+                  ),
+                  child: Icon(icon, color: Colors.white, size: 24),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title,
+                          style: GoogleFonts.playfairDisplay(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              color: c.text)),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 2),
+                        Text(subtitle!,
+                            style: TextStyle(fontSize: 13, color: c.textSub)),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ChoiceTile extends StatelessWidget {
+  final _Choice choice;
+  final bool selected;
+  final VoidCallback onTap;
+  const _ChoiceTile({
+    required this.choice,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.c;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: selected ? c.accent.withValues(alpha: 0.08) : Colors.transparent,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: selected ? c.accent : c.border),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: c.accent.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(choice.icon, color: c.accent, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(choice.label,
+                          style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: c.text)),
+                      const SizedBox(height: 1),
+                      Text(choice.sub,
+                          style: TextStyle(fontSize: 12.5, color: c.textSub)),
+                    ],
+                  ),
+                ),
+                Icon(
+                  selected
+                      ? Icons.check_circle_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  color: selected ? c.accent : c.border,
+                  size: 22,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NameDialog extends StatefulWidget {
+  final TextEditingController controller;
+  const _NameDialog({required this.controller});
+  @override
+  State<_NameDialog> createState() => _NameDialogState();
+}
+
+class _NameDialogState extends State<_NameDialog> {
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: widget.controller.text.length,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.c;
+    OutlineInputBorder b(Color col, [double w = 1]) => OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: col, width: w));
+    return _BrandedDialog(
+      icon: Icons.person_outline_rounded,
+      iconColor: kGold,
+      title: 'Your name',
+      subtitle: 'Shown on your home greeting',
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: widget.controller,
+            autofocus: true,
+            textCapitalization: TextCapitalization.words,
+            style: TextStyle(
+                fontSize: 16, fontWeight: FontWeight.w600, color: c.text),
+            decoration: InputDecoration(
+              hintText: 'Enter your name',
+              hintStyle: TextStyle(color: c.textSub),
+              filled: true,
+              fillColor: c.bg,
+              prefixIcon: Icon(Icons.person_outline_rounded, color: c.accent),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              border: b(c.border),
+              enabledBorder: b(c.border),
+              focusedBorder: b(c.accent, 2),
+            ),
+            onSubmitted: (_) => Navigator.pop(context, true),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  style: TextButton.styleFrom(foregroundColor: c.textSub),
+                  child: const Text('Cancel'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: kGreen,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Save',
+                      style: TextStyle(fontWeight: FontWeight.w700)),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
