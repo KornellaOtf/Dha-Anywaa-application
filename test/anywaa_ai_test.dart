@@ -195,8 +195,34 @@ void main() {
     // Thousands.
     expect(ai.answer('say 2026').text,
         contains('Kumme ariew ka piariew ka ab'));
+    // A valid number is now grounded as a result card (same UI as words),
+    // while still keeping the spoken form in the reply text.
+    final card = ai.answer('how do you say 11');
+    expect(card.found, isTrue);
+    expect(card.matches.first.entry.dha, contains('Apar ka aciel'));
     // Out of range is refused, never fabricated.
     expect(ai.answer('say 99999').found, isFalse);
+  });
+
+  test('dictionary carries no numbered sense-glue slop', () async {
+    final ai = AnywaaAiService.instance;
+    await ai.load();
+    // Formerly these entries held glued ".2/.3" sense markers concatenated into
+    // one giant garbled translation. After the cleanup the digit markers are
+    // gone (senses were split into separate variants) with words preserved.
+    final digit = RegExp(r'\d');
+    for (final q in ['belt', 'backbone', 'blow', 'account', 'barren', 'aim']) {
+      final r = ai.answer(q);
+      if (!r.found) continue;
+      for (final m in r.matches) {
+        expect(digit.hasMatch(m.entry.dha), isFalse,
+            reason: '$q still has digit slop: ${m.entry.dha}');
+        for (final s in m.entry.syn) {
+          expect(digit.hasMatch(s), isFalse,
+              reason: '$q synonym has digit slop: $s');
+        }
+      }
+    }
   });
 
   test('direction auto-detected when the query gives no explicit hint',

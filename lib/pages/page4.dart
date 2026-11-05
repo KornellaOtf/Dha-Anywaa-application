@@ -182,6 +182,34 @@ class _Page4State extends State<Page4> {
     return context.c.border;
   }
 
+  /// Fill-in-the-blank feedback: once the correct option is tapped, the blank
+  /// (a run of underscores) is replaced by the answer so the learner sees the
+  /// whole completed word, e.g. `__UU.` -> `NgUU.`. The inserted letters are
+  /// highlighted in gold. Wrong picks leave the blank untouched.
+  static const _questionStyle = TextStyle(
+      fontSize: 20,
+      fontWeight: FontWeight.bold,
+      color: Colors.white,
+      height: 1.3);
+
+  Widget _questionText(Questions q, int pageIdx) {
+    final answeredCorrect = _pageSelectedIndex == pageIdx &&
+        _selectedIndex >= 0 &&
+        _selectedIndex < q.options.length &&
+        q.options[_selectedIndex] == q.answer_index;
+    final blank = RegExp('_+').firstMatch(q.question);
+    if (answeredCorrect && blank != null) {
+      return Text.rich(TextSpan(style: _questionStyle, children: [
+        TextSpan(text: q.question.substring(0, blank.start)),
+        TextSpan(
+            text: q.answer_index,
+            style: const TextStyle(color: kGold)),
+        TextSpan(text: q.question.substring(blank.end)),
+      ]));
+    }
+    return Text(q.question, style: _questionStyle);
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -325,12 +353,7 @@ class _Page4State extends State<Page4> {
                                   color: kGold,
                                   fontWeight: FontWeight.w700)),
                           const SizedBox(height: 8),
-                          Text(q.question,
-                              style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  height: 1.3)),
+                          _questionText(q, pageIdx),
                         ]),
                   ),
                 ),

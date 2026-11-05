@@ -418,6 +418,7 @@ class _AnswerBody extends StatelessWidget {
       );
     }
     final items = answer.matches;
+    final isNumber = items.isNotEmpty && items.every((m) => m.source == 'number');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -469,10 +470,18 @@ class _AnswerBody extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.verified_user_outlined, size: 13, color: c.textSub),
+              Icon(
+                isNumber
+                    ? Icons.calculate_outlined
+                    : Icons.verified_user_outlined,
+                size: 13,
+                color: c.textSub,
+              ),
               const SizedBox(width: 6),
               Text(
-                'From the on-device dictionary',
+                isNumber
+                    ? 'Spelled with the taught counting rules'
+                    : 'From the on-device dictionary',
                 style: TextStyle(fontSize: 11, color: c.textSub),
               ),
             ],
