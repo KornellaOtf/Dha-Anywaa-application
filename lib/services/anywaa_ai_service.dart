@@ -698,7 +698,21 @@ class AnywaaAiService {
     }
     return AnywaaAnswer(
       text: 'Sure! $n in Dha Anywaa is $word.',
-      matches: const [],
+      // Grounded synthetic entry so the number renders in the same result card
+      // as a word lookup instead of a plain text bubble. Flagged with source
+      // 'number' so the UI can label it as rule-generated, not dictionary data.
+      matches: [
+        AnywaaMatch(
+          DictEntry(
+            en: '$n',
+            dha: word,
+            defs: 'Counting number, spelled with the taught Dha Anywaa rules.',
+            syn: const [],
+          ),
+          6,
+          'number',
+        ),
+      ],
     );
   }
 
