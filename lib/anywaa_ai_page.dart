@@ -14,12 +14,12 @@ import 'package:dha_anywaaa/theme/app_theme.dart';
 /// - Fully functional with 1300+ words, numbers, cultural facts ✅
 /// - 100% offline, never hallucinates ✅
 ///
-/// SmolLM2 INTEGRATION STATUS:
+/// Anywaa-LM INTEGRATION STATUS:
 /// - Download infrastructure: Working ✅
 /// - Model file storage: Working ✅
 /// - LLM inference: Planned for future update ⏳
 ///
-/// The SmolLM2 download is optional and prepares for future LLM inference
+/// The Anywaa-LM download is optional and prepares for future LLM inference
 /// that will provide more conversational responses while maintaining the
 /// same grounded accuracy.
 
@@ -592,7 +592,7 @@ class _ModelBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.c;
 
-    // Model already loaded — show a small badge that SmolLM2 is ready.
+    // Model already loaded — show a small badge that Anywaa-LM is ready.
     // Note: Currently still uses dictionary AI, but infrastructure is ready.
     if (status is ModelReady) {
       return Container(
@@ -602,7 +602,7 @@ class _ModelBanner extends StatelessWidget {
         child: Row(children: [
           Icon(Icons.offline_bolt_rounded, size: 14, color: c.accent),
           const SizedBox(width: 6),
-          Text('SmolLM2 ready (using dictionary AI)',
+          Text('Anywaa-LM ready (using dictionary AI)',
               style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
@@ -672,7 +672,7 @@ class _ModelBanner extends StatelessWidget {
       );
     }
 
-    // Idle — show optional download prompt for SmolLM2 (future LLM inference).
+    // Idle — show optional download prompt for Anywaa-LM (future LLM inference).
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -695,12 +695,12 @@ class _ModelBanner extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Download SmolLM2 (optional)',
+              Text('Download Anywaa-LM (optional)',
                   style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                       color: c.text)),
-              Text('258 MB · Future LLM upgrade',
+              Text('258 MB · AI language model',
                   style: TextStyle(fontSize: 11, color: c.textSub)),
             ],
           ),
