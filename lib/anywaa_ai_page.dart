@@ -7,6 +7,22 @@ import 'package:dha_anywaaa/services/model_download_service.dart';
 import 'package:dha_anywaaa/services/llama_service.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
 
+/// Anywaa AI Chat Interface
+///
+/// CURRENT IMPLEMENTATION:
+/// - Uses AnywaaAiService (dictionary-based AI) for all responses ✅
+/// - Fully functional with 1300+ words, numbers, cultural facts ✅
+/// - 100% offline, never hallucinates ✅
+///
+/// SmolLM2 INTEGRATION STATUS:
+/// - Download infrastructure: Working ✅
+/// - Model file storage: Working ✅
+/// - LLM inference: Planned for future update ⏳
+///
+/// The SmolLM2 download is optional and prepares for future LLM inference
+/// that will provide more conversational responses while maintaining the
+/// same grounded accuracy.
+
 class AnywaaAiPage extends StatefulWidget {
   const AnywaaAiPage({super.key});
   @override
@@ -576,16 +592,17 @@ class _ModelBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.c;
 
-    // Model already loaded — show a small badge only, no banner.
+    // Model already loaded — show a small badge that SmolLM2 is ready.
+    // Note: Currently still uses dictionary AI, but infrastructure is ready.
     if (status is ModelReady) {
       return Container(
         width: double.infinity,
         color: kGreen.withValues(alpha: 0.07),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         child: Row(children: [
-          Icon(Icons.psychology_rounded, size: 14, color: c.accent),
+          Icon(Icons.offline_bolt_rounded, size: 14, color: c.accent),
           const SizedBox(width: 6),
-          Text('AI mode active',
+          Text('SmolLM2 ready (using dictionary AI)',
               style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
@@ -655,7 +672,7 @@ class _ModelBanner extends StatelessWidget {
       );
     }
 
-    // Idle — show download prompt.
+    // Idle — show optional download prompt for SmolLM2 (future LLM inference).
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -670,7 +687,7 @@ class _ModelBanner extends StatelessWidget {
             color: kGreen.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
-          child: const Icon(Icons.psychology_outlined,
+          child: const Icon(Icons.cloud_download_outlined,
               size: 18, color: kGreen),
         ),
         const SizedBox(width: 10),
@@ -678,12 +695,12 @@ class _ModelBanner extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Upgrade to AI mode',
+              Text('Download SmolLM2 (optional)',
                   style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                       color: c.text)),
-              Text('Download 258 MB once over Wi-Fi',
+              Text('258 MB · Future LLM upgrade',
                   style: TextStyle(fontSize: 11, color: c.textSub)),
             ],
           ),

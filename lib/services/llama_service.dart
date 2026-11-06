@@ -1,35 +1,61 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:dha_anywaaa/services/anywaa_ai_service.dart';
+import 'package:llama_cpp_dart/llama_cpp_dart.dart';
 
 /// Wraps the llama.cpp inference engine.
 ///
-/// Phase 2 placeholder: the actual llama.cpp FFI bridge will replace the
-/// stub below once the llama_cpp_dart package is integrated. The public API
-/// is stable so the rest of the app does not need to change when the real
-/// engine is wired in.
+/// When the SmolLM2 model is downloaded, this service loads it via
+/// llama_cpp_dart and generates conversational English responses using
+/// the RAG (Retrieval-Augmented Generation) pipeline.
 ///
-/// Current behaviour:
-///   - [isAvailable] returns false when the GGUF file is not present.
-///   - [generate] calls the existing [AnywaaAiService] RAG pipeline and
-///     returns a deterministic grounded reply, exactly as today.
-///   - When [modelPath] is set and the GGUF exists, a TODO comment marks
-///     the swap-in point for real inference.
+/// The dictionary result is injected as [CONTEXT] so the model can only
+/// rephrase what the database already confirmed.
 class LlamaService {
   LlamaService._();
   static final LlamaService instance = LlamaService._();
 
   String? _modelPath;
+  Llama? _llama;
+  
   bool get isAvailable => _modelPath != null && File(_modelPath!).existsSync();
 
   /// Call after a successful model download.
-  void setModelPath(String path) {
+  Future<void> setModelPath(String path) async {
     _modelPath = path;
+    await _loadModel();
   }
 
   /// Clears the model path (e.g. after deletion).
   void clearModelPath() {
+    _dispose();
     _modelPath = null;
+  }
+
+  /// Load the GGUF model into memory.
+  Future<void> _loadModel() async {
+    if (_modelPath == null || !File(_modelPath!).existsSync()) {
+      return;
+    }
+
+    try {
+      // Dispose any existing model first
+      _dispose();
+
+      // Load the model with llama_cpp_dart v0.0.9 simple API
+      // The constructor takes the model path as the first argument
+      _llama = Llama(_modelPath!);
+    } catch (e) {
+      // ignore: avoid_print
+      print('Failed to load LLM model: $e');
+      _dispose();
+    }
+  }
+
+  /// Dispose of the model.
+  void _dispose() {
+    _llama?.dispose();
+    _llama = null;
   }
 
   /// Builds the ChatML prompt for SmolLM2-360M-Instruct.
@@ -92,25 +118,123 @@ Question: $userQuery
 
   /// Generate a reply for [userQuery].
   ///
-  /// When the real llama.cpp engine is available ([isAvailable] == true),
-  /// this will call native inference. Until then it returns the grounded
-  /// deterministic reply from [AnywaaAiService] — identical accuracy,
-  /// slightly less conversational phrasing.
+  /// If the model is available, uses SmolLM2 for conversational English
+  /// responses while maintaining grounded accuracy through the RAG pipeline.
+  /// Otherwise falls back to the dictionary-based reply.
+  ///
+  /// Returns: A conversational English response grounded in database facts.
   Future<String> generate({
     required String userQuery,
     required AnywaaAnswer dictionaryResult,
   }) async {
-    final _ = buildContext(dictionaryResult); // context for future LLM use
+    // Fallback to dictionary mode if model not available
+    if (_llama == null) {
+      return dictionaryResult.text;
+    }
 
-    // ── TODO: swap in real llama.cpp inference here ──────────────────────
-    // When isAvailable is true:
-    //   final prompt = buildPrompt(userQuery: userQuery, context: context);
-    //   final raw = await _nativeGenerate(prompt);  // llama_cpp_dart call
-    //   return applyGuardrail(
-    //       llmOutput: raw, context: context, fallback: dictionaryResult.text);
-    // ────────────────────────────────────────────────────────────────────
+    try {
+      // Build the RAG prompt with verified database facts
+      final context = buildContext(dictionaryResult);
+      final prompt = buildPrompt(userQuery: userQuery, context: context);
 
-    // Fallback: return the grounded dictionary reply unchanged.
-    return dictionaryResult.text;
+      // Set the prompt and generate response using llama.cpp
+      _llama!.setPrompt(prompt);
+      
+      final buffer = StringBuffer();
+      while (true) {
+        final result = _llama!.getNext();
+        final token = result.$1;
+        final done = result.$2;
+        
+        if (done) break;
+        buffer.write(token);
+        
+        // Stop at special tokens
+        if (buffer.toString().contains('<|im_end|>') || 
+            buffer.toString().contains('<|im_start|>')) {
+          break;
+        }
+      }
+
+      final generated = buffer.toString()
+          .replaceAll('<|im_end|>', '')
+          .replaceAll('<|im_start|>', '')
+          .trim();
+
+      // Apply guardrail to prevent hallucinations
+      return applyGuardrail(
+        llmOutput: generated,
+        context: context,
+        fallback: dictionaryResult.text,
+      );
+    } catch (e) {
+      // ignore: avoid_print
+      print('LLM generation failed: $e');
+      // Fallback to dictionary mode on error
+      return dictionaryResult.text;
+    }
+  }
+
+  /// Generate a reply with streaming token-by-token output.
+  ///
+  /// Returns a Stream that emits each token as it's generated.
+  Stream<String> generateStream({
+    required String userQuery,
+    required AnywaaAnswer dictionaryResult,
+  }) async* {
+    // Fallback to dictionary mode if model not available
+    if (_llama == null) {
+      yield dictionaryResult.text;
+      return;
+    }
+
+    try {
+      // Build the RAG prompt with verified database facts
+      final context = buildContext(dictionaryResult);
+      final prompt = buildPrompt(userQuery: userQuery, context: context);
+
+      // Set the prompt
+      _llama!.setPrompt(prompt);
+      
+      final buffer = StringBuffer();
+      while (true) {
+        final result = _llama!.getNext();
+        final token = result.$1;
+        final done = result.$2;
+        
+        if (done) break;
+        
+        buffer.write(token);
+        yield token;
+        
+        // Stop at special tokens
+        if (buffer.toString().contains('<|im_end|>') || 
+            buffer.toString().contains('<|im_start|>')) {
+          break;
+        }
+      }
+
+      // Apply guardrail after generation completes
+      final generated = buffer.toString()
+          .replaceAll('<|im_end|>', '')
+          .replaceAll('<|im_start|>', '')
+          .trim();
+          
+      final validated = applyGuardrail(
+        llmOutput: generated,
+        context: context,
+        fallback: dictionaryResult.text,
+      );
+
+      // If guardrail rejected the output, emit correction
+      if (validated != generated && validated == dictionaryResult.text) {
+        yield '\n\n[Corrected]: $validated';
+      }
+    } catch (e) {
+      // ignore: avoid_print
+      print('LLM streaming failed: $e');
+      // Fallback to dictionary mode on error
+      yield dictionaryResult.text;
+    }
   }
 }
