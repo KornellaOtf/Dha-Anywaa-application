@@ -16,7 +16,8 @@ class LlamaService {
   static final LlamaService instance = LlamaService._();
 
   String? _modelPath;
-  Llama? _llama;
+  LlamaEngine? _engine;
+  EngineSession? _session;
   
   bool get isAvailable => _modelPath != null && File(_modelPath!).existsSync();
 
@@ -42,9 +43,19 @@ class LlamaService {
       // Dispose any existing model first
       _dispose();
 
-      // Load the model with llama_cpp_dart v0.0.9 simple API
-      // The constructor takes the model path as the first argument
-      _llama = Llama(_modelPath!);
+      // Load the model with llama_cpp_dart v0.9.0 API
+      _engine = await LlamaEngine.spawn(
+        modelParams: ModelParams(
+          path: _modelPath!,
+          gpuLayers: 0, // CPU only for compatibility (increase if GPU available)
+        ),
+        contextParams: const ContextParams(
+          nCtx: 2048, // Safe for mobile
+        ),
+      );
+
+      // Create a session for generation
+      _session = await _engine!.createSession();
     } catch (e) {
       // ignore: avoid_print
       print('Failed to load LLM model: $e');
@@ -52,10 +63,12 @@ class LlamaService {
     }
   }
 
-  /// Dispose of the model.
+  /// Dispose of the model and context.
   void _dispose() {
-    _llama?.dispose();
-    _llama = null;
+    _session?.dispose();
+    _engine?.dispose();
+    _session = null;
+    _engine = null;
   }
 
   /// Builds the ChatML prompt for SmolLM2-360M-Instruct.
@@ -128,7 +141,7 @@ Question: $userQuery
     required AnywaaAnswer dictionaryResult,
   }) async {
     // Fallback to dictionary mode if model not available
-    if (_llama == null) {
+    if (_session == null) {
       return dictionaryResult.text;
     }
 
@@ -137,21 +150,25 @@ Question: $userQuery
       final context = buildContext(dictionaryResult);
       final prompt = buildPrompt(userQuery: userQuery, context: context);
 
-      // Set the prompt and generate response using llama.cpp
-      _llama!.setPrompt(prompt);
-      
+      // Generate response using llama.cpp
       final buffer = StringBuffer();
-      while (true) {
-        final result = _llama!.getNext();
-        final token = result.$1;
-        final done = result.$2;
-        
-        if (done) break;
-        buffer.write(token);
-        
-        // Stop at special tokens
-        if (buffer.toString().contains('<|im_end|>') || 
-            buffer.toString().contains('<|im_start|>')) {
+      await for (final event in _session!.generate(
+        prompt: prompt,
+        addSpecial: true,
+        sampler: const SamplerParams(
+          temperature: 0.7,
+          topP: 0.9,
+        ),
+        maxTokens: 256,
+      )) {
+        if (event is TokenEvent) {
+          buffer.write(event.text);
+          // Stop at special tokens
+          if (buffer.toString().contains('<|im_end|>') || 
+              buffer.toString().contains('<|im_start|>')) {
+            break;
+          }
+        } else if (event is DoneEvent) {
           break;
         }
       }
@@ -183,7 +200,7 @@ Question: $userQuery
     required AnywaaAnswer dictionaryResult,
   }) async* {
     // Fallback to dictionary mode if model not available
-    if (_llama == null) {
+    if (_session == null) {
       yield dictionaryResult.text;
       return;
     }
@@ -193,23 +210,27 @@ Question: $userQuery
       final context = buildContext(dictionaryResult);
       final prompt = buildPrompt(userQuery: userQuery, context: context);
 
-      // Set the prompt
-      _llama!.setPrompt(prompt);
-      
+      // Stream tokens from llama.cpp
       final buffer = StringBuffer();
-      while (true) {
-        final result = _llama!.getNext();
-        final token = result.$1;
-        final done = result.$2;
-        
-        if (done) break;
-        
-        buffer.write(token);
-        yield token;
-        
-        // Stop at special tokens
-        if (buffer.toString().contains('<|im_end|>') || 
-            buffer.toString().contains('<|im_start|>')) {
+      await for (final event in _session!.generate(
+        prompt: prompt,
+        addSpecial: true,
+        sampler: const SamplerParams(
+          temperature: 0.7,
+          topP: 0.9,
+        ),
+        maxTokens: 256,
+      )) {
+        if (event is TokenEvent) {
+          buffer.write(event.text);
+          yield event.text;
+          
+          // Stop at special tokens
+          if (buffer.toString().contains('<|im_end|>') || 
+              buffer.toString().contains('<|im_start|>')) {
+            break;
+          }
+        } else if (event is DoneEvent) {
           break;
         }
       }
