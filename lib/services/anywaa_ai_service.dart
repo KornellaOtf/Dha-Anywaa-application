@@ -2,6 +2,19 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/services.dart' show rootBundle;
 
+// ── Cultural fact ────────────────────────────────────────────────────────────
+class CulturalFact {
+  final String id;
+  final List<String> keywords;
+  final String fact;
+  const CulturalFact({required this.id, required this.keywords, required this.fact});
+  factory CulturalFact.fromJson(Map<String, dynamic> j) => CulturalFact(
+        id: (j['id'] ?? '') as String,
+        keywords: ((j['keywords'] ?? const []) as List).cast<String>(),
+        fact: (j['fact'] ?? '') as String,
+      );
+}
+
 /// One dictionary entry loaded from the bundled local data.
 class DictEntry {
   final String en;   // English word
@@ -54,8 +67,10 @@ class AnywaaAiService {
   static final AnywaaAiService instance = AnywaaAiService._();
 
   static const String _asset = 'assets/data/anywaa_dictionary.json';
+  static const String _culturalAsset = 'assets/data/cultural_facts.json';
 
   List<DictEntry> _words = const [];
+  List<CulturalFact> _facts = const [];
   bool get ready => _words.isNotEmpty;
   int get wordCount => _words.length;
 
@@ -144,14 +159,25 @@ class AnywaaAiService {
     return t.split(' ').length <= 2;
   }
 
-  /// Loads the bundled dictionary once. Safe to call repeatedly.
+  /// Loads the bundled dictionary and cultural facts once. Safe to call repeatedly.
   Future<void> load() async {
     if (ready) return;
+    // Load dictionary
     final raw = await rootBundle.loadString(_asset);
     final map = json.decode(raw) as Map<String, dynamic>;
     _words = ((map['words'] ?? const []) as List)
         .map((e) => DictEntry.fromJson(e as Map<String, dynamic>))
         .toList(growable: false);
+    // Load cultural facts (non-fatal if missing)
+    try {
+      final factRaw = await rootBundle.loadString(_culturalAsset);
+      final factMap = json.decode(factRaw) as Map<String, dynamic>;
+      _facts = ((factMap['facts'] ?? const []) as List)
+          .map((e) => CulturalFact.fromJson(e as Map<String, dynamic>))
+          .toList(growable: false);
+    } catch (_) {
+      _facts = const [];
+    }
   }
 
   // ── Text normalisation ──────────────────────────────────────────────────
@@ -217,6 +243,10 @@ class AnywaaAiService {
     // run next so they read like a chat, not a failed lookup.
     final intent = _intent(p);
     if (intent != null) return intent;
+
+    // Cultural facts from the bundled knowledge base.
+    final cultural = _culturalAnswer(p);
+    if (cultural != null) return cultural;
 
     // Numbers are generated from the taught rules (grounded, deterministic).
     final number = _numberAnswer(p);
@@ -619,6 +649,34 @@ class AnywaaAiService {
       h = (h * 31 + cu) & 0x7fffffff;
     }
     return h % n;
+  }
+
+  // ── Cultural knowledge lookup ───────────────────────────────────────────────
+  /// Searches the bundled cultural_facts.json for a fact matching the query.
+  /// Returns null when nothing matches so the caller falls through to the
+  /// dictionary.
+  AnywaaAnswer? _culturalAnswer(_Parsed p) {
+    if (_facts.isEmpty) return null;
+    final raw = p.raw;
+    // Score each fact by how many of its keywords appear in the query.
+    CulturalFact? best;
+    int bestScore = 0;
+    for (final f in _facts) {
+      int score = 0;
+      for (final kw in f.keywords) {
+        if (raw.contains(kw)) score++;
+      }
+      if (score > bestScore) {
+        bestScore = score;
+        best = f;
+      }
+    }
+    // Require at least 1 keyword hit and the query must not be a plain
+    // single-word translation request (those should go to the dictionary).
+    if (best == null || bestScore < 1) return null;
+    // If the query is just 1-2 core words, let the dictionary handle it first.
+    if (p.core.length <= 2 && bestScore < 2) return null;
+    return AnywaaAnswer(text: best.fact, matches: const []);
   }
 
   // ── Conversational intents ──────────────────────────────────────────────
