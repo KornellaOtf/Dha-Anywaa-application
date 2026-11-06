@@ -46,6 +46,7 @@ dependencies:
   open_file: ^3.3.2
   google_fonts: ^6.2.1
   crypto: ^3.0.3
+  flutter_local_notifications: ^17.0.0
 
 dev_dependencies:
   flutter_test:

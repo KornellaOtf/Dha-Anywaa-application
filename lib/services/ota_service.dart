@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dha_anywaaa/services/notification_service.dart';
 
 /// Result of an OTA check.
 class OtaCheckResult {
@@ -71,7 +72,16 @@ class OtaService {
   bool get isDownloading => _active;
 
   // ── Check ──────────────────────────────────────────────────────────────────
-  Future<OtaCheckResult?> checkForUpdate({bool forceCheck = false}) async {
+  /// Check for updates from GitHub releases.
+  /// 
+  /// [forceCheck] - If true, bypasses the 6-hour cache
+  /// [silent] - If true, shows notification instead of returning result
+  /// 
+  /// Returns null if no update available or if silent mode is enabled.
+  Future<OtaCheckResult?> checkForUpdate({
+    bool forceCheck = false,
+    bool silent = false,
+  }) async {
     if (!forceCheck) {
       final prefs     = await SharedPreferences.getInstance();
       final lastCheck = prefs.getInt(_cacheKey) ?? 0;
@@ -112,7 +122,7 @@ class OtaService {
 
       if (remoteCode <= localCode) return null;
 
-      return OtaCheckResult(
+      final result = OtaCheckResult(
         updateAvailable:   true,
         mandatory:         manifest['mandatory'] as bool? ?? false,
         latestVersion:     manifest['version'] as String? ?? '',
@@ -122,6 +132,18 @@ class OtaService {
         sizeBytes:         (manifest['sizeBytes'] as num?)?.toInt() ?? 0,
         releaseNotes:      manifest['releaseNotes'] as String? ?? '',
       );
+
+      // If silent mode, show notification instead of returning result
+      if (silent) {
+        await NotificationService().showUpdateNotification(
+          version: result.latestVersion,
+          sizeBytes: result.sizeBytes,
+          mandatory: result.mandatory,
+        );
+        return null; // Don't return result in silent mode
+      }
+
+      return result;
     } catch (_) {
       return null;
     }
@@ -132,15 +154,17 @@ class OtaService {
   /// are published on [download]; leaving the current screen will not cancel it,
   /// and a later retry resumes from the bytes already on disk instead of
   /// starting over.
-  void startDownload(OtaCheckResult result) {
+  /// 
+  /// [showNotifications] - If true, shows system notifications for progress
+  void startDownload(OtaCheckResult result, {bool showNotifications = true}) {
     if (_active) return; // already running – do not restart or duplicate
     _active = true;
     download.value = const OtaDownloadState(
         OtaPhase.running, 0, 'Preparing download…');
-    unawaited(_run(result));
+    unawaited(_run(result, showNotifications: showNotifications));
   }
 
-  Future<void> _run(OtaCheckResult result) async {
+  Future<void> _run(OtaCheckResult result, {bool showNotifications = true}) async {
     File? part;
     try {
       final dir = await getExternalStorageDirectory() ??
@@ -203,6 +227,15 @@ class OtaService {
               'Downloading… ${(pct * 100).toStringAsFixed(0)}% '
               '(${(received / 1048576).toStringAsFixed(1)} MB)',
             );
+            
+            // Update notification progress
+            if (showNotifications) {
+              await NotificationService().showDownloadProgress(
+                progress: pct,
+                bytesDownloaded: received,
+                totalBytes: total,
+              );
+            }
           }
         } finally {
           await sink.flush();
@@ -234,9 +267,18 @@ class OtaService {
       download.value = OtaDownloadState(
           OtaPhase.success, 1, 'Download complete. Tap to install.',
           finalFile.path);
+      
+      // Show completion notification
+      if (showNotifications) {
+        await NotificationService().cancelDownloadProgress();
+        await NotificationService().showDownloadComplete();
+      }
     } catch (_) {
       if (part != null) await _deleteQuietly(part);
       _fail('Download failed. Try again.');
+      if (showNotifications) {
+        await NotificationService().cancelDownloadProgress();
+      }
     } finally {
       _active = false;
     }
