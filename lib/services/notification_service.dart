@@ -88,7 +88,7 @@ class NotificationService {
         ? 'Version $version ($sizeMB MB)\nThis update is required to continue using the app.'
         : 'Version $version ($sizeMB MB) is ready to download.';
 
-    const androidDetails = AndroidNotificationDetails(
+    final androidDetails = AndroidNotificationDetails(
       'ota_updates',
       'OTA Updates',
       channelDescription: 'Notifications for app updates',
@@ -101,7 +101,7 @@ class NotificationService {
       category: AndroidNotificationCategory.recommendation,
     );
 
-    const notificationDetails = NotificationDetails(android: androidDetails);
+    final notificationDetails = NotificationDetails(android: androidDetails);
 
     await _notifications.show(
       0, // Notification ID (0 = update notifications)
@@ -143,7 +143,7 @@ class NotificationService {
       autoCancel: false,
     );
 
-    const notificationDetails = NotificationDetails(android: androidDetails);
+    final notificationDetails = NotificationDetails(android: androidDetails);
 
     await _notifications.show(
       1, // Notification ID (1 = download progress)
