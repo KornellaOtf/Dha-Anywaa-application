@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Manages the on-demand download of the SmolLM2-360M GGUF model file.
+/// Manages the on-demand download of the Qwen2.5-0.5B GGUF model file.
 ///
 /// CURRENT STATUS:
 /// - Download infrastructure: ✅ Complete and working
@@ -13,9 +13,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// - Active AI: Dictionary-based AnywaaAiService (fully functional)
 ///
 /// The app currently uses the dictionary-based AI for all responses.
-/// The SmolLM2 download feature prepares for future LLM inference that
-/// will provide more conversational responses while maintaining the same
-/// grounded accuracy through guardrails.
+/// The Qwen2.5 download prepares for future LLM inference that will
+/// provide more conversational responses while maintaining accuracy.
 ///
 /// Usage:
 ///   final svc = ModelDownloadService.instance;
@@ -28,11 +27,11 @@ class ModelDownloadService {
 
   // ── Constants ─────────────────────────────────────────────────────────────
   static const _modelUrl =
-      'https://huggingface.co/unsloth/SmolLM2-360M-Instruct-GGUF'
-      '/resolve/main/SmolLM2-360M-Instruct-Q4_K_M.gguf';
-  static const _expectedBytes = 270590560; // 270,590,560 bytes (~258 MB)
-  static const _fileName = 'SmolLM2-360M-Instruct-Q4_K_M.gguf';
-  static const _prefKey = 'model_download_complete';
+      'https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF'
+      '/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf';
+  static const _expectedBytes = 491400032; // 491,400,032 bytes (~469 MB)
+  static const _fileName = 'qwen2.5-0.5b-instruct-q4_k_m.gguf';
+  static const _prefKey = 'model_download_complete_qwen25';
 
   // ── State ─────────────────────────────────────────────────────────────────
   final _statusCtrl = StreamController<ModelStatus>.broadcast();

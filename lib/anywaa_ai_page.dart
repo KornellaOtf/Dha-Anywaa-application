@@ -9,19 +9,14 @@ import 'package:dha_anywaaa/theme/app_theme.dart';
 
 /// Anywaa AI Chat Interface
 ///
-/// CURRENT IMPLEMENTATION:
-/// - Uses AnywaaAiService (dictionary-based AI) for all responses ✅
-/// - Fully functional with 1300+ words, numbers, cultural facts ✅
-/// - 100% offline, never hallucinates ✅
+/// RESPONSE PIPELINE:
+/// 1. Dictionary lookup (AnywaaAiService) always runs first — grounded facts.
+/// 2. If Anywaa-LM is loaded (fllama), it generates a conversational reply:
+///    - Translation queries: model rephrases the dictionary result (RAG).
+///    - General questions: model answers freely from its own knowledge.
+/// 3. If the model is not loaded, the dictionary result is shown directly.
 ///
-/// Anywaa-LM INTEGRATION STATUS:
-/// - Download infrastructure: Working ✅
-/// - Model file storage: Working ✅
-/// - LLM inference: Planned for future update ⏳
-///
-/// The Anywaa-LM download is optional and prepares for future LLM inference
-/// that will provide more conversational responses while maintaining the
-/// same grounded accuracy.
+/// Anywaa-LM STATUS: ✅ Integrated via fllama (llama.cpp)
 
 class AnywaaAiPage extends StatefulWidget {
   const AnywaaAiPage({super.key});
@@ -101,17 +96,38 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
       _thinking = true;
     });
     _scrollDown();
+    _generateReply(text);
+  }
 
-    // Tiny delay so the "thinking" bubble reads; the lookup itself is instant.
-    Future.delayed(const Duration(milliseconds: 320), () {
-      final res = _ai.answer(text);
-      if (!mounted) return;
-      setState(() {
-        _thinking = false;
-        _msgs.add(_Msg.bot(res.text, res));
-      });
-      _scrollDown();
+  Future<void> _generateReply(String text) async {
+    // Step 1: dictionary lookup always runs — grounded, instant, synchronous.
+    await Future.delayed(const Duration(milliseconds: 120));
+    final dictResult = _ai.answer(text);
+
+    // Step 2: if Anywaa-LM is loaded, use real LLM inference.
+    // Otherwise fall back to the dictionary reply directly.
+    String replyText;
+    if (LlamaService.instance.isAvailable) {
+      try {
+        replyText = await LlamaService.instance.generate(
+          userQuery: text,
+          dictionaryResult: dictResult,
+        );
+      } catch (_) {
+        replyText = dictResult.text;
+      }
+    } else {
+      replyText = dictResult.text;
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _thinking = false;
+      // Use the LLM reply as display text, but keep the dictionary matches
+      // so the word cards still render in the chat bubble.
+      _msgs.add(_Msg.bot(replyText, dictResult));
     });
+    _scrollDown();
   }
 
   void _scrollDown() {
@@ -249,9 +265,9 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
         ),
         const SizedBox(height: 8),
         Text(
-          'I translate words, explain meanings, and say numbers. Everything '
-          'comes from the dictionary on your device. I work fully offline and '
-          'I never make up a translation.',
+          'I translate words, explain meanings, and say numbers. '
+          'If you have downloaded Anywaa-LM, I can also answer general '
+          'questions. Everything runs fully offline on your device.',
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 14, height: 1.5, color: c.textSub),
         ),
@@ -314,7 +330,7 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
                         onSubmitted: (_) => _send(),
                         style: TextStyle(color: c.text, fontSize: 15),
                         decoration: InputDecoration(
-                          hintText: 'Ask a word or a number',
+                          hintText: 'Ask a word, number, or anything',
                           hintStyle: TextStyle(color: c.textSub),
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.symmetric(
@@ -592,8 +608,7 @@ class _ModelBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.c;
 
-    // Model already loaded — show a small badge that Anywaa-LM is ready.
-    // Note: Currently still uses dictionary AI, but infrastructure is ready.
+    // Model downloaded and ready (inference not yet active).
     if (status is ModelReady) {
       return Container(
         width: double.infinity,
@@ -602,7 +617,7 @@ class _ModelBanner extends StatelessWidget {
         child: Row(children: [
           Icon(Icons.offline_bolt_rounded, size: 14, color: c.accent),
           const SizedBox(width: 6),
-          Text('Anywaa-LM ready (using dictionary AI)',
+          Text('Anywaa-LM downloaded · coming soon',
               style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
@@ -700,7 +715,7 @@ class _ModelBanner extends StatelessWidget {
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                       color: c.text)),
-              Text('258 MB · AI language model',
+              Text('469 MB · Qwen2.5 language model',
                   style: TextStyle(fontSize: 11, color: c.textSub)),
             ],
           ),
