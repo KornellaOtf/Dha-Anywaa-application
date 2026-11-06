@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "facts": [
+    {
+      "id": "location_gambella",
+      "keywords": ["live", "location", "where", "gambella", "home", "homeland", "region", "country"],
+      "fact": "The Anywaa people live primarily in the Gambella region of southwestern Ethiopia and along the rivers of South Sudan, especially near the Baro, Gilo, Akobo, and Pibor rivers."
+    },
+    {
+      "id": "language_family",
+      "keywords": ["language", "family", "related", "nilo", "nilotic", "anuak", "dha anywaa"],
+      "fact": "Dha Anywaa (also called Anuak) is a Nilo-Saharan language of the Eastern Sudanic branch. It is closely related to Dinka and Nuer."
+    },
+    {
+      "id": "population",
+      "keywords": ["population", "people", "how many", "number of", "size"],
+      "fact": "The Anywaa (Anuak) number approximately 200,000 to 300,000 people across Ethiopia and South Sudan."
+    },
+    {
+      "id": "religion",
+      "keywords": ["religion", "believe", "faith", "christian", "traditional", "god", "jwok"],
+      "fact": "The Anywaa traditionally believe in Jwok (the supreme spiritual power). Many Anywaa today also practice Christianity, introduced by missionaries in the 20th century."
+    },
+    {
+      "id": "economy_fishing",
+      "keywords": ["fish", "fishing", "river", "food", "eat", "economy", "livelihood"],
+      "fact": "The Anywaa are skilled fishers and farmers. The rivers are central to their livelihood. Fish, sorghum, and maize are staple foods."
+    },
+    {
+      "id": "social_structure",
+      "keywords": ["clan", "chief", "king", "nyibur", "leader", "society", "social", "structure", "royal"],
+      "fact": "Anywaa society is organized around noble clans who hold royal emblems (fishing nets and spears). Leadership passes through recognized noble lineages, and a chief is called Nyibur."
+    },
+    {
+      "id": "name_meaning",
+      "keywords": ["anywaa", "anuak", "name", "mean", "meaning of anywaa", "what does anywaa mean"],
+      "fact": "The name Anywaa (also spelled Anuak) means 'those who share' in the Dha Anywaa language, reflecting the community value of generosity and sharing."
+    },
+    {
+      "id": "music_culture",
+      "keywords": ["music", "dance", "song", "drum", "instrument", "cultural", "celebration"],
+      "fact": "Music and dance are important in Anywaa culture. Drums (kødø) are used in ceremonies and celebrations. Songs often tell stories of history and daily life."
+    },
+    {
+      "id": "greeting",
+      "keywords": ["greet", "greeting", "hello", "hi", "dëëri", "jööt", "how are you"],
+      "fact": "A common Anywaa greeting is 'Dëëri jööt?' which means 'How are you?' The typical reply is 'Dëëri' meaning 'I am well' or 'Fine'."
+    },
+    {
+      "id": "alphabet_origin",
+      "keywords": ["alphabet", "script", "write", "writing", "written", "orthography", "letters"],
+      "fact": "The Dha Anywaa writing system uses the Latin alphabet with additional characters for sounds specific to the language, such as ä, ë, ï, ö, ø, and others."
+    },
+    {
+      "id": "gambella_region",
+      "keywords": ["gambella", "ethiopia", "region", "province", "state"],
+      "fact": "Gambella is a regional state in southwestern Ethiopia. It borders South Sudan to the west. The Anywaa and Nuer are the two main indigenous groups of the region."
+    },
+    {
+      "id": "rivers",
+      "keywords": ["river", "baro", "gilo", "akobo", "pibor", "water", "naam"],
+      "fact": "The Baro, Gilo, Akobo, and Pibor rivers are central to Anywaa life. In Dha Anywaa, the word for river is 'naam'. The rivers provide fish, water, and transportation."
+    },
+    {
+      "id": "awal_pot",
+      "keywords": ["awal", "pot", "clay", "pottery", "cooking", "vessel"],
+      "fact": "The awal is a traditional Anywaa clay pot used for cooking, storing water, and fermentation. Pottery-making is a skilled craft practiced in the community."
+    },
+    {
+      "id": "history_displacement",
+      "keywords": ["history", "conflict", "displacement", "refugee", "war", "struggle", "rights"],
+      "fact": "The Anywaa people have faced significant challenges including land conflicts, ethnic violence, and displacement, particularly in the early 2000s in the Gambella region."
+    },
+    {
+      "id": "numbers_system",
+      "keywords": ["count", "counting", "number system", "how count", "numbers work"],
+      "fact": "Dha Anywaa has a base-10 counting system. Numbers 1-10 have unique names (Aciel through Apar). Larger numbers combine these with connectors, e.g. 11 is 'Apar ka Aciel' (ten and one)."
+    }
+  ]
+}
