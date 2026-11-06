@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:dha_anywaaa/services/anywaa_ai_service.dart';
+import 'package:dha_anywaaa/services/model_download_service.dart';
+import 'package:dha_anywaaa/services/llama_service.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
 
 class AnywaaAiPage extends StatefulWidget {
@@ -20,32 +22,45 @@ class _Msg {
 }
 
 class _AnywaaAiPageState extends State<AnywaaAiPage> {
-  final _ai = AnywaaAiService.instance;
-  final _ctrl = TextEditingController();
+  final _ai  = AnywaaAiService.instance;
+  final _mdl = ModelDownloadService.instance;
+  final _ctrl   = TextEditingController();
   final _scroll = ScrollController();
   final List<_Msg> _msgs = [];
-  bool _loading = true;
+  bool _loading  = true;
   bool _thinking = false;
   Timer? _rotate;
+  StreamSubscription<ModelStatus>? _modelSub;
+  ModelStatus _modelStatus = const ModelStatus.idle();
 
-  // Hero suggestions are generated fresh from the dictionary and rotated while
-  // the empty (hero) screen is showing, so the prompts change between visits.
   List<String> _examples = const [];
 
   @override
   void initState() {
     super.initState();
+    _modelSub = _mdl.statusStream.listen((s) {
+      if (!mounted) return;
+      setState(() => _modelStatus = s);
+      if (s is ModelReady) {
+        LlamaService.instance.setModelPath(s.path);
+      }
+    });
     _start();
   }
 
   Future<void> _start() async {
     await _ai.load();
+    await _mdl.checkExisting();
     if (!mounted) return;
+    final current = _mdl.status;
+    if (current is ModelReady) {
+      LlamaService.instance.setModelPath(current.path);
+    }
     setState(() {
-      _loading = false;
-      _examples = _ai.sampleQuestions(count: 6);
+      _loading     = false;
+      _modelStatus = current;
+      _examples    = _ai.sampleQuestions(count: 6);
     });
-    // Rotate the hero prompts every 10s, but only while no chat has started.
     _rotate = Timer.periodic(const Duration(seconds: 10), (_) {
       if (!mounted || _msgs.isNotEmpty) return;
       setState(() => _examples = _ai.sampleQuestions(count: 6));
@@ -54,6 +69,7 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
 
   @override
   void dispose() {
+    _modelSub?.cancel();
     _rotate?.cancel();
     _ctrl.dispose();
     _scroll.dispose();
@@ -179,6 +195,10 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
                             return _Bubble(msg: _msgs[i], onAsk: _send);
                           },
                         ),
+                ),
+                _ModelBanner(
+                  status: _modelStatus,
+                  onDownload: () => _mdl.download(),
                 ),
                 _inputBar(c),
               ],
@@ -430,7 +450,6 @@ class _AnswerBody extends StatelessWidget {
             decoration: BoxDecoration(
               color: c.card,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: c.border.withValues(alpha: 0.6)),
               boxShadow: const [kShadowSoft],
             ),
             child: Column(
@@ -543,6 +562,147 @@ class _EcoMark extends StatelessWidget {
         boxShadow: const [kShadowSoft],
       ),
       child: Icon(Icons.eco_rounded, size: size * 0.6, color: iconColor ?? c.accent),
+    );
+  }
+}
+
+// ── Model download banner ─────────────────────────────────────────────────────
+class _ModelBanner extends StatelessWidget {
+  final ModelStatus status;
+  final VoidCallback onDownload;
+  const _ModelBanner({required this.status, required this.onDownload});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.c;
+
+    // Model already loaded — show a small badge only, no banner.
+    if (status is ModelReady) {
+      return Container(
+        width: double.infinity,
+        color: kGreen.withValues(alpha: 0.07),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        child: Row(children: [
+          Icon(Icons.psychology_rounded, size: 14, color: c.accent),
+          const SizedBox(width: 6),
+          Text('AI mode active',
+              style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: c.accent)),
+        ]),
+      );
+    }
+
+    // Downloading — show progress bar.
+    if (status is ModelDownloading) {
+      final dl = status as ModelDownloading;
+      return Container(
+        width: double.infinity,
+        color: c.card,
+        padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: c.accent),
+              ),
+              const SizedBox(width: 8),
+              Text('Downloading AI model  ${dl.progressLabel}',
+                  style: TextStyle(fontSize: 12, color: c.textSub)),
+            ]),
+            const SizedBox(height: 6),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: dl.progress,
+                minHeight: 4,
+                backgroundColor: c.border,
+                color: kGreen,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Error state.
+    if (status is ModelError) {
+      final err = status as ModelError;
+      return Container(
+        width: double.infinity,
+        color: const Color(0xFFFFEEEE),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        child: Row(children: [
+          const Icon(Icons.error_outline_rounded,
+              size: 15, color: Color(0xFFC0392B)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(err.message,
+                style: const TextStyle(
+                    fontSize: 11, color: Color(0xFFC0392B))),
+          ),
+          TextButton(
+            onPressed: onDownload,
+            child: const Text('Retry',
+                style: TextStyle(fontSize: 12, color: Color(0xFFC0392B))),
+          ),
+        ]),
+      );
+    }
+
+    // Idle — show download prompt.
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: c.card,
+        border: Border(top: BorderSide(color: c.border)),
+      ),
+      padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
+      child: Row(children: [
+        Container(
+          padding: const EdgeInsets.all(7),
+          decoration: BoxDecoration(
+            color: kGreen.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.psychology_outlined,
+              size: 18, color: kGreen),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Upgrade to AI mode',
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: c.text)),
+              Text('Download 258 MB once over Wi-Fi',
+                  style: TextStyle(fontSize: 11, color: c.textSub)),
+            ],
+          ),
+        ),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: kGreen,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20)),
+            elevation: 0,
+            textStyle: const TextStyle(
+                fontSize: 12, fontWeight: FontWeight.bold),
+          ),
+          onPressed: onDownload,
+          child: const Text('Download'),
+        ),
+      ]),
     );
   }
 }
