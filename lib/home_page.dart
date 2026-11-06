@@ -5,6 +5,7 @@ import 'package:dha_anywaaa/components/savedData.dart';
 import 'package:dha_anywaaa/help.dart';
 import 'package:dha_anywaaa/privacy_policy_page.dart';
 import 'package:dha_anywaaa/services/ota_service.dart';
+import 'package:dha_anywaaa/services/notification_service.dart';
 import 'package:dha_anywaaa/settings_page.dart';
 import 'package:dha_anywaaa/terms_page.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
@@ -81,24 +82,33 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _load();
+    // Initialize notification service
+    _initNotifications();
     // Run update check after the first frame so it never blocks the UI.
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkForUpdate());
+  }
+
+  Future<void> _initNotifications() async {
+    try {
+      await NotificationService().initialize();
+      // Request permission on first launch
+      final hasPermission = await NotificationService().areNotificationsEnabled();
+      if (!hasPermission) {
+        await NotificationService().requestPermission();
+      }
+    } catch (e) {
+      debugPrint('Failed to initialize notifications: $e');
+    }
   }
 
   Future<void> _checkForUpdate() async {
     // Skip if offline.
     try {
-      final result = await OtaService().checkForUpdate();
-      if (result == null || !mounted) return;
-      _showUpdateDialog(result);
+      // Use silent mode to show notification instead of dialog
+      await OtaService().checkForUpdate(silent: true);
     } catch (_) {
       // Network unavailable or timeout: fail silently.
     }
-  }
-
-  void _showUpdateDialog(OtaCheckResult result) {
-    Navigator.push(
-        context, MaterialPageRoute(builder: (_) => OtaUpdatePage(result: result)));
   }
 
   Future<void> _load() async {
