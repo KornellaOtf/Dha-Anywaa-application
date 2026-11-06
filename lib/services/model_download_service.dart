@@ -6,11 +6,22 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Manages the on-demand download of the SmolLM2-360M GGUF model file.
 ///
+/// CURRENT STATUS:
+/// - Download infrastructure: ✅ Complete and working
+/// - Model file storage: ✅ Working (saves to app documents)
+/// - LLM inference: ⏳ Planned (requires llama.cpp FFI integration)
+/// - Active AI: Dictionary-based AnywaaAiService (fully functional)
+///
+/// The app currently uses the dictionary-based AI for all responses.
+/// The SmolLM2 download feature prepares for future LLM inference that
+/// will provide more conversational responses while maintaining the same
+/// grounded accuracy through guardrails.
+///
 /// Usage:
 ///   final svc = ModelDownloadService.instance;
 ///   svc.statusStream.listen((s) => ...);
 ///   await svc.download();
-///   if (svc.isReady) { /* use the model */ }
+///   if (svc.isReady) { /* model file downloaded and ready */ }
 class ModelDownloadService {
   ModelDownloadService._();
   static final ModelDownloadService instance = ModelDownloadService._();
