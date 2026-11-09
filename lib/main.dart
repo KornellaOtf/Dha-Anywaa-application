@@ -18,6 +18,7 @@ import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:dha_anywaaa/wraper.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -49,6 +50,7 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.data,
       darkTheme: AppTheme.dark,
       themeMode: settings.themeMode,
+      navigatorObservers: [FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance)],
       routes: {
         '/': (context) => const Wrapper(),
         'number': (context) => const Number(),

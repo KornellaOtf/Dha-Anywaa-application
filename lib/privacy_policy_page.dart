@@ -57,11 +57,12 @@ class _PolicyBody extends StatelessWidget {
         ),
         _section(context, 
           'What leaves your device',
-          'The app makes one outbound network request: it checks for app updates by calling the '
-          'GitHub Releases API at api.github.com. This request includes your IP address as part '
-          'of normal HTTPS communication. No personal data from the app (your name, progress or '
-          'preferences) is sent with this request. The request is made at most once every 6 hours '
-          'and only when you are online.',
+          'The app makes outbound network requests:\n\n'
+          '  - Update checks: calls GitHub Releases API at api.github.com. Includes your IP '
+          'address as part of normal HTTPS communication. No personal data is sent.\n'
+          '  - Firebase Analytics: anonymously logs app usage events (e.g., lesson audio played, '
+          'quiz completed). No personally identifiable information is collected.\n\n'
+          'The app makes update checks at most once every 6 hours when you are online.',
         ),
         _section(context, 
           'Permissions',
@@ -80,7 +81,10 @@ class _PolicyBody extends StatelessWidget {
         ),
         _section(context, 
           'Analytics and advertising',
-          'The app contains no analytics, crash reporting, tracking or advertising of any kind.',
+          'The app uses Firebase Analytics (Google) to collect anonymous usage data (which '
+          'lessons are played, app version, country, device type) to improve the app. No '
+          'personally identifiable information is collected. No advertising IDs are used. '
+          'See Google\'s Privacy Policy for more information.',
         ),
         _section(context, 
           'Third-party services',

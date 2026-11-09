@@ -8,6 +8,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dha_anywaaa/services/notification_service.dart';
+import 'package:dha_anywaaa/services/analytics_service.dart';
 
 /// Result of an OTA check.
 class OtaCheckResult {
@@ -82,6 +83,8 @@ class OtaService {
     bool forceCheck = false,
     bool silent = false,
   }) async {
+    AnalyticsService.instance.logCheckUpdate(forced: forceCheck);
+
     if (!forceCheck) {
       final prefs     = await SharedPreferences.getInstance();
       final lastCheck = prefs.getInt(_cacheKey) ?? 0;

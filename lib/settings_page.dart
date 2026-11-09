@@ -7,6 +7,7 @@ import 'package:dha_anywaaa/help.dart';
 import 'package:dha_anywaaa/privacy_policy_page.dart';
 import 'package:dha_anywaaa/ota_update_page.dart';
 import 'package:dha_anywaaa/services/ota_service.dart';
+import 'package:dha_anywaaa/services/analytics_service.dart';
 import 'package:dha_anywaaa/terms_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -112,7 +113,10 @@ class _SettingsPageState extends State<SettingsPage> {
               title: 'Sound effects',
               trailing: Switch(
                 value: settings.soundEnabled,
-                onChanged: settings.setSoundEnabled,
+                onChanged: (enabled) {
+                  AnalyticsService.instance.logToggleSound(enabled);
+                  settings.setSoundEnabled(enabled);
+                },
               ),
             ),
             _row(
@@ -155,8 +159,10 @@ class _SettingsPageState extends State<SettingsPage> {
               title: 'Anywaa AI',
               subtitle: 'Offline word helper. Ask a word, a meaning, or a number.',
               trailing: Icon(Icons.chevron_right, color: context.c.border),
-              onTap: () => Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const AnywaaAiPage())),
+              onTap: () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const AnywaaAiPage()));
+              },
             ),
           ]),
           const SizedBox(height: 24),
@@ -241,7 +247,10 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
       ),
     );
-    if (picked != null) settings.setThemeMode(picked);
+    if (picked != null) {
+      AnalyticsService.instance.logChangeTheme(picked.name);
+      settings.setThemeMode(picked);
+    }
   }
 
   // ── Name editor ───────────────────────────────────────────────────────────
