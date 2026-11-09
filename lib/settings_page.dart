@@ -263,6 +263,8 @@ class _SettingsPageState extends State<SettingsPage> {
     if (saved == true) {
       final n = _nameCtrl.text.trim();
       await _savedData.setName(n);
+      // Update analytics user ID
+      await AnalyticsService.instance.setUser(n);
       if (!mounted) return;
       setState(() => _name = n);
     }

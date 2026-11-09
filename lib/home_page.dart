@@ -4,6 +4,7 @@ import 'package:dha_anywaaa/components/savedData.dart';
 import 'package:dha_anywaaa/dictionary_page.dart';
 import 'package:dha_anywaaa/help.dart';
 import 'package:dha_anywaaa/privacy_policy_page.dart';
+import 'package:dha_anywaaa/services/analytics_service.dart';
 import 'package:dha_anywaaa/services/ota_service.dart';
 import 'package:dha_anywaaa/services/notification_service.dart';
 import 'package:dha_anywaaa/settings_page.dart';
@@ -556,6 +557,8 @@ class _HomePageState extends State<HomePage> {
             _drawerTile(context, Icons.logout_rounded, 'Log out', () async {
               Navigator.pop(context);
               await _savedData.setName('guess');
+              // Clear analytics user ID
+              await AnalyticsService.instance.clearUser();
               if (!mounted) return;
               // ignore: use_build_context_synchronously
               Navigator.pushReplacementNamed(context, '/');

@@ -1,6 +1,7 @@
 import 'package:dha_anywaaa/components/savedData.dart';
 import 'package:dha_anywaaa/home_page.dart';
 import 'package:dha_anywaaa/nameEntry.dart';
+import 'package:dha_anywaaa/services/analytics_service.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:dha_anywaaa/widgets/brand_leaf.dart';
 import 'package:flutter/material.dart';
@@ -25,6 +26,10 @@ class _WrapperState extends State<Wrapper> {
 
   Future<void> _check() async {
     final name = await _savedData.getName();
+    
+    // Initialize analytics with stored user ID
+    await AnalyticsService.instance.initializeFromStorage();
+    
     if (!mounted) return;
     setState(() {
       _needsName = name == 'guess';

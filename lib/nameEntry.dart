@@ -1,4 +1,5 @@
 import 'package:dha_anywaaa/components/savedData.dart';
+import 'package:dha_anywaaa/services/analytics_service.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:dha_anywaaa/widgets/brand_leaf.dart';
 import 'package:flutter/material.dart';
@@ -156,9 +157,12 @@ class _NameEntryState extends State<NameEntry> {
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14)),
                         ),
-                        onPressed: () {
+                        onPressed: () async {
                           if (_formKey.currentState!.validate()) {
-                            savedData.setName(name);
+                            await savedData.setName(name);
+                            // Set analytics user ID
+                            await AnalyticsService.instance.setUser(name);
+                            if (!mounted) return;
                             Navigator.pushReplacementNamed(
                                 context, 'home_page');
                           }
