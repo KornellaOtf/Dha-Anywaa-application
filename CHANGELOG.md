@@ -1,8 +1,11 @@
 # Changelog
 
-## 1.2.25 (build 125)
+## 1.2.26 (build 126)
 
 Released: 2026-11-09
+
+### Important Notice
+⚠️ **Package name changed** - Requires clean install (uninstall old app first)
 
 ### Fixed
 - User tracking in Firebase Analytics now properly tracks users across sessions
@@ -15,8 +18,9 @@ Released: 2026-11-09
 - User ID clearing on logout for privacy
 
 ### Changed
-- App version: 1.2.24 → 1.2.25
-- Build number: 124 → 125
+- App version: 1.2.24 → 1.2.26
+- Build number: 124 → 126
+- Package name: com.bellaTech.dha_anywaaa → com.kornellaotf.learn_dha_anywaa
 
 ## 1.2.24 (build 124)
 
