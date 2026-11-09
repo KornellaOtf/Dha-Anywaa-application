@@ -73,13 +73,6 @@ class NotificationService {
   }) async {
     if (!_initialized) await initialize();
 
-    // Check permission first
-    final hasPermission = await areNotificationsEnabled();
-    if (!hasPermission) {
-      debugPrint('Notification permission not granted');
-      return;
-    }
-
     final sizeMB = (sizeBytes / (1024 * 1024)).toStringAsFixed(1);
     final title = mandatory 
         ? 'Important Update Available'

@@ -90,12 +90,10 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _initNotifications() async {
     try {
+      // Request permission first (required on Android 13+)
+      await NotificationService().requestPermission();
+      // Then initialize with settings
       await NotificationService().initialize();
-      // Request permission on first launch
-      final hasPermission = await NotificationService().areNotificationsEnabled();
-      if (!hasPermission) {
-        await NotificationService().requestPermission();
-      }
     } catch (e) {
       debugPrint('Failed to initialize notifications: $e');
     }
