@@ -1,6 +1,5 @@
 import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 class Body extends StatelessWidget {
   const Body({super.key});
@@ -28,77 +27,35 @@ class Body extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Hero: clean body diagram ───────────────────────────────────
+            // ── Hero: body diagram with image ─────────────────────────────
             Container(
               width: double.infinity,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(22),
-                color: c.card,
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    kGreen.withValues(alpha: 0.12),
+                    c.card,
+                  ],
+                ),
                 border: Border.all(color: c.border.withValues(alpha: 0.5)),
                 boxShadow: const [kShadowCard],
               ),
-              padding: const EdgeInsets.all(16),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Title
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: kGreen.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        'Nying thäk dëër dhaanhø',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: kGreen,
-                        ),
-                      ),
+              padding: const EdgeInsets.fromLTRB(16, 18, 16, 14),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 480),
+                child: Image.asset(
+                  'assets/word_images/body.jpg',
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const SizedBox(
+                    height: 240,
+                    child: Center(
+                      child: Icon(Icons.accessibility_new_rounded,
+                          size: 120, color: Color(0xFFBFD0C7)),
                     ),
-                    const SizedBox(height: 16),
-                    // Clean SVG body illustration
-                    Container(
-                      constraints: const BoxConstraints(maxHeight: 450),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            kGreen.withValues(alpha: 0.05),
-                            c.bg.withValues(alpha: 0.2),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.all(12),
-                      child: SvgPicture.asset(
-                        'assets/word_images/body_clean.svg',
-                        fit: BoxFit.contain,
-                        placeholderBuilder: (_) => const Center(
-                          child: Icon(
-                            Icons.accessibility_new_rounded,
-                            size: 180,
-                            color: Color(0xFFBFD0C7),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    // Attribution
-                    Text(
-                      'Dha-Anywaa GDAT',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: c.textSub,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
