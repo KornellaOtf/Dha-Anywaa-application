@@ -1,6 +1,40 @@
 # Changelog
 
-## 1.1.0 (build 4)
+## 1.2.20 (build 120)
+
+Released: 2026-11-08
+
+### Added
+- Firebase Analytics integration for anonymous usage tracking
+- Analytics service: logPlayAudio, logCompleteLesson, logFinishQuiz, logCheckUpdate, logChangeTheme, logToggleSound
+- Automatic screen tracking via FirebaseAnalyticsObserver
+- OTA update notifications (local notifications on app open)
+- Settings page: theme change logging, sound toggle logging
+
+### Changed
+- Privacy policy updated to mention Firebase Analytics
+- App version: 1.2.18 → 1.2.20
+- Build number: 118 → 120
+
+## 1.2.19 (build 119)
+
+Released: 2026-11-08
+
+### Added
+- Firebase Cloud Messaging (FCM) integration for push OTA notifications
+- App subscribes to 'updates' topic automatically
+
+### Changed
+- App version: 1.2.18 → 1.2.19
+- Build number: 118 → 119
+
+## 1.2.18 (build 118)
+
+Released: 2026-11-08
+
+### Fixed
+- Notification permissions fixed - request before initialization
+- OTA update notifications now show when updates are available
 
 Released: 2025
 
