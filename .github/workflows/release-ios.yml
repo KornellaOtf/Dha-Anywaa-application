@@ -1,0 +1,140 @@
+name: Build & Release iOS OTA
+
+on:
+  push:
+    tags:
+      - 'v*'           # triggers on v1.0.2, v1.1.0, etc.
+
+  workflow_dispatch:   # manual trigger from GitHub UI
+
+permissions:
+  contents: write      # needed to create releases and upload assets
+
+jobs:
+  build-and-release-ios:
+    runs-on: macos-latest
+
+    steps:
+      # ── 1. Checkout ────────────────────────────────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ── 2. Set up Flutter ──────────────────────────────────────────────────
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.7'
+          channel: stable
+          cache: true
+
+      # ── 3. Install dependencies ────────────────────────────────────────────
+      - name: Install dependencies
+        run: flutter pub get
+
+      # ── 4. Setup iOS signing (certificates & provisioning profile) ─────────
+      - name: Setup signing
+        run: |
+          # Create keychain
+          security create-keychain -p "" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          
+          # Import certificate from secret (base64 encoded p12)
+          echo "${{ secrets.IOS_CERTIFICATE_BASE64 }}" | base64 -d > certificate.p12
+          security import certificate.p12 -k build.keychain -P "${{ secrets.IOS_CERTIFICATE_PASSWORD }}" -A
+          
+          # Import provisioning profile from secret
+          echo "${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}" | base64 -d > provisioning.mobileprovision
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp provisioning.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
+
+      # ── 5. Update iOS bundle version from pubspec ──────────────────────────
+      - name: Update iOS version
+        run: |
+          PV=$(grep '^version:' pubspec.yaml | awk '{print $2}')
+          VERSION=${PV%%+*}
+          VCODE=${PV##*+}
+          [ -z "$VCODE" ] && VCODE=${{ github.run_number }}
+          
+          # Update Info.plist
+          PLIST_PATH="ios/Runner/Info.plist"
+          defaults write "$PLIST_PATH" CFBundleShortVersionString -string "$VERSION"
+          defaults write "$PLIST_PATH" CFBundleVersion -string "$VCODE"
+          
+          echo "Version: $VERSION (build $VCODE)"
+
+      # ── 6. Build iOS IPA ───────────────────────────────────────────────────
+      - name: Build iOS IPA
+        run: |
+          flutter build ios --release --no-codesign
+          
+          # Create archive
+          xcodebuild archive \
+            -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -archivePath build/ios/Runner.xcarchive \
+            -sdk iphoneos \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -allowProvisioningUpdates
+
+          # Export IPA
+          xcodebuild -exportArchive \
+            -archivePath build/ios/Runner.xcarchive \
+            -exportPath build/ios \
+            -exportFormat IPA \
+            -allowProvisioningUpdates
+
+      # ── 7. Rename IPA to include version tag ──────────────────────────────
+      - name: Rename IPA
+        run: |
+          TAG=${GITHUB_REF_NAME:-v1.0.0}
+          mv build/ios/Runner.ipa build/ios/dha-anywaa-${TAG}.ipa
+          echo "IPA_PATH=build/ios/dha-anywaa-${TAG}.ipa" >> $GITHUB_ENV
+          echo "TAG=${TAG}" >> $GITHUB_ENV
+
+      # ── 8. Compute SHA-256 of IPA ─────────────────────────────────────────
+      - name: Compute SHA-256
+        run: |
+          SHA=$(sha256sum "$IPA_PATH" | awk '{print $1}')
+          SIZE=$(stat -c%s "$IPA_PATH")
+          echo "SHA256=${SHA}" >> $GITHUB_ENV
+          echo "SIZE=${SIZE}" >> $GITHUB_ENV
+
+      # ── 9. Write iOS manifest.json ────────────────────────────────────────
+      - name: Write iOS manifest.json
+        run: |
+          OWNER=$(echo "${{ github.repository }}" | cut -d/ -f1)
+          REPO=$(echo "${{ github.repository }}" | cut -d/ -f2)
+          PV=$(grep '^version:' pubspec.yaml | awk '{print $2}')
+          VERSION=${PV%%+*}
+          VCODE=${PV##*+}
+          [ -z "$VCODE" ] && VCODE=${{ github.run_number }}
+          cat > ios_manifest.json <<EOF
+          {
+            "version": "${VERSION}",
+            "buildNumber": "${VCODE}",
+            "ipaUrl": "https://github.com/${OWNER}/${REPO}/releases/download/${TAG}/dha-anywaa-${TAG}.ipa",
+            "sha256": "${SHA256}",
+            "sizeBytes": ${SIZE},
+            "minimumOsVersion": "12.0",
+            "releaseNotes": "See release notes on GitHub.",
+            "developer": "Kornella Otf"
+          }
+          EOF
+
+      # ── 10. Publish release assets (idempotent) ───────────────────────────
+      - name: Publish release assets
+        run: |
+          gh release create "$TAG" \
+            --title "Dha Anywaa $TAG" \
+            --generate-notes \
+            --latest 2>/dev/null \
+            || echo "Release '$TAG' already exists — attaching assets to it."
+          
+          gh release upload "$TAG" \
+            "$IPA_PATH" \
+            ios_manifest.json \
+            --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
