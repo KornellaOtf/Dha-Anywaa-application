@@ -82,8 +82,8 @@ class NotificationService {
 
     final sizeMB = (sizeBytes / (1024 * 1024)).toStringAsFixed(1);
     final title = mandatory 
-        ? '🔴 Important Update Available'
-        : '✨ Update Available';
+        ? 'Important Update Available'
+        : 'Update Available';
     final body = mandatory
         ? 'Version $version ($sizeMB MB)\nThis update is required to continue using the app.'
         : 'Version $version ($sizeMB MB) is ready to download.';
@@ -173,7 +173,7 @@ class NotificationService {
 
     await _notifications.show(
       2, // Notification ID (2 = download complete)
-      '✅ Update Ready',
+      'Update Ready',
       'Tap to install the update',
       notificationDetails,
       payload: 'install_update',
