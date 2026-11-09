@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:open_file/open_file.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import 'package:dha_anywaaa/services/analytics_service.dart';
 import 'package:dha_anywaaa/services/ota_service.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
 
@@ -239,9 +240,13 @@ class _OtaUpdatePageState extends State<OtaUpdatePage> {
           }),
         OtaPhase.success => Column(
             children: [
-              _primary('Install', () {
+              _primary('Install', () async {
                 final p = dl.filePath;
-                if (p != null) OpenFile.open(p);
+                if (p != null) {
+                  // Log install attempt
+                  AnalyticsService.instance.logInstallUpdate(widget.result.latestVersion);
+                  await OpenFile.open(p);
+                }
               }),
               _plain('Later', () => Navigator.pop(context)),
             ],

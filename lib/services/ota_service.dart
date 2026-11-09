@@ -267,6 +267,11 @@ class OtaService {
       }
 
       await part.rename(finalFile.path);
+      
+      // Log download completion
+      final info = await PackageInfo.fromPlatform();
+      AnalyticsService.instance.logDownloadUpdate(info.version, result.latestVersion);
+      
       download.value = OtaDownloadState(
           OtaPhase.success, 1, 'Download complete. Tap to install.',
           finalFile.path);

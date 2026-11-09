@@ -1,15 +1,28 @@
+import 'package:dha_anywaaa/services/analytics_service.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class Result extends StatelessWidget {
+class Result extends StatefulWidget {
   final int finalResult;
   final int total;
 
   const Result({super.key, required this.finalResult, required this.total});
 
+  @override
+  State<Result> createState() => _ResultState();
+}
+
+class _ResultState extends State<Result> {
+  @override
+  void initState() {
+    super.initState();
+    // Log quiz completion to analytics
+    AnalyticsService.instance.logFinishQuiz(widget.finalResult, widget.total);
+  }
+
   String _message() {
-    final pct = total > 0 ? (finalResult / total * 100).round() : 0;
+    final pct = widget.total > 0 ? (widget.finalResult / widget.total * 100).round() : 0;
     if (pct < 40) return "Keep practising.\nYou'll get there!";
     if (pct < 60) return 'Good effort!\nKeep going.';
     if (pct < 80) return 'Well done!\nAlmost there.';
@@ -17,7 +30,7 @@ class Result extends StatelessWidget {
   }
 
   IconData _icon() {
-    final pct = total > 0 ? (finalResult / total * 100).round() : 0;
+    final pct = widget.total > 0 ? (widget.finalResult / widget.total * 100).round() : 0;
     if (pct < 40) return Icons.sentiment_dissatisfied_rounded;
     if (pct < 60) return Icons.sentiment_neutral_rounded;
     if (pct < 80) return Icons.sentiment_satisfied_rounded;
@@ -25,7 +38,7 @@ class Result extends StatelessWidget {
   }
 
   Color _iconColor() {
-    final pct = total > 0 ? (finalResult / total * 100).round() : 0;
+    final pct = widget.total > 0 ? (widget.finalResult / widget.total * 100).round() : 0;
     if (pct < 40) return kRust;
     if (pct < 60) return kGold;
     if (pct < 80) return kGreenMid;
@@ -33,7 +46,7 @@ class Result extends StatelessWidget {
   }
 
   Color _ringColor() {
-    final pct = total > 0 ? (finalResult / total * 100).round() : 0;
+    final pct = widget.total > 0 ? (widget.finalResult / widget.total * 100).round() : 0;
     if (pct < 40) return kRust;
     if (pct < 60) return kGold;
     return kGreen;
@@ -41,7 +54,7 @@ class Result extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pct = total > 0 ? (finalResult / total * 100).round() : 0;
+    final pct = widget.total > 0 ? (widget.finalResult / widget.total * 100).round() : 0;
 
     return Scaffold(
       backgroundColor: context.c.bg,
@@ -116,7 +129,7 @@ class Result extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        '$finalResult / $total',
+                        '${widget.finalResult} / ${widget.total}',
                         style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -157,7 +170,7 @@ class Result extends StatelessWidget {
                     onPressed: () {
                       Clipboard.setData(ClipboardData(
                           text:
-                              'I scored $finalResult/$total ($pct%) on the Dha Anywaa quiz!'));
+                              'I scored ${widget.finalResult}/${widget.total} ($pct%) on the Dha Anywaa quiz!'));
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content:

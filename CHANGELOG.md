@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.2.27 (build 127)
+
+Released: 2026-11-09
+
+### Fixed
+- Analytics events now firing across all key user actions
+- Quiz completion (`finish_quiz`) logged with score and total
+- Alphabet audio plays logged with letter ID
+- Alphabet lesson completions logged when marked as learned
+- Vocabulary category audio plays logged with category and word
+- Vocabulary lesson completions logged when marked as learned
+- OTA download completion logged with from/to version
+- OTA install tap logged with target version
+
+### Changed
+- `Result` widget converted from `StatelessWidget` to `StatefulWidget` to support analytics in `initState`
+- App version: 1.2.26 → 1.2.27
+- Build number: 126 → 127
+
 ## 1.2.26 (build 126)
 
 Released: 2026-11-09

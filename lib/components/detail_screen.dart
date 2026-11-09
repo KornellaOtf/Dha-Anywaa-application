@@ -1,5 +1,6 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:dha_anywaaa/components/savedData.dart';
+import 'package:dha_anywaaa/services/analytics_service.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -67,6 +68,13 @@ class _DetailScreenState extends State<DetailScreen> {
   Future<void> _toggleLearned(int i) async {
     final val = !_learned[i];
     await _savedData.setLearned(widget.category, i, value: val);
+    
+    // Log lesson completion when marking as learned
+    if (val) {
+      final itemId = widget.items[i]['engName'] ?? 'item_$i';
+      AnalyticsService.instance.logCompleteLesson(widget.category, itemId);
+    }
+    
     final count =
         await _savedData.learnedCount(widget.category, widget.items.length);
     if (!mounted) return;
@@ -82,6 +90,11 @@ class _DetailScreenState extends State<DetailScreen> {
     final path = widget.items[i][key];
     if (path == null || path.isEmpty) return;
     if (_isPlaying) return;
+    
+    // Log audio play event
+    final itemId = widget.items[i]['engName'] ?? 'item_$i';
+    AnalyticsService.instance.logPlayAudio(widget.category, itemId);
+    
     setState(() => _isPlaying = true);
     try {
       await _player.play(AssetSource(path));

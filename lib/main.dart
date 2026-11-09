@@ -53,13 +53,16 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     // Depend on the settings notifier so a theme change rebuilds MaterialApp.
     final settings = AppSettings.of(context);
+    
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Dha Anywaa',
       theme: AppTheme.data,
       darkTheme: AppTheme.dark,
       themeMode: settings.themeMode,
-      navigatorObservers: [FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance)],
+      navigatorObservers: [
+        FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
+      ],
       routes: {
         '/': (context) => const Wrapper(),
         'number': (context) => const Number(),
