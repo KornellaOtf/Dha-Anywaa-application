@@ -1,6 +1,6 @@
 # Dha Anywaa UI Audit
 
-**Date:** 2026-11-03  
+**Date:** 2026-11-03 (Updated: 2026-11-09 v1.2.22)  
 **Scope:** Full Flutter UI source review, asset-reference check, and `flutter analyze`.  
 **Method note:** This is a code-led audit. I did not run a device/emulator visual test in this pass, so findings about clipping at very small sizes should be confirmed on target devices.
 
@@ -8,7 +8,17 @@
 
 The app has a clear educational purpose and a useful learning sequence: alphabet, vocabulary, reading, and quiz. Its core content is broad, the two-column wide-screen navigator is a good starting point, and most primary screens expose both Anywaa and English labels.
 
+**Update (v1.2.22):** Body parts screen has been significantly improved with a clean custom SVG illustration, removing the watermarked stock image and baked-in text labels that were previously flagged as usability issues.
+
 The UI currently has high-impact reliability and usability gaps. Several catalog cards cannot be selected, a number of detail views show the wrong section heading, most vocabulary modules show an audio control that does nothing, and the quiz loses its state during ordinary rebuilds. The visual system is also inconsistent across modules: app bars, header-language order, colors, spacing, and wide-screen behavior vary considerably. Fix the P0/P1 items before a user-facing release.
+
+## Recent Improvements (v1.2.22)
+
+### ✅ Fixed Issues
+- **Body Parts Screen**: Replaced watermarked stock photo with custom SVG illustration
+- **Text Legibility**: Removed baked-in text labels that were blurry on mobile screens
+- **Layout Issues**: Eliminated excessive whitespace and nested container issues
+- **Professional Appearance**: Added proper Anywaa title and cleaner visual hierarchy
 
 ## Screen and navigation inventory
 
@@ -22,8 +32,8 @@ The UI currently has high-impact reliability and usability gaps. Several catalog
 | Reading | `Page3` | Scrollable sentence list; tap a row to play audio. | No visible play affordance/status, state is not represented correctly. |
 | Quiz | `Page4` | Vertically paged 31-question quiz with answer feedback. | Controller/data are re-created on rebuild; progress is hidden; navigation is weak. |
 | Result | `Result` | Displays score in a circle. | No restart, review, or return-home action. |
-| Vocabulary groups | Number, colors, shapes, body, clothes, birds, animals, fish | Grids with a zoom/detail toggle. | Most grids are non-interactive and most detail audio buttons are inert. |
-| About/Help/body diagram | `About`, `Help`, `Body` | Supporting information and visual body chart. | Text-heavy, weak responsive layout, missing/incorrect asset in About. |
+| Vocabulary groups | Number, colors, shapes, body, clothes, birds, animals, fish | Grids with a zoom/detail toggle. | ✅ Body screen improved with SVG. Most other grids still non-interactive. |
+| About/Help/body diagram | `About`, `Help`, `Body` | Supporting information and visual body chart. | ✅ Body diagram now uses clean SVG illustration. Text-heavy responsive layout still needs work. |
 
 ## Findings
 

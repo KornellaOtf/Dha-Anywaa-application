@@ -3,6 +3,7 @@
 A Flutter app for learning the Dha Anywaa (Anuak) language.
 Alphabet, vocabulary, reading and a quiz. Works fully offline.
 
+**Current Version**: 1.2.22 (build 122)  
 Developed by **Kornella Otf** (Kornellaotf@gmail.com)
 
 ---
@@ -28,7 +29,7 @@ The app checks for updates once every 6 hours when online.
 | Reading | 29 sentences with audio |
 | Colors | 8 color cards with pictures |
 | Shapes | 4 shape cards |
-| Body | 18 body parts with pictures |
+| Body | 18 body parts with clean SVG illustration |
 | Clothes | 10 clothing items |
 | Birds | 12 birds |
 | Animals | 14 animals |
@@ -36,6 +37,7 @@ The app checks for updates once every 6 hours when online.
 | Numbers | 1 to 10 |
 | Quiz | 31 questions, live score, confirm before quitting |
 | Settings | Sound toggle, name change, update check, Privacy Policy, Terms |
+| Anywaa AI | Offline translation and learning assistant |
 
 ---
 
@@ -57,31 +59,52 @@ lib/
     number.dart           Numbers screen
     savedData.dart        SharedPreferences helpers
     audio_helper.dart     Safe audio playback helper
+  widgets/
+    body.dart             Body parts screen with SVG illustration
   services/
     ota_service.dart      GitHub Releases update checker
+    notification_service.dart  FCM push notifications
+    anywaa_ai_service.dart     Offline AI translation
   theme/
     app_theme.dart        Color tokens and ThemeData
   privacy_policy_page.dart
   terms_page.dart
   about.dart
   help.dart
+  anywaa_ai_page.dart     AI chat interface
 assets/
   sound/                  Alphabet audio (29 files)
   word_sound/             Word audio (30 files)
   sentence_sound/         Reading audio (29 files, Voice6.mp3 missing)
-  word_images/            Word and category images
+  word_images/            Word and category images (including body_clean.svg)
   category_image/         Home grid images
   animals/                Animal images
   birds/                  Bird images
   fish/                   Fish images
   body_part/              Body part images
   cloth/                  Clothing images
+  data/                   AI dictionary and model files
 android/
   app/build.gradle        Package: com.kornellaotf.learn_dha_anywaa
   app/src/main/
     AndroidManifest.xml
     res/xml/network_security_config.xml
 ```
+
+---
+
+## Latest Updates (v1.2.22)
+
+### 🎨 UI Improvements
+- **Body Parts Screen**: Replaced watermarked stock image with clean custom SVG illustration
+- Removed baked-in text labels that were blurry on mobile screens
+- Eliminated excessive whitespace and improved layout
+- Added proper Anywaa title: "Nying thäk dëër dhaanhø"
+
+### 📦 Technical
+- Added `flutter_svg` package for vector graphics support
+- Improved container design without nested boxes
+- Better visual hierarchy and professional appearance
 
 ---
 

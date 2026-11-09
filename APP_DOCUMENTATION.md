@@ -7,7 +7,7 @@
 - **App name:** Dha Anywaa (MaterialApp title)
 - **Dart package:** `dha_anywaaa`
 - **Android application id:** `com.kornellaotf.learn_dha_anywaa`
-- **Current version:** `1.1.5+100` (versionName `1.1.5`, versionCode `100`)
+- **Current version:** `1.2.22+122` (versionName `1.2.22`, versionCode `122`)
 - **Developer:** Kornella Otf (Kornellaotf@gmail.com)
 - **Repository:** https://github.com/KornellaOtf/Dha-Anywaa-application
 - **Platform focus:** Android (also scaffolds for iOS, web, Linux, macOS, Windows)
@@ -24,8 +24,9 @@ parts, clothes, colors, shapes, numbers), and tests knowledge with a
 multiple-choice quiz.
 
 No account is required. The core features work with no internet at all. The
-only network use is an optional update check (GitHub Releases) once every six
-hours when the device is online.
+only network use is an optional update check (GitHub Releases) and Firebase
+Analytics for anonymous usage tracking. FCM push notifications inform users
+of new updates.
 
 Target audience: children and beginner learners of the language.
 
@@ -48,6 +49,9 @@ Target audience: children and beginner learners of the language.
 | External links | `url_launcher` |
 | Scaling | `flutter_screenutil` |
 | Fonts | `google_fonts`: Nunito (body), Playfair Display (titles / big Anywaa words) |
+| Vector graphics | `flutter_svg` (for SVG illustrations) |
+| Firebase | `firebase_core`, `firebase_analytics` (anonymous usage tracking) |
+| Notifications | `flutter_local_notifications` (OTA update alerts, FCM) |
 | Icons/launcher | `flutter_launcher_icons` |
 | Lints | `flutter_lints` (`analysis_options.yaml`) |
 
