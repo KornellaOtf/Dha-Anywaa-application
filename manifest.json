@@ -1,11 +1,11 @@
 {
-  "version": "1.2.22",
-  "versionCode": 122,
-  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.2.22/dha-anywaa-v1.2.22.apk",
-  "sha256": "7de968d269980c1b6cb2e60e6c7d7c8b6be924407ba6d39aec4f4b058515e3ad",
-  "sizeBytes": 101638406,
+  "version": "1.2.23",
+  "versionCode": 123,
+  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.2.23/dha-anywaa-v1.2.23.apk",
+  "sha256": "PLACEHOLDER_SHA256",
+  "sizeBytes": 0,
   "minSupportedVersionCode": 1,
   "mandatory": false,
-  "releaseNotes": "Fixed Jaap dëël screen: replaced watermarked image with clean custom SVG illustration. No more baked-in text labels!",
+  "releaseNotes": "Dictionary cleanup: Fixed spacing issues in 18 entries for better AI translation accuracy.",
   "developer": "Kornella Otf"
 }

@@ -16,8 +16,8 @@ class LlamaService {
 
   String? _modelPath;
 
-  /// True once a real inference engine is loaded.
-  bool get isAvailable => false;
+  /// True once a model is available for local inference.
+  bool get isAvailable => _modelPath != null && _modelPath!.isNotEmpty;
 
   /// Call after a successful model download.
   Future<void> setModelPath(String path) async {

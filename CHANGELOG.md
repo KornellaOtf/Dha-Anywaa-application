@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.2.23 (build 123)
+
+Released: 2026-11-09
+
+### Fixed
+- Dictionary data quality: removed double spaces in 18 entries
+- Improved AI translation accuracy with cleaner dictionary data
+- JSON formatting for better maintainability
+
+### Changed
+- App version: 1.2.22 → 1.2.23
+- Build number: 122 → 123
+
 ## 1.2.22 (build 122)
 
 Released: 2026-11-09
