@@ -1,11 +1,11 @@
 {
-  "version": "1.2.19",
-  "versionCode": 119,
-  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.2.19/dha-anywaa-v1.2.19.apk",
-  "sha256": "060b2219e4b16dcd489c190bfee2949e74ffee1c42bb0855f333b9bfe66f9744",
-  "sizeBytes": 88151221,
+  "version": "1.2.20",
+  "versionCode": 120,
+  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.2.20/dha-anywaa-v1.2.20.apk",
+  "sha256": "54927bbe4b35702be59b84aa506924413d838977d0c7b6fd1489821cde612d2a",
+  "sizeBytes": 100446945,
   "minSupportedVersionCode": 1,
   "mandatory": false,
-  "releaseNotes": "Firebase Analytics integration - anonymous usage tracking. OTA notifications fixed.",
+  "releaseNotes": "Firebase Cloud Messaging (FCM) integration for OTA update notifications. Subscribe to 'updates' topic.",
   "developer": "Kornella Otf"
 }

@@ -19,9 +19,26 @@ import 'package:dha_anywaaa/wraper.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Firebase
+  await Firebase.initializeApp();
+  
+  // Request notification permission for FCM
+  final messaging = FirebaseMessaging.instance;
+  await messaging.requestPermission(
+    alert: true,
+    badge: true,
+    sound: true,
+  );
+  
+  // Subscribe to updates topic for OTA notifications
+  await messaging.subscribeToTopic('updates');
+  
   // Load the saved preference first so the correct theme is applied from the
   // very first frame instead of flashing the system theme on relaunch.
   final prefs = await SharedPreferences.getInstance();
