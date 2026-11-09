@@ -43,17 +43,24 @@ class Body extends StatelessWidget {
                 border: Border.all(color: c.border.withValues(alpha: 0.5)),
                 boxShadow: const [kShadowCard],
               ),
-              padding: const EdgeInsets.fromLTRB(16, 18, 16, 14),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 480),
-                child: Image.asset(
-                  'assets/word_images/body.jpg',
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const SizedBox(
-                    height: 240,
-                    child: Center(
-                      child: Icon(Icons.accessibility_new_rounded,
-                          size: 120, color: Color(0xFFBFD0C7)),
+              padding: const EdgeInsets.all(12),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxHeight: 520,
+                    maxWidth: 400,
+                  ),
+                  child: Image.asset(
+                    'assets/word_images/body.jpg',
+                    fit: BoxFit.contain,
+                    alignment: Alignment.center,
+                    errorBuilder: (_, __, ___) => const SizedBox(
+                      height: 240,
+                      child: Center(
+                        child: Icon(Icons.accessibility_new_rounded,
+                            size: 120, color: Color(0xFFBFD0C7)),
+                      ),
                     ),
                   ),
                 ),
