@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.2.25 (build 125)
+
+Released: 2026-11-09
+
+### Fixed
+- User tracking in Firebase Analytics now properly tracks users across sessions
+- User IDs are privacy-preserving SHA-256 hashes
+- Analytics persist across app restarts
+
+### Added
+- User ID initialization on app start
+- Analytics user tracking on name entry and changes
+- User ID clearing on logout for privacy
+
+### Changed
+- App version: 1.2.24 → 1.2.25
+- Build number: 124 → 125
+
 ## 1.2.24 (build 124)
 
 Released: 2026-11-09
