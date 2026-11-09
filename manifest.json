@@ -1,11 +1,11 @@
 {
-  "version": "1.2.20",
-  "versionCode": 120,
-  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.2.20/dha-anywaa-v1.2.20.apk",
-  "sha256": "a1f37af0ab14c2509617e3948b9da9345385a17e6a5d6f6622e78d7f0a4f30ed",
-  "sizeBytes": 100277217,
+  "version": "1.2.22",
+  "versionCode": 122,
+  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.2.22/dha-anywaa-v1.2.22.apk",
+  "sha256": "PLACEHOLDER_SHA256",
+  "sizeBytes": 0,
   "minSupportedVersionCode": 1,
   "mandatory": false,
-  "releaseNotes": "Firebase Analytics integration for anonymous usage tracking. OTA notifications working.",
+  "releaseNotes": "Fixed Jaap dëël screen: replaced watermarked image with clean custom SVG illustration. No more baked-in text labels!",
   "developer": "Kornella Otf"
 }

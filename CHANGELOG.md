@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.2.22 (build 122)
+
+Released: 2026-11-09
+
+### Fixed
+- Jaap dëël (Body Parts) screen: replaced low-quality image with baked-in text labels with clean custom SVG illustration
+- Removed watermarked stock photo, eliminated excessive whitespace
+- Improved container design: cleaner layout without nested boxes
+- Added proper title "Nying thäk dëër dhaanhø" (Body part names)
+- Professional attribution placement
+
+### Added
+- Custom SVG body diagram illustration (body_clean.svg) - no copyright issues, clean design
+- flutter_svg package for vector graphics support
+
+### Changed
+- App version: 1.2.21 → 1.2.22
+- Build number: 121 → 122
+
 ## 1.2.20 (build 120)
 
 Released: 2026-11-08

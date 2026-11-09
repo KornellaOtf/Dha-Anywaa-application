@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600" width="400" height="600">
+  <!-- Clean body diagram for educational use -->
+  
+  <!-- Head -->
+  <ellipse cx="200" cy="80" rx="50" ry="60" fill="#f4a460" stroke="#8b5a2b" stroke-width="2"/>
+  
+  <!-- Hair -->
+  <ellipse cx="200" cy="50" rx="52" ry="35" fill="#5c4033"/>
+  <ellipse cx="170" cy="60" rx="25" ry="30" fill="#5c4033"/>
+  <ellipse cx="230" cy="60" rx="25" ry="30" fill="#5c4033"/>
+  
+  <!-- Ears -->
+  <ellipse cx="150" cy="80" rx="12" ry="18" fill="#f4a460" stroke="#8b5a2b" stroke-width="1.5"/>
+  <ellipse cx="250" cy="80" rx="12" ry="18" fill="#f4a460" stroke="#8b5a2b" stroke-width="1.5"/>
+  
+  <!-- Eyes -->
+  <ellipse cx="180" cy="75" rx="8" ry="12" fill="white" stroke="#333" stroke-width="1"/>
+  <ellipse cx="220" cy="75" rx="8" ry="12" fill="white" stroke="#333" stroke-width="1"/>
+  <circle cx="180" cy="78" r="5" fill="#2c5f4f"/>
+  <circle cx="220" cy="78" r="5" fill="#2c5f4f"/>
+  <circle cx="182" cy="76" r="2" fill="white"/>
+  <circle cx="222" cy="76" r="2" fill="white"/>
+  
+  <!-- Nose -->
+  <path d="M 200 85 Q 195 95 200 100" fill="none" stroke="#d4845f" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Mouth -->
+  <path d="M 185 105 Q 200 112 215 105" fill="none" stroke="#8b5a2b" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M 185 105 Q 200 108 215 105" fill="#ff9999" opacity="0.6"/>
+  
+  <!-- Teeth -->
+  <rect x="195" y="106" width="4" height="3" fill="white" opacity="0.8"/>
+  <rect x="201" y="106" width="4" height="3" fill="white" opacity="0.8"/>
+  
+  <!-- Neck -->
+  <rect x="185" y="135" width="30" height="25" fill="#f4a460" stroke="#8b5a2b" stroke-width="1.5"/>
+  
+  <!-- Shoulders -->
+  <ellipse cx="200" cy="165" rx="70" ry="20" fill="#f4a460"/>
+  
+  <!-- Torso/Chest -->
+  <rect x="160" y="160" width="80" height="90" rx="10" fill="#ffd4a3" stroke="#8b5a2b" stroke-width="2"/>
+  
+  <!-- Arms -->
+  <rect x="110" y="165" width="50" height="25" rx="12" fill="#f4a460" stroke="#8b5a2b" stroke-width="2"/>
+  <rect x="240" y="165" width="50" height="25" rx="12" fill="#f4a460" stroke="#8b5a2b" stroke-width="2"/>
+  
+  <!-- Lower arms -->
+  <rect x="95" y="185" width="30" height="80" rx="15" fill="#f4a460" stroke="#8b5a2b" stroke-width="2"/>
+  <rect x="275" y="185" width="30" height="80" rx="15" fill="#f4a460" stroke="#8b5a2b" stroke-width="2"/>
+  
+  <!-- Hands -->
+  <ellipse cx="110" cy="270" rx="15" ry="20" fill="#f4a460" stroke="#8b5a2b" stroke-width="2"/>
+  <ellipse cx="290" cy="270" rx="15" ry="20" fill="#f4a460" stroke="#8b5a2b" stroke-width="2"/>
+  
+  <!-- Fingers -->
+  <ellipse cx="105" cy="285" rx="3" ry="8" fill="#f4a460" stroke="#8b5a2b" stroke-width="1"/>
+  <ellipse cx="110" cy="288" rx="3" ry="8" fill="#f4a460" stroke="#8b5a2b" stroke-width="1"/>
+  <ellipse cx="115" cy="285" rx="3" ry="8" fill="#f4a460" stroke="#8b5a2b" stroke-width="1"/>
+  <ellipse cx="285" cy="285" rx="3" ry="8" fill="#f4a460" stroke="#8b5a2b" stroke-width="1"/>
+  <ellipse cx="290" cy="288" rx="3" ry="8" fill="#f4a460" stroke="#8b5a2b" stroke-width="1"/>
+  <ellipse cx="295" cy="285" rx="3" ry="8" fill="#f4a460" stroke="#8b5a2b" stroke-width="1"/>
+  
+  <!-- Waist/Shorts -->
+  <rect x="165" y="250" width="70" height="60" rx="8" fill="#4169e1" stroke="#1e3a8a" stroke-width="2"/>
+  
+  <!-- Belt -->
+  <rect x="165" y="250" width="70" height="8" fill="#8b6914"/>
+  <circle cx="200" cy="254" r="4" fill="#ffd700" stroke="#8b6914" stroke-width="1"/>
+  
+  <!-- Thighs -->
+  <rect x="165" y="305" width="28" height="90" rx="14" fill="#f4a460" stroke="#8b5a2b" stroke-width="2"/>
+  <rect x="207" y="305" width="28" height="90" rx="14" fill="#f4a460" stroke="#8b5a2b" stroke-width="2"/>
+  
+  <!-- Knees -->
+  <circle cx="179" cy="390" r="12" fill="#e09450" opacity="0.5"/>
+  <circle cx="221" cy="390" r="12" fill="#e09450" opacity="0.5"/>
+  
+  <!-- Lower legs -->
+  <rect x="168" y="390" width="24" height="100" rx="12" fill="#f4a460" stroke="#8b5a2b" stroke-width="2"/>
+  <rect x="210" y="390" width="24" height="100" rx="12" fill="#f4a460" stroke="#8b5a2b" stroke-width="2"/>
+  
+  <!-- Ankles -->
+  <circle cx="180" cy="485" r="8" fill="#e09450" opacity="0.4"/>
+  <circle cx="222" cy="485" r="8" fill="#e09450" opacity="0.4"/>
+  
+  <!-- Feet -->
+  <ellipse cx="180" cy="510" rx="22" ry="30" fill="#f4a460" stroke="#8b5a2b" stroke-width="2"/>
+  <ellipse cx="222" cy="510" rx="22" ry="30" fill="#f4a460" stroke="#8b5a2b" stroke-width="2"/>
+  
+  <!-- Toes -->
+  <ellipse cx="172" cy="525" rx="4" ry="6" fill="#e09450" stroke="#8b5a2b" stroke-width="0.5"/>
+  <ellipse cx="180" cy="527" rx="4" ry="6" fill="#e09450" stroke="#8b5a2b" stroke-width="0.5"/>
+  <ellipse cx="188" cy="525" rx="4" ry="6" fill="#e09450" stroke="#8b5a2b" stroke-width="0.5"/>
+  <ellipse cx="214" cy="525" rx="4" ry="6" fill="#e09450" stroke="#8b5a2b" stroke-width="0.5"/>
+  <ellipse cx="222" cy="527" rx="4" ry="6" fill="#e09450" stroke="#8b5a2b" stroke-width="0.5"/>
+  <ellipse cx="230" cy="525" rx="4" ry="6" fill="#e09450" stroke="#8b5a2b" stroke-width="0.5"/>
+</svg>
