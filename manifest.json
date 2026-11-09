@@ -5,7 +5,7 @@
   "sha256": "PLACEHOLDER_SHA256",
   "sizeBytes": 0,
   "minSupportedVersionCode": 1,
-  "mandatory": false,
-  "releaseNotes": "Fixed user tracking in Firebase Analytics for better engagement insights and user retention measurement.",
+  "mandatory": true,
+  "releaseNotes": "IMPORTANT: Package name changed. Please uninstall old app first, then install this version. Future updates will work automatically.",
   "developer": "Kornella Otf"
 }
