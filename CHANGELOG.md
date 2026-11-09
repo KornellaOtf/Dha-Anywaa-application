@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.2.24 (build 124)
+
+Released: 2026-11-09
+
+### Fixed
+- Jaap dëël screen: restored original body.jpg diagram
+- Improved image fit with better constraints and centering
+- Optimized container padding for balanced display
+
+### Changed
+- App version: 1.2.23 → 1.2.24
+- Build number: 123 → 124
+
 ## 1.2.23 (build 123)
 
 Released: 2026-11-09
