@@ -8,6 +8,12 @@ This directory contains comprehensive documentation for the Dha Anywaa Flutter a
 
 ### Release Documentation
 
+#### [RELEASE_NOTES_v1.2.27.md](./RELEASE_NOTES_v1.2.27.md)
+Analytics fix and Firebase App Distribution setup:
+- Events now firing across all key user actions
+- Firebase App Distribution configured
+- distribute.sh script for future releases
+
 #### [RELEASE_NOTES_v1.2.26.md](./RELEASE_NOTES_v1.2.26.md)
 Complete documentation for v1.2.26 release including:
 - Executive summary and breaking changes
@@ -20,6 +26,24 @@ Complete documentation for v1.2.26 release including:
 **Read this first** for an overview of the v1.2.26 release.
 
 ### Feature Documentation
+
+#### [FIREBASE_ANALYTICS_GUIDE.md](./FIREBASE_ANALYTICS_GUIDE.md)
+Complete guide to reading Firebase Analytics data:
+- Where to find each metric in the Firebase console
+- Full events reference with parameters
+- How to interpret retention, DAU/MAU, events
+- All Firebase console bookmarks
+- Data delay expectations
+- How to add new events
+
+#### [RELEASE_WORKFLOW.md](./RELEASE_WORKFLOW.md)
+Step-by-step guide for every future release:
+- How to use distribute.sh
+- Version numbering rules
+- OTA update flow explained
+- Mandatory vs optional updates
+- Signing configuration
+- Troubleshooting common issues
 
 #### [USER_TRACKING_IMPLEMENTATION.md](./USER_TRACKING_IMPLEMENTATION.md)
 Detailed guide to Firebase Analytics user tracking:
