@@ -49,7 +49,11 @@ class AnalyticsService {
 
   Future<void> logPlayAudio(String category, String itemId) => _fa.logEvent(
         name: 'play_lesson_audio',
-        parameters: {'category': category, 'item_id': itemId},
+        parameters: {
+          'category': category,
+          'item_id': itemId,
+          'song_name': '${category}_$itemId',
+        },
       );
 
   Future<void> logCompleteLesson(String category, String itemId) => _fa.logEvent(

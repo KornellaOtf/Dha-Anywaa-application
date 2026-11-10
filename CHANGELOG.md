@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.2.28 (build 128)
+
+Released: 2026-11-10
+
+### Fixed
+- Firebase Analytics: all screens now have named routes — no more `(not set)` in Firebase console
+- `play_lesson_audio` now includes `song_name` parameter (e.g. `alphabet_A`, `animal_Cow`)
+- Named routes added to: vowel_letters, body_parts, anywaa_ai, dictionary, settings,
+  privacy_policy, terms_of_use, about, help, ota_update, quiz_result
+
+### Changed
+- App version: 1.2.27 → 1.2.28
+- Build number: 127 → 128
+
 ## 1.2.27 (build 127)
 
 Released: 2026-11-09

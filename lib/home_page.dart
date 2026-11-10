@@ -498,23 +498,27 @@ class _HomePageState extends State<HomePage> {
                 () {
               Navigator.pop(context);
               Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const VowelLetter()));
+                  MaterialPageRoute(builder: (_) => const VowelLetter(),
+                      settings: const RouteSettings(name: 'vowel_letters')));
             }),
             _drawerTile(context, Icons.face_retouching_natural_rounded,
                 'Jap dëël', () {
               Navigator.pop(context);
               Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const Body()));
+                  MaterialPageRoute(builder: (_) => const Body(),
+                      settings: const RouteSettings(name: 'body_parts')));
             }),
             _drawerTile(context, Icons.eco_rounded, 'Anywaa AI', () {
               Navigator.pop(context);
               Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const AnywaaAiPage()));
+                  MaterialPageRoute(builder: (_) => const AnywaaAiPage(),
+                      settings: const RouteSettings(name: 'anywaa_ai')));
             }, color: kGreen),
             _drawerTile(context, Icons.menu_book_rounded, 'Dictionary', () {
               Navigator.pop(context);
               Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const DictionaryPage()));
+                  MaterialPageRoute(builder: (_) => const DictionaryPage(),
+                      settings: const RouteSettings(name: 'dictionary')));
             }),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -524,31 +528,36 @@ class _HomePageState extends State<HomePage> {
                 () {
               Navigator.pop(context);
               Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const SettingsPage()));
+                  MaterialPageRoute(builder: (_) => const SettingsPage(),
+                      settings: const RouteSettings(name: 'settings')));
             }),
             _drawerTile(context, Icons.privacy_tip_outlined, 'Privacy Policy',
                 () {
               Navigator.pop(context);
               Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const PrivacyPolicyPage()));
+                  MaterialPageRoute(builder: (_) => const PrivacyPolicyPage(),
+                      settings: const RouteSettings(name: 'privacy_policy')));
             }),
             _drawerTile(context, Icons.gavel_outlined, 'Terms of Use',
                 () {
               Navigator.pop(context);
               Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const TermsPage()));
+                  MaterialPageRoute(builder: (_) => const TermsPage(),
+                      settings: const RouteSettings(name: 'terms_of_use')));
             }),
             _drawerTile(context, Icons.info_outline_rounded, 'About',
                 () {
               Navigator.pop(context);
               Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const About()));
+                  MaterialPageRoute(builder: (_) => const About(),
+                      settings: const RouteSettings(name: 'about')));
             }),
             _drawerTile(context, Icons.help_outline_rounded, 'Help',
                 () {
               Navigator.pop(context);
               Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const Help()));
+                  MaterialPageRoute(builder: (_) => const Help(),
+                      settings: const RouteSettings(name: 'help')));
             }),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),

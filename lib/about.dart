@@ -98,6 +98,7 @@ class _AboutState extends State<About> {
                   Icons.privacy_tip_outlined,
                   'Privacy Policy',
                   const PrivacyPolicyPage(),
+                  'privacy_policy',
                 ),
                 const Divider(height: 1, indent: 56),
                 _navTile(
@@ -105,6 +106,7 @@ class _AboutState extends State<About> {
                   Icons.gavel_outlined,
                   'Terms of Use',
                   const TermsPage(),
+                  'terms_of_use',
                 ),
                 const Divider(height: 1, indent: 56),
                 ListTile(
@@ -134,7 +136,7 @@ class _AboutState extends State<About> {
   }
 
   Widget _navTile(
-      BuildContext context, IconData icon, String label, Widget page) {
+      BuildContext context, IconData icon, String label, Widget page, String routeName) {
     return ListTile(
       leading: Icon(icon, color: context.c.accent),
       title: Text(label,
@@ -143,7 +145,8 @@ class _AboutState extends State<About> {
       trailing:
           Icon(Icons.chevron_right, color: context.c.border),
       onTap: () => Navigator.push(
-          context, MaterialPageRoute(builder: (_) => page)),
+          context, MaterialPageRoute(builder: (_) => page,
+              settings: RouteSettings(name: routeName))),
     );
   }
 }

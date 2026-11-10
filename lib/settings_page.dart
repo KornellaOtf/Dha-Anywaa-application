@@ -66,7 +66,8 @@ class _SettingsPageState extends State<SettingsPage> {
       return;
     }
     Navigator.push(
-        context, MaterialPageRoute(builder: (_) => OtaUpdatePage(result: result)));
+        context, MaterialPageRoute(builder: (_) => OtaUpdatePage(result: result),
+            settings: const RouteSettings(name: 'ota_update')));
   }
 
   void _toast(String msg) => ScaffoldMessenger.of(context).showSnackBar(
@@ -161,7 +162,8 @@ class _SettingsPageState extends State<SettingsPage> {
               trailing: Icon(Icons.chevron_right, color: context.c.border),
               onTap: () {
                 Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const AnywaaAiPage()));
+                    MaterialPageRoute(builder: (_) => const AnywaaAiPage(),
+                        settings: const RouteSettings(name: 'anywaa_ai')));
               },
             ),
           ]),
@@ -173,25 +175,25 @@ class _SettingsPageState extends State<SettingsPage> {
                 iconColor: kGreenMid,
                 title: 'Privacy Policy',
                 trailing: Icon(Icons.chevron_right, color: context.c.border),
-                onTap: () => _push(const PrivacyPolicyPage())),
+                onTap: () => _push(const PrivacyPolicyPage(), 'privacy_policy')),
             _row(
                 icon: Icons.description_outlined,
                 iconColor: kGold,
                 title: 'Terms of Use',
                 trailing: Icon(Icons.chevron_right, color: context.c.border),
-                onTap: () => _push(const TermsPage())),
+                onTap: () => _push(const TermsPage(), 'terms_of_use')),
             _row(
                 icon: Icons.help_outline_rounded,
                 iconColor: kRust,
                 title: 'Help',
                 trailing: Icon(Icons.chevron_right, color: context.c.border),
-                onTap: () => _push(const Help())),
+                onTap: () => _push(const Help(), 'help')),
             _row(
                 icon: Icons.info_outline_rounded,
                 iconColor: kGreen,
                 title: 'About',
                 trailing: Icon(Icons.chevron_right, color: context.c.border),
-                onTap: () => _push(const About())),
+                onTap: () => _push(const About(), 'about')),
             _row(
               icon: Icons.code_rounded,
               iconColor: kTextMuted,
@@ -218,8 +220,9 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  void _push(Widget page) => Navigator.push(
-      context, MaterialPageRoute(builder: (_) => page));
+  void _push(Widget page, String routeName) => Navigator.push(
+      context, MaterialPageRoute(builder: (_) => page,
+          settings: RouteSettings(name: routeName)));
 
   // ── Theme picker ────────────────────────────────────────────────────────
   Future<void> _pickTheme(AppSettingsNotifier settings) async {

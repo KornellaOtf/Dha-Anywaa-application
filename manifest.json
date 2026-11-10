@@ -1,11 +1,11 @@
 {
-  "version": "1.2.27",
-  "versionCode": 127,
-  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.2.27/dha-anywaa-v1.2.27.apk",
-  "sha256": "48a0521de72f16c74ab80b8d47b543e0b5e9cb362db1168d523632b5a5dd73e1",
-  "sizeBytes": 100363730,
+  "version": "1.2.28",
+  "versionCode": 128,
+  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.2.28/dha-anywaa-v1.2.28.apk",
+  "sha256": "cd5ef99afd941a117fea14d335971e50b1a31f1b43ad54a7306cb1b42e423e87",
+  "sizeBytes": 100419434,
   "minSupportedVersionCode": 1,
   "mandatory": false,
-  "releaseNotes": "Analytics fix: lesson audio, quiz scores, and lesson completions now tracked properly in Firebase. No reinstall needed.",
+  "releaseNotes": "Analytics fix: all screens now have names in Firebase (no more (not set)). Audio events now include song name.",
   "developer": "Kornella Otf"
 }

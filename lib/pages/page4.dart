@@ -445,6 +445,7 @@ class _Page4State extends State<Page4> {
                                   Navigator.pushReplacement(
                                       context,
                                       MaterialPageRoute(
+                                          settings: const RouteSettings(name: 'quiz_result'),
                                           builder: (_) => Result(
                                               finalResult:
                                                   _finalResult,
