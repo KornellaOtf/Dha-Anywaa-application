@@ -65,8 +65,11 @@ class OtaService {
   static const int _cacheTtlMs = 1000 * 60 * 60 * 6; // 6 hours
   static const String _taskId = 'ota_apk_download';
 
-  static const String _latestUrl =
-      'https://api.github.com/repos/$_owner/$_repo/releases/latest';
+  // Fetch manifest.json directly from the latest release — bypasses the
+  // GitHub API (60 req/hour limit) entirely. Raw release asset URLs have
+  // no rate limit and work without authentication.
+  static const String _manifestUrl =
+      'https://github.com/$_owner/$_repo/releases/latest/download/manifest.json';
 
   // ── Download state (survives navigation) ─────────────────────────────────
   final ValueNotifier<OtaDownloadState> download =
@@ -115,31 +118,9 @@ class OtaService {
     }
 
     try {
-      final releaseRes = await http
-          .get(Uri.parse(_latestUrl),
-              headers: {'Accept': 'application/vnd.github+json'})
-          .timeout(const Duration(seconds: 10));
-
-      // 403/429 = rate limited — don't cache the timestamp so the next
-      // check actually retries instead of silently skipping for 6 hours.
-      if (releaseRes.statusCode == 403 || releaseRes.statusCode == 429) {
-        debugPrint('OTA: GitHub rate limit hit (${releaseRes.statusCode})');
-        return null;
-      }
-
-      if (releaseRes.statusCode != 200) return null;
-
-      final release = json.decode(releaseRes.body) as Map<String, dynamic>;
-      final assets = (release['assets'] as List<dynamic>);
-
-      final manifestAsset = assets.firstWhere(
-        (a) => (a['name'] as String) == 'manifest.json',
-        orElse: () => null,
-      );
-      if (manifestAsset == null) return null;
-
+      // Fetch manifest.json directly — no GitHub API, no rate limits.
       final manifestRes = await http
-          .get(Uri.parse(manifestAsset['browser_download_url'] as String))
+          .get(Uri.parse(_manifestUrl))
           .timeout(const Duration(seconds: 10));
 
       if (manifestRes.statusCode != 200) return null;

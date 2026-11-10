@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.2.35 (build 135)
+
+Released: 2026-11-10
+
+### Fixed
+- OTA update check completely reworked — no longer uses GitHub API
+- Now fetches manifest.json directly via release download URL
+  (no authentication required, no rate limit, works for all users)
+- Root cause of "you're up to date" bug: GitHub API has 60 req/hour
+  unauthenticated limit, hitting it silently returned null = "up to date"
+- Also fixed: manifest.json SHA-256 mismatch in v1.2.34
+
+### Changed
+- App version: 1.2.34 → 1.2.35
+- Build number: 134 → 135
+
 ## 1.2.34 (build 134)
 
 Released: 2026-11-10

@@ -1,11 +1,11 @@
 {
-  "version": "1.2.34",
-  "versionCode": 134,
-  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.2.34/dha-anywaa-v1.2.34.apk",
-  "sha256": "70640107272d0ec14f64fd6507156226fcee4e20f3cba436b682cc70d3315f56",
+  "version": "1.2.35",
+  "versionCode": 135,
+  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.2.35/dha-anywaa-v1.2.35.apk",
+  "sha256": "0d3895a37aaa6d684242a092a562e31bab0d34234a92f96a792463bfae79c122",
   "sizeBytes": 101912856,
   "minSupportedVersionCode": 1,
   "mandatory": false,
-  "releaseNotes": "Dictionary accuracy improved: words now merged by trust priority - hand-entered words first, original app dictionary second, additional words to fill gaps. 3,346 total words.",
+  "releaseNotes": "OTA update check fixed permanently. No more rate limit issues. Update should now work reliably every time.",
   "developer": "Kornella Otf"
 }
