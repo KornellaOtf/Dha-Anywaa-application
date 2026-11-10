@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.2.34 (build 134)
+
+Released: 2026-11-10
+
+### Fixed
+- Dictionary sources merged by trust priority:
+  1. Hand-entered seed words (65, highest trust)
+  2. Original in-app dictionary (1,313, natural/authentic)
+  3. Additional words from master dictionary (1,968, fills gaps)
+- Existing entries enriched with categories, POS, pronunciation and
+  examples from master where those fields were missing
+- 3,346 total words across 69 categories
+
+### Changed
+- App version: 1.2.33 → 1.2.34
+- Build number: 133 → 134
+
 ## 1.2.33 (build 133)
 
 Released: 2026-11-10

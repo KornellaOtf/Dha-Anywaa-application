@@ -1,11 +1,11 @@
 {
-  "version": "1.2.33",
-  "versionCode": 133,
-  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.2.33/dha-anywaa-v1.2.33.apk",
-  "sha256": "7d32e8411a1d88fedbc3594feefcda273e74f2c45389adc7458f97adb6932a37",
-  "sizeBytes": 101879580,
+  "version": "1.2.34",
+  "versionCode": 134,
+  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.2.34/dha-anywaa-v1.2.34.apk",
+  "sha256": "70640107272d0ec14f64fd6507156226fcee4e20f3cba436b682cc70d3315f56",
+  "sizeBytes": 101912856,
   "minSupportedVersionCode": 1,
   "mandatory": false,
-  "releaseNotes": "Dictionary: replaced all emojis with clean Flutter Material icons. Every word card shows a consistent icon matching the word meaning.",
+  "releaseNotes": "Dictionary accuracy improved: words now merged by trust priority - hand-entered words first, original app dictionary second, additional words to fill gaps. 3,346 total words.",
   "developer": "Kornella Otf"
 }
