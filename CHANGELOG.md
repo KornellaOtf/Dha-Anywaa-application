@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.2.33 (build 133)
+
+Released: 2026-11-10
+
+### Changed
+- Dictionary: replaced all emoji icons with Flutter Material icons
+- Every word card shows a clean, consistent Material icon matching the word
+  (e.g. eye → visibility, cow → cruelty_free, water → water_drop, run → directions_run)
+- 150+ word-to-icon mappings, falls back to category icon for unmatched words
+- No more emoji rendering inconsistencies across Android devices
+- App version: 1.2.32 → 1.2.33
+- Build number: 132 → 133
+
 ## 1.2.32 (build 132)
 
 Released: 2026-11-10

@@ -71,129 +71,281 @@ class _Category {
 }
 
 // ── Word emoji icon ───────────────────────────────────────────────────────────
-// Maps common English words/concepts to an emoji for the word card header.
+// ── Word icon ─────────────────────────────────────────────────────────────────
+// Maps English word/category to a Material icon for the word card header.
 
-String _wordEmoji(String en, String cat) {
+IconData _wordIcon(String en, String cat) {
   final w = en.toLowerCase();
 
-  // Exact / starts-with matches
-  const exact = <String, String>{
-    'eye': '👁️', 'eyes': '👁️', 'ear': '👂', 'nose': '👃', 'mouth': '👄',
-    'hand': '✋', 'foot': '🦶', 'head': '🗣️', 'hair': '💇', 'heart': '❤️',
-    'tooth': '🦷', 'teeth': '🦷', 'tongue': '👅', 'bone': '🦴', 'blood': '🩸',
-    'arm': '💪', 'leg': '🦵', 'back': '🫂', 'stomach': '🫃', 'chest': '🫁',
-    'skin': '🫀', 'neck': '🗣️', 'shoulder': '💪', 'knee': '🦵', 'finger': '☝️',
+  // Word-specific overrides (most specific first)
+  const wordMap = <String, IconData>{
+    // Body
+    'eye': Icons.visibility_rounded,
+    'ear': Icons.hearing_rounded,
+    'nose': Icons.air_rounded,
+    'mouth': Icons.chat_bubble_outline_rounded,
+    'hand': Icons.back_hand_rounded,
+    'foot': Icons.directions_walk_rounded,
+    'head': Icons.face_rounded,
+    'hair': Icons.face_retouching_natural_rounded,
+    'heart': Icons.favorite_rounded,
+    'bone': Icons.healing_rounded,
+    'blood': Icons.water_drop_rounded,
+    'arm': Icons.sports_handball_rounded,
+    'leg': Icons.directions_walk_rounded,
+    'finger': Icons.touch_app_rounded,
+    'tooth': Icons.sentiment_satisfied_rounded,
+    'teeth': Icons.sentiment_satisfied_rounded,
+    'tongue': Icons.local_dining_rounded,
+    'stomach': Icons.monitor_heart_rounded,
+    'chest': Icons.monitor_heart_rounded,
+    'shoulder': Icons.accessibility_new_rounded,
+    'neck': Icons.accessibility_new_rounded,
+    'knee': Icons.accessibility_new_rounded,
+    'back': Icons.accessibility_new_rounded,
+    'skin': Icons.person_rounded,
 
-    'water': '💧', 'fire': '🔥', 'sun': '☀️', 'moon': '🌙', 'star': '⭐',
-    'rain': '🌧️', 'wind': '💨', 'cloud': '☁️', 'tree': '🌳', 'flower': '🌸',
-    'grass': '🌿', 'river': '🏞️', 'mountain': '⛰️', 'sky': '🌌', 'earth': '🌍',
-    'stone': '🪨', 'sand': '🏜️', 'sea': '🌊', 'lake': '🏊', 'land': '🌾',
+    // Nature
+    'water': Icons.water_drop_rounded,
+    'fire': Icons.local_fire_department_rounded,
+    'sun': Icons.wb_sunny_rounded,
+    'moon': Icons.nights_stay_rounded,
+    'star': Icons.star_rounded,
+    'rain': Icons.umbrella_rounded,
+    'wind': Icons.air_rounded,
+    'cloud': Icons.cloud_rounded,
+    'tree': Icons.park_rounded,
+    'flower': Icons.local_florist_rounded,
+    'grass': Icons.grass_rounded,
+    'river': Icons.water_rounded,
+    'mountain': Icons.landscape_rounded,
+    'sky': Icons.cloud_queue_rounded,
+    'earth': Icons.public_rounded,
+    'stone': Icons.terrain_rounded,
+    'sea': Icons.waves_rounded,
+    'lake': Icons.water_rounded,
+    'land': Icons.landscape_rounded,
 
-    'cow': '🐄', 'goat': '🐐', 'sheep': '🐑', 'dog': '🐕', 'cat': '🐈',
-    'lion': '🦁', 'elephant': '🐘', 'giraffe': '🦒', 'zebra': '🦓',
-    'crocodile': '🐊', 'snake': '🐍', 'frog': '🐸', 'fish': '🐟',
-    'eagle': '🦅', 'bird': '🐦', 'chicken': '🐔', 'hen': '🐓',
-    'monkey': '🐒', 'hippo': '🦛', 'rhino': '🦏', 'buffalo': '🦬',
-    'rabbit': '🐇', 'rat': '🐀', 'mouse': '🐭', 'pig': '🐷', 'horse': '🐴',
-    'camel': '🐪', 'bee': '🐝', 'ant': '🐜', 'fly': '🪰', 'spider': '🕷️',
-    'butterfly': '🦋', 'mosquito': '🦟', 'worm': '🪱',
+    // Animals
+    'cow': Icons.cruelty_free_rounded,
+    'goat': Icons.cruelty_free_rounded,
+    'sheep': Icons.cruelty_free_rounded,
+    'dog': Icons.pets_rounded,
+    'cat': Icons.pets_rounded,
+    'lion': Icons.pets_rounded,
+    'elephant': Icons.pets_rounded,
+    'bird': Icons.flutter_dash_rounded,
+    'chicken': Icons.egg_rounded,
+    'hen': Icons.egg_rounded,
+    'fish': Icons.set_meal_rounded,
+    'snake': Icons.pest_control_rounded,
+    'bee': Icons.bug_report_rounded,
+    'ant': Icons.bug_report_rounded,
+    'insect': Icons.bug_report_rounded,
 
-    'man': '👨', 'woman': '👩', 'child': '👶', 'boy': '👦', 'girl': '👧',
-    'father': '👨‍👦', 'mother': '👩‍👦', 'brother': '👬', 'sister': '👭',
-    'grandfather': '👴', 'grandmother': '👵', 'family': '👨‍👩‍👧‍👦',
-    'husband': '🤵', 'wife': '👰', 'son': '👦', 'daughter': '👧',
-    'uncle': '👨', 'aunt': '👩', 'friend': '🤝',
+    // People & Family
+    'man': Icons.person_rounded,
+    'woman': Icons.person_rounded,
+    'child': Icons.child_care_rounded,
+    'boy': Icons.person_rounded,
+    'girl': Icons.person_rounded,
+    'father': Icons.people_rounded,
+    'mother': Icons.people_rounded,
+    'brother': Icons.people_rounded,
+    'sister': Icons.people_rounded,
+    'grandfather': Icons.elderly_rounded,
+    'grandmother': Icons.elderly_rounded,
+    'family': Icons.family_restroom_rounded,
+    'husband': Icons.people_rounded,
+    'wife': Icons.people_rounded,
+    'friend': Icons.handshake_rounded,
+    'baby': Icons.child_care_rounded,
 
-    'food': '🍽️', 'eat': '🍴', 'drink': '🥤', 'cook': '👨‍🍳', 'milk': '🥛',
-    'meat': '🥩', 'bread': '🍞', 'rice': '🍚', 'maize': '🌽', 'fish food': '🐟',
-    'salt': '🧂', 'sugar': '🍬', 'honey': '🍯', 'oil': '🫙', 'egg': '🥚',
-    'fruit': '🍎', 'banana': '🍌', 'mango': '🥭', 'orange': '🍊',
-    'potato': '🥔', 'onion': '🧅', 'bean': '🫘', 'soup': '🍲',
-    'coffee': '☕', 'tea': '🍵', 'beer': '🍺', 'wine': '🍷',
+    // Food & Drink
+    'food': Icons.restaurant_rounded,
+    'eat': Icons.restaurant_rounded,
+    'drink': Icons.local_drink_rounded,
+    'cook': Icons.soup_kitchen_rounded,
+    'milk': Icons.local_drink_rounded,
+    'meat': Icons.set_meal_rounded,
+    'bread': Icons.bakery_dining_rounded,
+    'rice': Icons.rice_bowl_rounded,
+    'egg': Icons.egg_rounded,
+    'fruit': Icons.eco_rounded,
+    'soup': Icons.soup_kitchen_rounded,
+    'coffee': Icons.coffee_rounded,
+    'tea': Icons.emoji_food_beverage_rounded,
 
-    'house': '🏠', 'home': '🏡', 'door': '🚪', 'window': '🪟', 'bed': '🛏️',
-    'chair': '🪑', 'table': '🪑', 'roof': '🏠', 'wall': '🧱', 'floor': '🏠',
-    'kitchen': '🍳', 'room': '🛋️', 'garden': '🌻', 'fence': '🪵',
+    // House
+    'house': Icons.home_rounded,
+    'home': Icons.home_rounded,
+    'door': Icons.sensor_door_rounded,
+    'window': Icons.window_rounded,
+    'bed': Icons.bed_rounded,
+    'chair': Icons.chair_rounded,
+    'table': Icons.table_restaurant_rounded,
+    'roof': Icons.roofing_rounded,
+    'wall': Icons.foundation_rounded,
+    'kitchen': Icons.kitchen_rounded,
+    'room': Icons.meeting_room_rounded,
+    'garden': Icons.yard_rounded,
 
-    'school': '🏫', 'book': '📚', 'pen': '✏️', 'pencil': '✏️', 'paper': '📄',
-    'teacher': '👩‍🏫', 'student': '👩‍🎓', 'learn': '📖', 'write': '✍️',
-    'read': '📖', 'number': '🔢', 'letter': '🔤', 'word': '💬', 'language': '🗣️',
+    // Education
+    'school': Icons.school_rounded,
+    'book': Icons.menu_book_rounded,
+    'pen': Icons.edit_rounded,
+    'pencil': Icons.create_rounded,
+    'paper': Icons.description_rounded,
+    'teacher': Icons.person_rounded,
+    'student': Icons.school_rounded,
+    'learn': Icons.auto_stories_rounded,
+    'write': Icons.edit_rounded,
+    'read': Icons.auto_stories_rounded,
+    'number': Icons.tag_rounded,
+    'letter': Icons.text_fields_rounded,
+    'word': Icons.text_snippet_rounded,
+    'language': Icons.translate_rounded,
 
-    'one': '1️⃣', 'two': '2️⃣', 'three': '3️⃣', 'four': '4️⃣', 'five': '5️⃣',
-    'six': '6️⃣', 'seven': '7️⃣', 'eight': '8️⃣', 'nine': '9️⃣', 'ten': '🔟',
-    'zero': '0️⃣', 'hundred': '💯', 'thousand': '🔢',
+    // Numbers
+    'one': Icons.looks_one_rounded,
+    'two': Icons.looks_two_rounded,
+    'three': Icons.looks_3_rounded,
+    'four': Icons.looks_4_rounded,
+    'five': Icons.looks_5_rounded,
+    'six': Icons.looks_6_rounded,
+    'zero': Icons.exposure_zero_rounded,
 
-    'morning': '🌅', 'evening': '🌆', 'night': '🌙', 'day': '☀️',
-    'today': '📅', 'yesterday': '📅', 'tomorrow': '📅', 'week': '🗓️',
-    'month': '🗓️', 'year': '📅', 'time': '⏰', 'hour': '⏰',
-    'monday': '📅', 'tuesday': '📅', 'wednesday': '📅', 'thursday': '📅',
-    'friday': '📅', 'saturday': '📅', 'sunday': '📅',
+    // Time
+    'morning': Icons.wb_twilight_rounded,
+    'evening': Icons.nights_stay_rounded,
+    'night': Icons.bedtime_rounded,
+    'day': Icons.wb_sunny_rounded,
+    'today': Icons.today_rounded,
+    'week': Icons.view_week_rounded,
+    'month': Icons.calendar_month_rounded,
+    'year': Icons.calendar_today_rounded,
+    'time': Icons.access_time_rounded,
+    'hour': Icons.schedule_rounded,
+    'monday': Icons.today_rounded,
+    'tuesday': Icons.today_rounded,
+    'wednesday': Icons.today_rounded,
+    'thursday': Icons.today_rounded,
+    'friday': Icons.today_rounded,
+    'saturday': Icons.today_rounded,
+    'sunday': Icons.today_rounded,
 
-    'red': '🔴', 'blue': '🔵', 'green': '🟢', 'yellow': '🟡', 'white': '⚪',
-    'black': '⚫', 'orange color': '🟠', 'purple': '🟣', 'pink': '🩷', 'brown': '🟤',
+    // Colors
+    'red': Icons.circle_rounded,
+    'blue': Icons.circle_rounded,
+    'green': Icons.circle_rounded,
+    'yellow': Icons.circle_rounded,
+    'white': Icons.circle_outlined,
+    'black': Icons.circle_rounded,
+    'color': Icons.palette_rounded,
+    'colour': Icons.palette_rounded,
 
-    'walk': '🚶', 'run': '🏃', 'sit': '🪑', 'stand': '🧍', 'sleep': '😴',
-    'talk': '💬', 'listen': '👂', 'see': '👁️', 'hear': '👂', 'smell': '👃',
-    'touch': '🤚', 'taste': '👅', 'cry': '😭', 'laugh': '😂', 'sing': '🎤',
-    'dance': '💃', 'pray': '🙏', 'work': '⚒️', 'play': '🎮', 'fight': '🥊',
-    'love': '❤️', 'hate': '😡', 'help': '🤝', 'give': '🎁', 'take': '✋',
-    'come': '👋', 'go': '🚶', 'bring': '🤲', 'carry': '💪', 'build': '🏗️',
-    'kill': '⚔️', 'die': '💀', 'born': '👶', 'grow': '🌱', 'know': '🧠',
+    // Actions / Verbs
+    'walk': Icons.directions_walk_rounded,
+    'run': Icons.directions_run_rounded,
+    'sit': Icons.chair_rounded,
+    'stand': Icons.accessibility_rounded,
+    'sleep': Icons.bedtime_rounded,
+    'talk': Icons.chat_rounded,
+    'listen': Icons.hearing_rounded,
+    'see': Icons.visibility_rounded,
+    'hear': Icons.hearing_rounded,
+    'cry': Icons.sentiment_very_dissatisfied_rounded,
+    'laugh': Icons.sentiment_very_satisfied_rounded,
+    'sing': Icons.music_note_rounded,
+    'dance': Icons.music_note_rounded,
+    'pray': Icons.self_improvement_rounded,
+    'work': Icons.work_rounded,
+    'play': Icons.sports_esports_rounded,
+    'fight': Icons.sports_mma_rounded,
+    'love': Icons.favorite_rounded,
+    'hate': Icons.heart_broken_rounded,
+    'help': Icons.handshake_rounded,
+    'give': Icons.card_giftcard_rounded,
+    'carry': Icons.fitness_center_rounded,
+    'build': Icons.construction_rounded,
+    'die': Icons.ac_unit_rounded,
+    'born': Icons.child_care_rounded,
+    'grow': Icons.trending_up_rounded,
+    'know': Icons.psychology_rounded,
 
-    'good': '👍', 'bad': '👎', 'big': '🔝', 'small': '🔅', 'long': '📏',
-    'short': '📐', 'hot': '🔥', 'cold': '🥶', 'fast': '⚡', 'slow': '🐢',
-    'strong': '💪', 'weak': '😮‍💨', 'old': '👴', 'young': '👶', 'new': '✨',
-    'beautiful': '😍', 'ugly': '😬', 'clean': '🧹', 'dirty': '🗑️',
-    'happy': '😊', 'sad': '😢', 'angry': '😡', 'afraid': '😨', 'tired': '😴',
+    // Adjectives
+    'good': Icons.thumb_up_rounded,
+    'bad': Icons.thumb_down_rounded,
+    'big': Icons.open_in_full_rounded,
+    'small': Icons.close_fullscreen_rounded,
+    'hot': Icons.thermostat_rounded,
+    'cold': Icons.ac_unit_rounded,
+    'fast': Icons.speed_rounded,
+    'slow': Icons.hourglass_bottom_rounded,
+    'strong': Icons.fitness_center_rounded,
+    'old': Icons.elderly_rounded,
+    'new': Icons.new_releases_rounded,
+    'clean': Icons.cleaning_services_rounded,
+    'happy': Icons.sentiment_very_satisfied_rounded,
+    'sad': Icons.sentiment_very_dissatisfied_rounded,
+    'angry': Icons.mood_bad_rounded,
+    'afraid': Icons.warning_rounded,
+    'tired': Icons.hotel_rounded,
+    'beautiful': Icons.auto_awesome_rounded,
 
-    'doctor': '👨‍⚕️', 'nurse': '👩‍⚕️', 'farmer': '👨‍🌾', 'soldier': '💂',
-    'chief': '👑', 'king': '👑', 'judge': '👨‍⚖️', 'driver': '🚗',
-    'builder': '👷', 'priest': '🧑‍💼', 'pastor': '🧑‍💼',
+    // Professions
+    'doctor': Icons.medical_services_rounded,
+    'nurse': Icons.local_hospital_rounded,
+    'farmer': Icons.agriculture_rounded,
+    'soldier': Icons.military_tech_rounded,
+    'chief': Icons.star_rounded,
+    'king': Icons.emoji_events_rounded,
+    'judge': Icons.gavel_rounded,
+    'driver': Icons.drive_eta_rounded,
+    'builder': Icons.engineering_rounded,
+    'teacher prof': Icons.school_rounded,
+    'priest': Icons.church_rounded,
 
-    'car': '🚗', 'boat': '⛵', 'plane': '✈️', 'bicycle': '🚲',
-    'road': '🛣️', 'bridge': '🌉',
+    // Transport
+    'car': Icons.directions_car_rounded,
+    'boat': Icons.directions_boat_rounded,
+    'plane': Icons.flight_rounded,
+    'bicycle': Icons.pedal_bike_rounded,
+    'road': Icons.add_road_rounded,
+    'bridge': Icons.settings_ethernet_rounded,
 
-    'phone': '📱', 'radio': '📻', 'television': '📺', 'computer': '💻',
-    'money': '💰', 'market': '🛒', 'shop': '🏪', 'price': '💲',
-    'god': '🙏', 'church': '⛪', 'mosque': '🕌', 'spirit': '👻',
-    'war': '⚔️', 'peace': '☮️', 'government': '🏛️', 'law': '⚖️',
-    'hello': '👋', 'goodbye': '👋', 'thank you': '🙏',
-    'yes': '✅', 'no': '❌', 'name': '🏷️',
+    // Tech & Communication
+    'phone': Icons.phone_android_rounded,
+    'radio': Icons.radio_rounded,
+    'television': Icons.tv_rounded,
+    'computer': Icons.computer_rounded,
+    'money': Icons.attach_money_rounded,
+    'market': Icons.storefront_rounded,
+    'shop': Icons.store_rounded,
+    'price': Icons.sell_rounded,
+
+    // Misc
+    'god': Icons.self_improvement_rounded,
+    'church': Icons.church_rounded,
+    'war': Icons.gavel_rounded,
+    'peace': Icons.handshake_rounded,
+    'government': Icons.account_balance_rounded,
+    'law': Icons.balance_rounded,
+    'hello': Icons.waving_hand_rounded,
+    'goodbye': Icons.waving_hand_rounded,
+    'yes': Icons.check_circle_rounded,
+    'no': Icons.cancel_rounded,
+    'name': Icons.badge_rounded,
   };
 
-  if (exact.containsKey(w)) return exact[w]!;
-
-  // Prefix / contains checks
-  for (final e in exact.entries) {
-    if (w.startsWith(e.key) || w.contains(e.key)) return e.value;
+  // Check exact then prefix
+  if (wordMap.containsKey(w)) return wordMap[w]!;
+  for (final e in wordMap.entries) {
+    if (w.startsWith(e.key)) return e.value;
   }
 
   // Category fallback
-  const catEmoji = <String, String>{
-    'greetings': '👋', 'family': '👨‍👩‍👧‍👦', 'body_parts': '🫀', 'body': '🫀',
-    'food_drink': '🍽️', 'food': '🍽️', 'animals': '🐾', 'animals_mammals': '🐾',
-    'animals_fish': '🐟', 'animals_reptiles': '🦎', 'birds': '🐦',
-    'insects': '🐛', 'nature': '🌿', 'nature_geography': '🌍',
-    'plants_trees': '🌳', 'weather_climate': '🌤️', 'celestial': '🌙',
-    'numbers': '🔢', 'ordinal_numbers': '🔢', 'math': '➕',
-    'colors': '🎨', 'time': '⏰', 'days_of_week': '📅',
-    'directions': '🧭', 'navigation': '🗺️', 'verbs': '⚡',
-    'verbs_actions': '⚡', 'adjectives': '✨', 'adverbs': '🏃',
-    'pronouns': '👤', 'possessive_pronouns': '👤',
-    'conjunctions_prepositions': '🔗', 'interjections': '💬',
-    'interrogatives': '❓', 'question_words': '❓', 'question_phrases': '❓',
-    'phrases': '🗣️', 'grammar': '📝', 'education': '🎓',
-    'health_medical': '🏥', 'emotions': '😊', 'feelings_sensations': '💭',
-    'culture': '🎭', 'spiritual_cultural': '🙏', 'music_arts': '🎵',
-    'sports_games': '⚽', 'professions': '💼', 'household': '🏠',
-    'household_items': '🏠', 'house_building': '🏗️', 'kitchen_utensils': '🍳',
-    'clothing': '👗', 'materials': '🧱', 'tools': '🔧', 'transport': '🚗',
-    'technology': '💻', 'communication': '📡', 'economics': '💰',
-    'politics_government': '🏛️', 'market': '🛒', 'taste_cooking': '👨‍🍳',
-    'identity': '🪪',
-  };
-
-  return catEmoji[cat] ?? '📖';
+  return _catIcon(cat);
 }
 
 // ── Category colour ───────────────────────────────────────────────────────────
@@ -201,6 +353,7 @@ String _wordEmoji(String en, String cat) {
 Color _catColor(String key) {
   const colors = [
     kGold, kRust, kGreen, kGreenMid,
+
     Color(0xFF7C6AF7), Color(0xFFE05C97),
     Color(0xFF3BA5C8), Color(0xFFE08B2A),
     Color(0xFF4CAF50), Color(0xFFFF5722),
@@ -733,7 +886,7 @@ class _WordCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.c;
     final posCol = _posColor(word.pos);
-    final emoji = _wordEmoji(word.en, word.cat);
+    final wordIcon = _wordIcon(word.en, word.cat);
     final hasDetail = word.exDha.isNotEmpty || word.alt.isNotEmpty || word.note.isNotEmpty;
 
     return GestureDetector(
@@ -755,17 +908,14 @@ class _WordCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
             child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-              // Emoji icon bubble
+              // Icon bubble
               Container(
                 width: 48, height: 48,
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Center(
-                  child: Text(emoji,
-                      style: const TextStyle(fontSize: 24)),
-                ),
+                child: Icon(wordIcon, color: color, size: 24),
               ),
               const SizedBox(width: 12),
               // Words

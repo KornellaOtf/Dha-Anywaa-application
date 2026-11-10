@@ -1,11 +1,11 @@
 {
-  "version": "1.2.32",
-  "versionCode": 132,
-  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.2.32/dha-anywaa-v1.2.32.apk",
-  "sha256": "e4f577a2a524f7534d3ae9f6a7acaa3785f84e6b5667e57c46fa5c2ce47e6fa8",
-  "sizeBytes": 101868208,
+  "version": "1.2.33",
+  "versionCode": 133,
+  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.2.33/dha-anywaa-v1.2.33.apk",
+  "sha256": "7d32e8411a1d88fedbc3594feefcda273e74f2c45389adc7458f97adb6932a37",
+  "sizeBytes": 101879580,
   "minSupportedVersionCode": 1,
   "mandatory": false,
-  "releaseNotes": "Dictionary: removed 280 duplicate words, every word card now shows an emoji icon, cleaner card design with coloured emoji bubble, POS badges, and expandable examples.",
+  "releaseNotes": "Dictionary: replaced all emojis with clean Flutter Material icons. Every word card shows a consistent icon matching the word meaning.",
   "developer": "Kornella Otf"
 }
