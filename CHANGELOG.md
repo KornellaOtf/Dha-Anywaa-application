@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.3.0 (build 150)
+
+Released: 2026-11-10
+
+### Added
+- Anywaa AI now trained on 3,346 verified words (was 1,353)
+- 2x smarter: knows more vocabulary, grammar, cultural context
+- AI can now answer questions about words from all 69 categories
+
+### Changed
+- Dictionary temporarily hidden with "Coming next month" message
+- Will be released publicly after final verification is complete
+- Jumped build number to 150 to signal major AI improvement
+- App version: 1.2.36 → 1.3.0
+
 ## 1.2.36 (build 136)
 
 Released: 2026-11-10

@@ -516,9 +516,21 @@ class _HomePageState extends State<HomePage> {
             }, color: kGreen),
             _drawerTile(context, Icons.menu_book_rounded, 'Dictionary', () {
               Navigator.pop(context);
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const DictionaryPage(),
-                      settings: const RouteSettings(name: 'dictionary')));
+              // Dictionary coming next month after verification
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text(
+                    '📚 Dictionary coming next month! Currently verifying 3,346 words.',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                  ),
+                  backgroundColor: kGold,
+                  duration: const Duration(seconds: 4),
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              );
             }),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),

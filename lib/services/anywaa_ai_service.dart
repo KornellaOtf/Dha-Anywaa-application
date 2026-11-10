@@ -66,7 +66,7 @@ class AnywaaAiService {
   AnywaaAiService._();
   static final AnywaaAiService instance = AnywaaAiService._();
 
-  static const String _asset = 'assets/data/anywaa_dictionary.json';
+  static const String _asset = 'assets/data/dictionary_full.json';
   static const String _culturalAsset = 'assets/data/cultural_facts.json';
 
   List<DictEntry> _words = const [];
@@ -162,12 +162,36 @@ class AnywaaAiService {
   /// Loads the bundled dictionary and cultural facts once. Safe to call repeatedly.
   Future<void> load() async {
     if (ready) return;
-    // Load dictionary
+    // Load dictionary_full.json (nested by category)
     final raw = await rootBundle.loadString(_asset);
     final map = json.decode(raw) as Map<String, dynamic>;
-    _words = ((map['words'] ?? const []) as List)
-        .map((e) => DictEntry.fromJson(e as Map<String, dynamic>))
-        .toList(growable: false);
+    
+    final allWords = <DictEntry>[];
+    // Flatten categories into a single list
+    for (final cat in (map['categories'] ?? const []) as List) {
+      final catMap = cat as Map<String, dynamic>;
+      for (final word in (catMap['words'] ?? const []) as List) {
+        final w = word as Map<String, dynamic>;
+        // Convert dictionary_full.json format to DictEntry format
+        final dha = (w['dha'] ?? '') as String;
+        final en = (w['en'] ?? '') as String;
+        final alt = (w['alt'] ?? const []) as List;
+        final note = (w['note'] ?? '') as String;
+        
+        // Build synonyms list from alt meanings
+        final syn = alt.cast<String>().toList();
+        
+        allWords.add(DictEntry(
+          en: en,
+          dha: dha,
+          defs: note,
+          syn: syn,
+        ));
+      }
+    }
+    
+    _words = allWords;
+    
     // Load cultural facts (non-fatal if missing)
     try {
       final factRaw = await rootBundle.loadString(_culturalAsset);
