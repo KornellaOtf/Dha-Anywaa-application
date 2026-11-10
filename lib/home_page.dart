@@ -1,6 +1,7 @@
 import 'package:dha_anywaaa/about.dart';
 import 'package:dha_anywaaa/anywaa_ai_page.dart';
 import 'package:dha_anywaaa/components/savedData.dart';
+import 'package:dha_anywaaa/dictionary_coming_soon_page.dart';
 import 'package:dha_anywaaa/dictionary_page.dart';
 import 'package:dha_anywaaa/help.dart';
 import 'package:dha_anywaaa/privacy_policy_page.dart';
@@ -516,19 +517,12 @@ class _HomePageState extends State<HomePage> {
             }, color: kGreen),
             _drawerTile(context, Icons.menu_book_rounded, 'Dictionary', () {
               Navigator.pop(context);
-              // Dictionary coming next month after verification
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text(
-                    '📚 Dictionary coming next month! Currently verifying 3,346 words.',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                  ),
-                  backgroundColor: kGold,
-                  duration: const Duration(seconds: 4),
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+              // Dictionary coming soon page
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const DictionaryComingSoonPage(),
+                  settings: const RouteSettings(name: 'dictionary_coming_soon'),
                 ),
               );
             }),

@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.3.1 (build 151)
+
+Released: 2026-11-10
+
+### Changed
+- Dictionary "coming soon" is now a full page (not a popup snackbar)
+- Clean, centered design showing verification status
+- Removed emoji from dictionary message
+- App version: 1.3.0 → 1.3.1
+- Build number: 150 → 151
+
 ## 1.3.0 (build 150)
 
 Released: 2026-11-10
