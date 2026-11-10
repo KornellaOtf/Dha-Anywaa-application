@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.2.32 (build 132)
+
+Released: 2026-11-10
+
+### Fixed
+- Dictionary: removed 280 duplicate words (3304 → 3024 unique words)
+- Duplicates were cross-category (same word appearing in multiple categories)
+
+### Changed
+- Every word card now shows an emoji icon matching the word meaning
+  (e.g. eye → 👁️, cow → 🐄, water → 💧, run → 🏃)
+- Word cards redesigned: emoji bubble on left, Anywaa word large and bold,
+  English below in category colour, POS badge top right
+- Cleaner layout, no vibe-coded artifacts from previous version
+- App version: 1.2.31 → 1.2.32
+- Build number: 131 → 132
+
 ## 1.2.31 (build 131)
 
 Released: 2026-11-10

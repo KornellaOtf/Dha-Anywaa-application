@@ -1,11 +1,11 @@
 {
-  "version": "1.2.31",
-  "versionCode": 131,
-  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.2.31/dha-anywaa-v1.2.31.apk",
-  "sha256": "96bf07fa905d4692747d3bd51b59a5ff1aab2d7a373b754152189ad8c8b2b4a4",
-  "sizeBytes": 101870196,
+  "version": "1.2.32",
+  "versionCode": 132,
+  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.2.32/dha-anywaa-v1.2.32.apk",
+  "sha256": "e4f577a2a524f7534d3ae9f6a7acaa3785f84e6b5667e57c46fa5c2ce47e6fa8",
+  "sizeBytes": 101868208,
   "minSupportedVersionCode": 1,
   "mandatory": false,
-  "releaseNotes": "Fix: OTA update check now works reliably. Previously GitHub rate limits caused it to silently say you are up to date even when a new version was available.",
+  "releaseNotes": "Dictionary: removed 280 duplicate words, every word card now shows an emoji icon, cleaner card design with coloured emoji bubble, POS badges, and expandable examples.",
   "developer": "Kornella Otf"
 }
