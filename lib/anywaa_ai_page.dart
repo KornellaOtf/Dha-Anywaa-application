@@ -3,20 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:dha_anywaaa/services/anywaa_ai_service.dart';
-import 'package:dha_anywaaa/services/model_download_service.dart';
-import 'package:dha_anywaaa/services/llama_service.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
 
 /// Anywaa AI Chat Interface
 ///
-/// RESPONSE PIPELINE:
-/// 1. Dictionary lookup (AnywaaAiService) always runs first — grounded facts.
-/// 2. If Anywaa-LM is loaded (fllama), it generates a conversational reply:
-///    - Translation queries: model rephrases the dictionary result (RAG).
-///    - General questions: model answers freely from its own knowledge.
-/// 3. If the model is not loaded, the dictionary result is shown directly.
-///
-/// Anywaa-LM STATUS: ✅ Integrated via fllama (llama.cpp)
+/// Answers entirely from the on-device dictionary (3,346 words).
+/// No network required. No external model. Fast and fully offline.
 
 class AnywaaAiPage extends StatefulWidget {
   const AnywaaAiPage({super.key});
@@ -33,44 +25,28 @@ class _Msg {
 }
 
 class _AnywaaAiPageState extends State<AnywaaAiPage> {
-  final _ai  = AnywaaAiService.instance;
-  final _mdl = ModelDownloadService.instance;
-  final _ctrl   = TextEditingController();
+  final _ai   = AnywaaAiService.instance;
+  final _ctrl  = TextEditingController();
   final _scroll = ScrollController();
   final List<_Msg> _msgs = [];
   bool _loading  = true;
   bool _thinking = false;
   Timer? _rotate;
-  StreamSubscription<ModelStatus>? _modelSub;
-  ModelStatus _modelStatus = const ModelStatus.idle();
 
   List<String> _examples = const [];
 
   @override
   void initState() {
     super.initState();
-    _modelSub = _mdl.statusStream.listen((s) {
-      if (!mounted) return;
-      setState(() => _modelStatus = s);
-      if (s is ModelReady) {
-        LlamaService.instance.setModelPath(s.path);
-      }
-    });
     _start();
   }
 
   Future<void> _start() async {
     await _ai.load();
-    await _mdl.checkExisting();
     if (!mounted) return;
-    final current = _mdl.status;
-    if (current is ModelReady) {
-      LlamaService.instance.setModelPath(current.path);
-    }
     setState(() {
-      _loading     = false;
-      _modelStatus = current;
-      _examples    = _ai.sampleQuestions(count: 6);
+      _loading  = false;
+      _examples = _ai.sampleQuestions(count: 6);
     });
     _rotate = Timer.periodic(const Duration(seconds: 10), (_) {
       if (!mounted || _msgs.isNotEmpty) return;
@@ -80,7 +56,6 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
 
   @override
   void dispose() {
-    _modelSub?.cancel();
     _rotate?.cancel();
     _ctrl.dispose();
     _scroll.dispose();
@@ -100,32 +75,12 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
   }
 
   Future<void> _generateReply(String text) async {
-    // Step 1: dictionary lookup always runs — grounded, instant, synchronous.
     await Future.delayed(const Duration(milliseconds: 120));
     final dictResult = _ai.answer(text);
-
-    // Step 2: if Anywaa-LM is loaded, use real LLM inference.
-    // Otherwise fall back to the dictionary reply directly.
-    String replyText;
-    if (LlamaService.instance.isAvailable) {
-      try {
-        replyText = await LlamaService.instance.generate(
-          userQuery: text,
-          dictionaryResult: dictResult,
-        );
-      } catch (_) {
-        replyText = dictResult.text;
-      }
-    } else {
-      replyText = dictResult.text;
-    }
-
     if (!mounted) return;
     setState(() {
       _thinking = false;
-      // Use the LLM reply as display text, but keep the dictionary matches
-      // so the word cards still render in the chat bubble.
-      _msgs.add(_Msg.bot(replyText, dictResult));
+      _msgs.add(_Msg.bot(dictResult.text, dictResult));
     });
     _scrollDown();
   }
@@ -154,17 +109,14 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
         titleSpacing: 0,
         title: Row(
           children: [
-            const _EcoMark(
-                size: 30,
-                bg: Color(0x33FFFFFF),
-                iconColor: Colors.white),
+            const _EcoMark(size: 30, bg: Color(0x33FFFFFF), iconColor: Colors.white),
             const SizedBox(width: 10),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text('Anywaa AI',
                     style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
-                Text('on-device helper',
+                Text('on-device · 3,346 words',
                     style: TextStyle(
                         fontSize: 11, color: Colors.white.withValues(alpha: 0.75))),
               ],
@@ -174,8 +126,7 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
         actions: [
           IconButton(
             tooltip: 'New chat',
-            icon: const Icon(Icons.add_rounded,
-                color: Colors.white, size: 24),
+            icon: const Icon(Icons.add_rounded, color: Colors.white, size: 24),
             onPressed: () {
               _ai.newChat();
               setState(() {
@@ -228,10 +179,6 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
                           },
                         ),
                 ),
-                _ModelBanner(
-                  status: _modelStatus,
-                  onDownload: () => _mdl.download(),
-                ),
                 _inputBar(c),
               ],
             ),
@@ -266,8 +213,7 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
         const SizedBox(height: 8),
         Text(
           'I translate words, explain meanings, and say numbers. '
-          'If you have downloaded Anywaa-LM, I can also answer general '
-          'questions. Everything runs fully offline on your device.',
+          'Everything runs fully offline on your device.',
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 14, height: 1.5, color: c.textSub),
         ),
@@ -284,14 +230,12 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
           runSpacing: 8,
           children: _examples
               .map((e) => ActionChip(
-                    label: Text(e,
-                        style: TextStyle(fontSize: 12.5, color: c.text)),
-                    avatar: Icon(Icons.arrow_forward_rounded,
-                        size: 15, color: c.accent),
+                    label: Text(e, style: TextStyle(fontSize: 12.5, color: c.text)),
+                    avatar: Icon(Icons.arrow_forward_rounded, size: 15, color: c.accent),
                     backgroundColor: c.card,
                     side: BorderSide(color: c.border),
-                    shape:
-                        RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20)),
                     onPressed: () => _send(e),
                   ))
               .toList(),
@@ -368,6 +312,8 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
   }
 }
 
+// ── Chat bubbles ──────────────────────────────────────────────────────────────
+
 class _Bubble extends StatelessWidget {
   final _Msg msg;
   final ValueChanged<String> onAsk;
@@ -394,8 +340,8 @@ class _Bubble extends StatelessWidget {
                   user ? CrossAxisAlignment.end : CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
                     gradient: user
                         ? const LinearGradient(
@@ -414,7 +360,8 @@ class _Bubble extends StatelessWidget {
                     boxShadow: const [kShadowSoft],
                     border: user
                         ? null
-                        : Border.all(color: c.border.withValues(alpha: 0.6)),
+                        : Border.all(
+                            color: c.border.withValues(alpha: 0.6)),
                   ),
                   child: Text(
                     msg.text,
@@ -450,27 +397,25 @@ class _AnswerBody extends StatelessWidget {
     final c = context.c;
     if (!answer.found) {
       if (answer.suggestions.isEmpty) return const SizedBox.shrink();
-      return Padding(
-        padding: const EdgeInsets.only(left: 2),
-        child: Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: answer.suggestions
-              .map((s) => ActionChip(
-                    label: Text(s,
-                        style: TextStyle(fontSize: 12.5, color: c.accent)),
-                    backgroundColor: c.accent.withValues(alpha: 0.08),
-                    side: BorderSide(color: c.accent.withValues(alpha: 0.3)),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18)),
-                    onPressed: () => onAsk(s),
-                  ))
-              .toList(),
-        ),
+      return Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: answer.suggestions
+            .map((s) => ActionChip(
+                  label: Text(s,
+                      style: TextStyle(fontSize: 12.5, color: c.accent)),
+                  backgroundColor: c.accent.withValues(alpha: 0.08),
+                  side: BorderSide(color: c.accent.withValues(alpha: 0.3)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18)),
+                  onPressed: () => onAsk(s),
+                ))
+            .toList(),
       );
     }
     final items = answer.matches;
-    final isNumber = items.isNotEmpty && items.every((m) => m.source == 'number');
+    final isNumber = items.isNotEmpty &&
+        items.every((m) => m.source == 'number');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -487,56 +432,45 @@ class _AnswerBody extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  m.entry.en,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12.5,
-                    letterSpacing: 0.4,
-                    color: c.textSub,
-                  ),
-                ),
+                Text(m.entry.en,
+                    style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12.5,
+                        letterSpacing: 0.4,
+                        color: c.textSub)),
                 const SizedBox(height: 2),
-                Text(
-                  m.entry.dha,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 18,
-                    color: c.accent,
-                  ),
-                ),
+                Text(m.entry.dha,
+                    style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 18,
+                        color: c.accent)),
                 if (m.entry.defs.isNotEmpty) ...[
                   const SizedBox(height: 6),
-                  Text(
-                    m.entry.defs,
-                    style:
-                        TextStyle(fontSize: 13, height: 1.4, color: c.textSub),
-                  ),
+                  Text(m.entry.defs,
+                      style: TextStyle(
+                          fontSize: 13, height: 1.4, color: c.textSub)),
                 ],
               ],
             ),
           ),
-        Padding(
-          padding: const EdgeInsets.only(top: 2),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                isNumber
-                    ? Icons.calculate_outlined
-                    : Icons.verified_user_outlined,
-                size: 13,
-                color: c.textSub,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                isNumber
-                    ? 'Spelled with the taught counting rules'
-                    : 'From the on-device dictionary',
-                style: TextStyle(fontSize: 11, color: c.textSub),
-              ),
-            ],
-          ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isNumber
+                  ? Icons.calculate_outlined
+                  : Icons.verified_user_outlined,
+              size: 13,
+              color: c.textSub,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              isNumber
+                  ? 'Spelled with the taught counting rules'
+                  : 'From the on-device dictionary',
+              style: TextStyle(fontSize: 11, color: c.textSub),
+            ),
+          ],
         ),
       ],
     );
@@ -555,7 +489,8 @@ class _ThinkingBubble extends StatelessWidget {
           const _EcoMark(size: 26),
           const SizedBox(width: 8),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: const EdgeInsets.symmetric(
+                horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
               color: c.card,
               borderRadius: const BorderRadius.all(Radius.circular(16)),
@@ -564,7 +499,8 @@ class _ThinkingBubble extends StatelessWidget {
             child: SizedBox(
               width: 18,
               height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2, color: c.accent),
+              child: CircularProgressIndicator(
+                  strokeWidth: 2, color: c.accent),
             ),
           ),
         ],
@@ -573,9 +509,6 @@ class _ThinkingBubble extends StatelessWidget {
   }
 }
 
-/// The screen's mark: the leaf badge this chat used before the redesign,
-/// restored. Drawn as a soft circle with the Material `eco` leaf so it stays
-/// crisp and legible in both light and dark themes.
 class _EcoMark extends StatelessWidget {
   final double size;
   final Color? bg;
@@ -593,148 +526,21 @@ class _EcoMark extends StatelessWidget {
         color: bg ?? kGreen.withValues(alpha: 0.14),
         boxShadow: const [kShadowSoft],
       ),
-      child: Icon(Icons.eco_rounded, size: size * 0.6, color: iconColor ?? c.accent),
+      child: Icon(Icons.eco_rounded,
+          size: size * 0.6, color: iconColor ?? c.accent),
     );
   }
 }
 
-// ── Model download banner ─────────────────────────────────────────────────────
-class _ModelBanner extends StatelessWidget {
-  final ModelStatus status;
-  final VoidCallback onDownload;
-  const _ModelBanner({required this.status, required this.onDownload});
 
-  @override
-  Widget build(BuildContext context) {
-    final c = context.c;
+/// Anywaa AI Chat Interface
+///
+/// RESPONSE PIPELINE:
+/// 1. Dictionary lookup (AnywaaAiService) always runs first — grounded facts.
+/// 2. If Anywaa-LM is loaded (fllama), it generates a conversational reply:
+///    - Translation queries: model rephrases the dictionary result (RAG).
+///    - General questions: model answers freely from its own knowledge.
+/// 3. If the model is not loaded, the dictionary result is shown directly.
+///
+/// Anywaa-LM STATUS: ✅ Integrated via fllama (llama.cpp)
 
-    // Model downloaded and ready (inference not yet active).
-    if (status is ModelReady) {
-      return Container(
-        width: double.infinity,
-        color: kGreen.withValues(alpha: 0.07),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-        child: Row(children: [
-          Icon(Icons.offline_bolt_rounded, size: 14, color: c.accent),
-          const SizedBox(width: 6),
-          Text('Anywaa-LM downloaded · coming soon',
-              style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: c.accent)),
-        ]),
-      );
-    }
-
-    // Downloading — show progress bar.
-    if (status is ModelDownloading) {
-      final dl = status as ModelDownloading;
-      return Container(
-        width: double.infinity,
-        color: c.card,
-        padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(children: [
-              SizedBox(
-                width: 14,
-                height: 14,
-                child: CircularProgressIndicator(
-                    strokeWidth: 2, color: c.accent),
-              ),
-              const SizedBox(width: 8),
-              Text('Downloading AI model  ${dl.progressLabel}',
-                  style: TextStyle(fontSize: 12, color: c.textSub)),
-            ]),
-            const SizedBox(height: 6),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: dl.progress,
-                minHeight: 4,
-                backgroundColor: c.border,
-                color: kGreen,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    // Error state.
-    if (status is ModelError) {
-      final err = status as ModelError;
-      return Container(
-        width: double.infinity,
-        color: const Color(0xFFFFEEEE),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        child: Row(children: [
-          const Icon(Icons.error_outline_rounded,
-              size: 15, color: Color(0xFFC0392B)),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(err.message,
-                style: const TextStyle(
-                    fontSize: 11, color: Color(0xFFC0392B))),
-          ),
-          TextButton(
-            onPressed: onDownload,
-            child: const Text('Retry',
-                style: TextStyle(fontSize: 12, color: Color(0xFFC0392B))),
-          ),
-        ]),
-      );
-    }
-
-    // Idle — show optional download prompt for Anywaa-LM (future LLM inference).
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: c.card,
-        border: Border(top: BorderSide(color: c.border)),
-      ),
-      padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
-      child: Row(children: [
-        Container(
-          padding: const EdgeInsets.all(7),
-          decoration: BoxDecoration(
-            color: kGreen.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(Icons.cloud_download_outlined,
-              size: 18, color: kGreen),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Download Anywaa-LM (optional)',
-                  style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: c.text)),
-              Text('469 MB · Qwen2.5 language model',
-                  style: TextStyle(fontSize: 11, color: c.textSub)),
-            ],
-          ),
-        ),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: kGreen,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20)),
-            elevation: 0,
-            textStyle: const TextStyle(
-                fontSize: 12, fontWeight: FontWeight.bold),
-          ),
-          onPressed: onDownload,
-          child: const Text('Download'),
-        ),
-      ]),
-    );
-  }
-}

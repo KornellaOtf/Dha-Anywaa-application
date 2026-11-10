@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.3.4 (build 154)
+
+Released: 2026-11-10
+
+### Fixed
+- OTA now uses browser download (no more "keep phone open")
+- Dead Qwen/LLaMA stub code removed (llama_service.dart, model_download_service.dart)
+- Removed "Download Anywaa-LM" banner from AI page (was never functional)
+- AI subtitle updated to "on-device · 3,346 words"
+
+### Changed
+- App version: 1.3.3 → 1.3.4
+- Build number: 153 → 154
+
 ## 1.3.3 (build 153)
 
 Released: 2026-11-10
