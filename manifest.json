@@ -1,11 +1,11 @@
 {
-  "version": "1.2.29",
-  "versionCode": 129,
-  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.2.29/dha-anywaa-v1.2.29.apk",
-  "sha256": "e07e3948674e9e4a1eb69022a8f23ba4557d6b1038b32fe6402d06cdfe55e1ac",
-  "sizeBytes": 101781948,
+  "version": "1.2.30",
+  "versionCode": 130,
+  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.2.30/dha-anywaa-v1.2.30.apk",
+  "sha256": "1f13e6dc179f8cca2b29def134a1423ea48d3130b53bc49be48b2b101574a0e1",
+  "sizeBytes": 101870196,
   "minSupportedVersionCode": 1,
   "mandatory": false,
-  "releaseNotes": "Download now continues in the background — you can switch to WhatsApp or lock your phone while it downloads. Also fixes package invalid error instructions.",
+  "releaseNotes": "Dictionary redesigned: 3,304 words across 62 categories. Browse by category, search all words, tap any word to see pronunciation, example sentences, and cultural notes.",
   "developer": "Kornella Otf"
 }

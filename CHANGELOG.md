@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.2.30 (build 130)
+
+Released: 2026-11-10
+
+### Added
+- Dictionary completely redesigned
+- 3,304 verified words imported from Anywaa web database (was 1,353)
+- Browse by category: 62 categories with icons, word counts, and colour coding
+- Tap any word card to expand: pronunciation guide, example sentences (Anywaa + English), alternative meanings, cultural notes
+- Global search across all 3,304 words from the app bar
+- Category search to filter within any category
+- Part-of-speech badges (noun, verb, adjective, etc.) with colour coding
+
+### Changed
+- App version: 1.2.29 → 1.2.30
+- Build number: 129 → 130
+
 ## 1.2.29 (build 129)
 
 Released: 2026-11-10
