@@ -183,14 +183,9 @@ class OtaService {
     }
   }
 
-  // ── Legacy in-app download (kept for reference, not used) ─────────────────
+  // ── In-app download ───────────────────────────────────────────────────────
   /// Starts the APK download as a background foreground-service task.
-  /// The download will continue even if the user switches to another app,
-  /// locks their phone, or minimises Dha Anywaa.
-  ///
-  /// NOTE: This method is no longer used. On Android 12+, users must keep
-  /// the phone unlocked for the download to complete. We now use browser
-  /// download (downloadInBrowser) which works in the background on all versions.
+  /// Shows progress bar in the app UI. User should keep app open.
   void startDownload(OtaCheckResult result, {bool showNotifications = true}) {
     if (_active) return;
     _active = true;

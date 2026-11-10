@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.3.2 (build 152)
+
+Released: 2026-11-10
+
+### Changed
+- Reverted to in-app download with progress bar (user request)
+- Download happens inside the app with visual progress
+- User should keep app open until download completes
+- Browser download method kept as fallback (downloadInBrowser)
+- App version: 1.3.1 → 1.3.2
+- Build number: 151 → 152
+
 ## 1.3.1 (build 151)
 
 Released: 2026-11-10

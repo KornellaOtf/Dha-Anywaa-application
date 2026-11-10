@@ -154,7 +154,7 @@ class _OtaUpdatePageState extends State<OtaUpdatePage> {
         ),
         const SizedBox(height: 14),
         Text(
-          'Your browser will download the update. After it finishes, tap the download notification to install.',
+          'The download will continue in the background. Keep the app open until it finishes.',
           style: TextStyle(fontSize: 14, height: 1.5, color: c.textSub),
         ),
       ],
@@ -300,17 +300,14 @@ class _OtaUpdatePageState extends State<OtaUpdatePage> {
           ),
         OtaPhase.error => Column(
             children: [
-              _primary('Try again', () => _ota.downloadInBrowser(widget.result)),
+              _primary('Try again', () => _ota.startDownload(widget.result)),
               _plain('Not now', () => Navigator.pop(context)),
             ],
           ),
         _ => Column(
             children: [
               _primary('Download and install',
-                  () async {
-                    await _ota.downloadInBrowser(widget.result);
-                    if (mounted) Navigator.pop(context);
-                  }),
+                  () => _ota.startDownload(widget.result)),
               _plain('Not now', () => Navigator.pop(context)),
             ],
           ),

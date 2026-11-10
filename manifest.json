@@ -1,11 +1,11 @@
 {
-  "version": "1.3.1",
-  "versionCode": 151,
-  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.3.1/dha-anywaa-v1.3.1.apk",
-  "sha256": "8c9e7fc4685632fe4a5481588c0620c198f2084cea45f1f6ebed1cea8c5b7ba8",
-  "sizeBytes": 101764496,
+  "version": "1.3.2",
+  "versionCode": 152,
+  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.3.2/dha-anywaa-v1.3.2.apk",
+  "sha256": "b1898600c95dc1e9f0b704732bfc0ece49210e3ee587f6b05cba9c7ffba58823",
+  "sizeBytes": 101780876,
   "minSupportedVersionCode": 1,
   "mandatory": false,
-  "releaseNotes": "Dictionary 'coming soon' page (no popup). Anywaa AI trained on 3,346 words.",
+  "releaseNotes": "In-app download with progress bar. Keep app open until download completes.",
   "developer": "Kornella Otf"
 }
