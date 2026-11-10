@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:dha_anywaaa/services/notification_service.dart';
 import 'package:dha_anywaaa/services/analytics_service.dart';
 
@@ -164,9 +165,32 @@ class OtaService {
   }
 
   // ── Download ──────────────────────────────────────────────────────────────
+  /// Opens the APK download URL in the system browser.
+  /// The browser handles the download in the background, bypassing Android 12+
+  /// restrictions on in-app background downloads. After download completes,
+  /// Android will prompt the user to install.
+  Future<void> downloadInBrowser(OtaCheckResult result) async {
+    AnalyticsService.instance.logAppUpdate(
+      version: result.latestVersion,
+      method: 'browser',
+    );
+
+    final uri = Uri.parse(result.apkUrl);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      debugPrint('OTA: Could not launch ${result.apkUrl}');
+    }
+  }
+
+  // ── Legacy in-app download (kept for reference, not used) ─────────────────
   /// Starts the APK download as a background foreground-service task.
   /// The download will continue even if the user switches to another app,
   /// locks their phone, or minimises Dha Anywaa.
+  ///
+  /// NOTE: This method is no longer used. On Android 12+, users must keep
+  /// the phone unlocked for the download to complete. We now use browser
+  /// download (downloadInBrowser) which works in the background on all versions.
   void startDownload(OtaCheckResult result, {bool showNotifications = true}) {
     if (_active) return;
     _active = true;

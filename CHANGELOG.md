@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.2.36 (build 136)
+
+Released: 2026-11-10
+
+### Fixed
+- **OTA downloads now use browser instead of in-app download**
+- No more "keep phone open" issue — browser downloads work in background
+  on all Android versions (8, 9, 10, 11, 12, 13, 14)
+- After download completes, tap the browser's download notification to install
+- Fixes 51 failed update attempts reported in analytics (54 tried, only 3 succeeded)
+
+### Changed
+- FirebaseAnalyticsObserver already present in main.dart (screen tracking works)
+- Added `app_update` analytics event to track browser vs in-app download method
+- App version: 1.2.35 → 1.2.36
+- Build number: 135 → 136
+
 ## 1.2.35 (build 135)
 
 Released: 2026-11-10

@@ -81,6 +81,15 @@ class AnalyticsService {
         parameters: {'to_version': toVersion},
       );
 
+  Future<void> logAppUpdate({
+    required String version,
+    required String method,
+  }) =>
+      _fa.logEvent(
+        name: 'app_update',
+        parameters: {'version': version, 'method': method},
+      );
+
   Future<void> logChangeTheme(String mode) => _fa.logEvent(
         name: 'change_theme',
         parameters: {'mode': mode},
