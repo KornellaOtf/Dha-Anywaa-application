@@ -1,11 +1,11 @@
 {
-  "version": "1.2.30",
-  "versionCode": 130,
-  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.2.30/dha-anywaa-v1.2.30.apk",
-  "sha256": "1f13e6dc179f8cca2b29def134a1423ea48d3130b53bc49be48b2b101574a0e1",
+  "version": "1.2.31",
+  "versionCode": 131,
+  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.2.31/dha-anywaa-v1.2.31.apk",
+  "sha256": "96bf07fa905d4692747d3bd51b59a5ff1aab2d7a373b754152189ad8c8b2b4a4",
   "sizeBytes": 101870196,
   "minSupportedVersionCode": 1,
   "mandatory": false,
-  "releaseNotes": "Dictionary redesigned: 3,304 words across 62 categories. Browse by category, search all words, tap any word to see pronunciation, example sentences, and cultural notes.",
+  "releaseNotes": "Fix: OTA update check now works reliably. Previously GitHub rate limits caused it to silently say you are up to date even when a new version was available.",
   "developer": "Kornella Otf"
 }

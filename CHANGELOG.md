@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.2.31 (build 131)
+
+Released: 2026-11-10
+
+### Fixed
+- OTA check was silently failing when GitHub API rate limit was hit (60 req/hour
+  for unauthenticated IPs) — now detects 403/429 responses and does NOT cache
+  the failed check, so the next open retries instead of waiting 6 hours
+- Cache timestamp is now only saved after a successful manifest response,
+  not on rate-limit or network failures
+- "You're up to date" toast now shows current version number for clarity
+
+### Changed
+- App version: 1.2.30 → 1.2.31
+- Build number: 130 → 131
+
 ## 1.2.30 (build 130)
 
 Released: 2026-11-10

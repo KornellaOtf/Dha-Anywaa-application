@@ -62,7 +62,7 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() => _checking = false);
 
     if (result == null) {
-      _toast('You\'re up to date');
+      _toast('You\'re up to date (v$_appVersion)');
       return;
     }
     Navigator.push(

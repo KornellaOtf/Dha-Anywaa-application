@@ -120,6 +120,13 @@ class OtaService {
               headers: {'Accept': 'application/vnd.github+json'})
           .timeout(const Duration(seconds: 10));
 
+      // 403/429 = rate limited — don't cache the timestamp so the next
+      // check actually retries instead of silently skipping for 6 hours.
+      if (releaseRes.statusCode == 403 || releaseRes.statusCode == 429) {
+        debugPrint('OTA: GitHub rate limit hit (${releaseRes.statusCode})');
+        return null;
+      }
+
       if (releaseRes.statusCode != 200) return null;
 
       final release = json.decode(releaseRes.body) as Map<String, dynamic>;
@@ -142,6 +149,8 @@ class OtaService {
       final info = await PackageInfo.fromPlatform();
       final localCode = int.tryParse(info.buildNumber) ?? 0;
 
+      // Save cache timestamp only after a successful valid response
+      // so rate-limit/network failures don't block the next check for 6 hours.
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt(_cacheKey, DateTime.now().millisecondsSinceEpoch);
 
