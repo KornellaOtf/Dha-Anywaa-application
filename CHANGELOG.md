@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.3.3 (build 153)
+
+Released: 2026-11-10
+
+### Changed
+- APK size reduced from 101.8MB to 78.5MB (saved 23MB, 23% smaller)
+- Removed x86_64 native library (emulator-only, no real device uses it)
+- Compressed all 140 images (strip metadata, optimized quality)
+- Build now uses --target-platform android-arm,android-arm64 only
+- Downloads ~23% faster on mobile data
+- App version: 1.3.2 → 1.3.3
+- Build number: 152 → 153
+
 ## 1.3.2 (build 152)
 
 Released: 2026-11-10

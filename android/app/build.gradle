@@ -32,7 +32,7 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace "com.kornellaotf.learn_dha_anywaa"
     compileSdk flutter.compileSdkVersion
-    ndkVersion "28.2.13676358"  // fllama requires NDK 28+
+    ndkVersion "28.2.13676358"
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
@@ -55,8 +55,10 @@ android {
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         ndk {
-            // fllama supports arm64-v8a, armeabi-v7a, x86_64 (not x86)
-            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64'
+            // arm64-v8a: all modern Android phones (2015+)
+            // armeabi-v7a: older 32-bit phones
+            // x86_64 removed — emulator only, saves ~19MB from APK
+            abiFilters 'armeabi-v7a', 'arm64-v8a'
         }
     }
 
