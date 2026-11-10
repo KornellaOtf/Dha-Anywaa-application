@@ -127,9 +127,34 @@ class _OtaUpdatePageState extends State<OtaUpdatePage> {
             ),
         ],
         const SizedBox(height: 18),
+        // ── Migration notice (shown for all users who may have old package) ──
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: kGold.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: kGold.withValues(alpha: 0.35)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.info_outline_rounded, color: kGold, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'If Android says "package invalid" after downloading, '
+                  'go to Settings → Apps → find Dha Anywaa → Uninstall, '
+                  'then open the downloaded file to install. '
+                  'This is a one-time step.',
+                  style: TextStyle(fontSize: 13, height: 1.5, color: kGold.withValues(alpha: 0.85)),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
         Text(
-          'The file is downloaded from the official GitHub release of this app '
-          'and checked before it is installed. Android will ask you to confirm.',
+          'You can switch to other apps while the download runs — it will continue in the background.',
           style: TextStyle(fontSize: 14, height: 1.5, color: c.textSub),
         ),
       ],
@@ -203,9 +228,31 @@ class _OtaUpdatePageState extends State<OtaUpdatePage> {
           _checkRow('Same app as the one installed'),
         ]),
         const SizedBox(height: 18),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: kGold.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: kGold.withValues(alpha: 0.35)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.info_outline_rounded, color: kGold, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'If Android says "package invalid", uninstall the old app first from '
+                  'Settings → Apps → Dha Anywaa → Uninstall, then tap Install again.',
+                  style: TextStyle(fontSize: 13, height: 1.5, color: kGold.withValues(alpha: 0.85)),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
         Text(
-          'Android will ask you to confirm. Your name and progress stay on '
-          'this phone.',
+          'Your name and progress stay on this phone.',
           style: TextStyle(fontSize: 14, height: 1.5, color: c.textSub),
         ),
       ],

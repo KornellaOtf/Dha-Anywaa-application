@@ -1,5 +1,6 @@
 import 'package:dha_anywaaa/app_settings.dart';
 import 'package:dha_anywaaa/anywaa_ai_page.dart';
+import 'package:dha_anywaaa/services/ota_service.dart';
 import 'package:dha_anywaaa/components/animal.dart';
 import 'package:dha_anywaaa/components/bird.dart';
 import 'package:dha_anywaaa/components/body_part.dart';
@@ -30,6 +31,9 @@ void main() async {
   } catch (e) {
     debugPrint('Firebase initialization error: $e');
   }
+
+  // Initialize background downloader so OTA downloads survive backgrounding
+  await OtaService.initialize();
   
   // Load the saved preference first so the correct theme is applied from the
   // very first frame instead of flashing the system theme on relaunch.

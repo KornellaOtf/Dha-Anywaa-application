@@ -1,11 +1,11 @@
 {
-  "version": "1.2.28",
-  "versionCode": 128,
-  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.2.28/dha-anywaa-v1.2.28.apk",
-  "sha256": "cd5ef99afd941a117fea14d335971e50b1a31f1b43ad54a7306cb1b42e423e87",
-  "sizeBytes": 100419434,
+  "version": "1.2.29",
+  "versionCode": 129,
+  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.2.29/dha-anywaa-v1.2.29.apk",
+  "sha256": "e07e3948674e9e4a1eb69022a8f23ba4557d6b1038b32fe6402d06cdfe55e1ac",
+  "sizeBytes": 101781948,
   "minSupportedVersionCode": 1,
   "mandatory": false,
-  "releaseNotes": "Analytics fix: all screens now have names in Firebase (no more (not set)). Audio events now include song name.",
+  "releaseNotes": "Download now continues in the background — you can switch to WhatsApp or lock your phone while it downloads. Also fixes package invalid error instructions.",
   "developer": "Kornella Otf"
 }

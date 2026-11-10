@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.2.29 (build 129)
+
+Released: 2026-11-10
+
+### Fixed
+- OTA download now survives app backgrounding — users can switch to WhatsApp,
+  lock their phone, or use other apps while the update downloads
+- Android shows a persistent "Downloading update…" notification in the status
+  bar; download continues until complete regardless of app state
+- Download resumes automatically if interrupted (retries up to 3 times)
+
+### Technical
+- Added `background_downloader ^9.6.6` package
+- Added `FOREGROUND_SERVICE` and `FOREGROUND_SERVICE_DATA_SYNC` permissions
+- OtaService now uses `DownloadTask` with `foregroundServiceType=dataSync`
+- `OtaService.initialize()` called at app startup to re-attach any in-progress download
+
+### Changed
+- App version: 1.2.28 → 1.2.29
+- Build number: 128 → 129
+
 ## 1.2.28 (build 128)
 
 Released: 2026-11-10
