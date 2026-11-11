@@ -1,11 +1,11 @@
 {
-  "version": "1.4.1",
-  "versionCode": 161,
-  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.4.1/dha-anywaa-v1.4.1.apk",
-  "sha256": "9bfb87a638eade72b39f293f7155bb099c3da2fa6dfcdf15d7cb4171ec44fa06",
-  "sizeBytes": 63352432,
+  "version": "1.4.2",
+  "versionCode": 162,
+  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.4.2/dha-anywaa-v1.4.2.apk",
+  "sha256": "8aab25ac285c47bb1b2a0fcdaa5ba5f3b35bd90cdbbd339f8a620f5d34883da5",
+  "sizeBytes": 63352540,
   "minSupportedVersionCode": 1,
   "mandatory": false,
-  "releaseNotes": "Fixed OTA update. Reading page correct images. 63MB APK.",
+  "releaseNotes": "Version 1.4.2",
   "developer": "Kornella Otf"
 }
