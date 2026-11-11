@@ -273,7 +273,7 @@ Triggers: `HomePage` auto-checks after the first frame (cached, non-forced);
 `Settings -> Check for update` forces a fresh check (bypasses the cache). If
 `mandatory` is true, the update dialog is not dismissible.
 
-### Download (resumable, singleton)
+### Download (in-app, resumable, singleton)
 
 `OtaService` is a **singleton** (`factory OtaService() => instance`) exposing a
 `ValueNotifier<OtaDownloadState>` (`idle / running / success / error`,
@@ -283,83 +283,100 @@ UI just listens.
 
 `startDownload(result)`:
 - Idempotent: a second call while one is running is ignored (no duplicate).
-- Streams bytes to `dha_anywaa_update.apk.part` in the external storage (or
-  app documents) directory.
-- Resumable: on (re)start it measures the existing `.part` bytes and sends
-  `Range: bytes=<n>-`; if the server honors it (HTTP 206) it appends, else
-  (HTTP 200) it truncates and starts over.
-- Per-read idle timeout (60s) and a 30s header timeout, so a stalled transfer
-  aborts cleanly.
+- Uses `background_downloader` package for resumable downloads with
+  foreground service notification.
 - After download it verifies the byte size against the manifest, computes
   SHA-256 over the finished file, and compares it; on any mismatch it deletes
-  the partial file and reports failure. On success it renames the `.part` to
-  the final APK and sets the state to success.
+  the partial file and reports failure. On success it sets the state to success.
 
-On success the Settings tile flips to "Install update" and calls
-`OpenFile.open(...)` so Android shows the installer. (Grant "install unknown
-apps" when prompted.)
+On success the update page shows "Install" and calls `OpenFile.open(...)` so
+Android shows the installer. (Grant "install unknown apps" when prompted.)
 
-Note: this fixes navigation and accidental process restarts within the running
-app. A guaranteed true background download that survives a full force-kill
-would require a native downloader (e.g. WorkManager / flutter_downloader),
-which is not currently used.
+`downloadInBrowser(result)`:
+- Alternative download method that opens the APK URL in the system browser
+  via `url_launcher`. Used as a fallback when in-app download fails.
+- Browser handles download in background on all Android versions.
 
-The home-screen update dialog instead opens the APK URL in the external
-browser (`url_launcher`), which is a separate code path from the in-app
-downloader.
+### OTA manifest.json — CRITICAL RULES
+
+The `manifest.json` file is the single source of truth for OTA. It must
+contain the **exact** SHA256 and file size of the APK uploaded to the GitHub
+release. If these don't match, the OTA download will fail with a verification
+error ("Update failed").
+
+**CRITICAL:** The SHA256 in manifest.json must be computed from the actual
+built APK file AFTER the build completes. Never copy a hash from a previous
+release. Always use `scripts/release.sh` which automates this correctly.
+
+### OTA version history
+
+| Version | Build | APK Size | Key OTA changes |
+|---|---|---|---|
+| 1.2.35 | 135 | 101 MB | Bypassed GitHub API rate limit (direct manifest URL) |
+| 1.2.36 | 136 | 101 MB | Added browser download fallback |
+| 1.3.0 | 150 | 101 MB | Anywaa AI 2x smarter (3,346 words) |
+| 1.3.3 | 153 | 78 MB | Removed x86_64, compressed images |
+| 1.3.4 | 154 | 78 MB | Browser download as default |
+| 1.3.6 | 156 | 78 MB | Back to in-app download (user preference) |
+| 1.3.9 | 159 | 63 MB | Compressed 7 huge images (78MB to 63MB) |
+| 1.4.0 | 160 | 63 MB | Reading page correct images (SHA was wrong, OTA failed) |
+| 1.4.1 | 161 | 63 MB | Fixed SHA256 mismatch in manifest.json |
 
 ---
 
-## 9. Release pipeline (`.github/workflows/release.yml`)
+## 9. Release pipeline
 
-Releases are built and published by GitHub Actions, not locally (local builds
-can hit memory limits).
+### Local release (current method)
 
-- **Trigger:** pushing a tag matching `v*` (e.g. `v1.1.5`), plus manual
-  `workflow_dispatch`. Permissions: `contents: write`.
-- **Steps:**
-  1. Checkout.
-  2. Set up Java 17 (Temurin).
-  3. Set up Flutter `3.47.7` (cached).
-  4. `flutter pub get`.
-  4b. Restore the signing keystore from secrets (`KEYSTORE_BASE64`,
-      `KEYSTORE_PASSWORD`, `KEY_PASSWORD`, `KEY_ALIAS`) into
-      `android/upload-keystore.jks` + `android/key.properties`.
-  5. **Build signed release APK.** The build number is taken from the pubspec
-     `+N` suffix (e.g. `100`), not the CI run counter, so the APK versionCode
-     always matches the manifest versionCode.
-  6. Rename APK to `dha-anywaa-<TAG>.apk`.
-  7. Compute SHA-256 and byte size of the APK.
-  8. Write `manifest.json` with real `version`, `versionCode`, `apkUrl`,
-     `sha256`, `sizeBytes` (version/versionCode come from pubspec; `apkUrl`
-     points at the release download for that tag).
-  9. Publish (idempotent): `gh release create <TAG> --generate-notes --latest`
-     (ignore if it exists), then `gh release upload <TAG> <apk> manifest.json
-     --clobber`.
-- **Duration:** ~5-7 min on a warm cache, ~19-27 min on a cold cache.
+Releases are built locally using `scripts/release.sh`. This script:
+
+1. Bumps `version:` in `pubspec.yaml` to the new version + build number.
+2. Builds the APK with `--target-platform android-arm,android-arm64` (no x86_64,
+   saves ~19MB).
+3. **Computes SHA256 and file size from the ACTUAL built APK file.**
+4. Writes `manifest.json` with the correct hash, size, version, and URL.
+5. **Verifies the SHA256 in manifest.json matches the APK before committing.**
+6. Commits, tags, and pushes to GitHub.
+7. Creates a GitHub release with the APK + manifest.json attached.
+8. Verifies the GitHub release has the APK with the correct size.
+
+### Usage
+
+```bash
+./scripts/release.sh 1.4.2 162
+```
+
+Arguments: version number and versionCode (build number).
+
+### Why the release script exists
+
+In v1.4.0, the SHA256 in manifest.json was manually copied from v1.3.9 instead
+of being computed from the actual v1.4.0 APK. This caused every OTA update to
+fail with a verification error — the downloaded file didn't match the expected
+hash. The release script prevents this by always computing the hash from the
+real file and verifying it before publishing.
 
 ### Versioning and tagging
 
 - Tags follow `vX.Y.Z`.
 - `pubspec.yaml` holds `version: X.Y.Z+NN`. **`NN` is the versionCode used for
-  OTA detection** and must increase on every release. Both the manifest and the
-  installed APK now derive it from `NN`, so OTA shows an update whenever the
-  new `NN` is greater than what is already on the device.
-- Example history: `1.1.1+14` ... `1.1.4+17`, then `1.1.5+100` (a high `NN`
-  chosen to clearly exceed previously installed builds).
+  OTA detection** and must increase on every release.
+- **Always use `scripts/release.sh`** to ensure the SHA256 is correct.
 
-Standard release procedure:
-1. Bump `version:` in `pubspec.yaml` (increment the `+NN`).
-2. Commit, then create an annotated/lightweight tag `vX.Y.Z`.
-3. Push the commit and the tag; the tag push triggers the CI build and the
-   published GitHub Release.
+### Build configuration
 
-Repo branch/commit conventions: work on feature branches (e.g.
-`ui-cleanup-startup`), descriptive commit messages, and a security review gate
-is offered before each push (see project SCM settings; the L3 scan prompt can
-be disabled from Qoder Settings > Security).
+The APK is built with `--target-platform android-arm,android-arm64`:
+- `arm64-v8a`: all modern Android phones (2015+)
+- `armeabi-v7a`: older 32-bit phones
+- `x86_64` is excluded (emulator only, saves ~19MB)
 
----
+Firebase App Distribution is also used to distribute to testers:
+```bash
+firebase appdistribution:distribute build/app/outputs/flutter-apk/app-release.apk \
+  --project learn-dha-anywaa \
+  --app 1:741893789084:android:c37941cbe756ed3f92a459 \
+  --release-notes "vX.Y.Z - description"
+```
 
 ## 10. Building and running locally
 
