@@ -1,11 +1,11 @@
 {
-  "version": "1.3.4",
-  "versionCode": 154,
-  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.3.4/dha-anywaa-v1.3.4.apk",
-  "sha256": "ae40bdcf427dd72ab0f69b00cd7346b9e08a0a2492fb37dd7b7751b9feec5fc4",
+  "version": "1.3.5",
+  "versionCode": 155,
+  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.3.5/dha-anywaa-v1.3.5.apk",
+  "sha256": "684b2a2e9ed01c53fe2418e344b2c42ca4bebe635329e7737213adec9b8eb4a2",
   "sizeBytes": 78406088,
   "minSupportedVersionCode": 1,
   "mandatory": false,
-  "releaseNotes": "Browser download for updates. Dead AI code removed. 78MB APK.",
+  "releaseNotes": "Shorter 'up to date' message.",
   "developer": "Kornella Otf"
 }
