@@ -82,6 +82,8 @@ echo "OK - SHA256 matches"
 # ── Step 6: Copy APK, commit, tag, push ──────────────────────────────────────
 echo ""
 echo "[6/8] Committing and pushing..."
+# Remove any stale APK in /tmp to prevent uploading the wrong file
+rm -f "/tmp/${APK_NAME}"
 cp "${APK_PATH}" "/tmp/${APK_NAME}"
 git add pubspec.yaml "${MANIFEST}"
 git commit -m "release: v${VERSION}+${BUILD}" || echo "Nothing to commit"
