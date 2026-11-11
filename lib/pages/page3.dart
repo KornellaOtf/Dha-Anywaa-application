@@ -84,30 +84,30 @@ class _Page3State extends State<Page3> {
     Sentence(letter: "B",  word: "Bøøgø",  sentence: "Bääla bøøgø mare dwøng døc.",                 audioUrl: "sentence_sound/Voice3.mp3"),
     Sentence(letter: "C",  word: "Cöör",   sentence: "Cöör kunynyö kiper cäng.",                    audioUrl: "sentence_sound/Voice4.mp3"),
     Sentence(letter: "D",  word: "Digwey", sentence: " Digwey muulö bäät liel.",                    audioUrl: "sentence_sound/Voice5.mp3"),
-    Sentence(letter: "Dh", word: "Dhieng", sentence: "Dhieng nyämö ki lum yi bäp.",                 audioUrl: "sentence_sound/Voice7.mp3"),
-    Sentence(letter: "E",  word: "Eel",    sentence: "Omøt cwaal mo dwøng a eel wïïë.",             audioUrl: "sentence_sound/Voice8.mp3"),
-    Sentence(letter: "Ë",  word: "Ëëli",   sentence: "Ariet tëëdö bäät ëëli ka araapraapi.",        audioUrl: "sentence_sound/Voice9.mp3"),
+    Sentence(letter: "Dh", word: "Dhieng", sentence: "Dhieng nyämö ki lum yi bäp.",                 audioUrl: "sentence_sound/Voice7.mp3", imageAsset: 'assets/word_images/leaf.png'),
+    Sentence(letter: "E",  word: "Eel",    sentence: "Omøt cwaal mo dwøng a eel wïïë.",             audioUrl: "sentence_sound/Voice8.mp3", imageAsset: 'assets/word_images/eel.png'),
+    Sentence(letter: "Ë",  word: "Ëëli",   sentence: "Ariet tëëdö bäät ëëli ka araapraapi.",        audioUrl: "sentence_sound/Voice9.mp3", imageAsset: 'assets/word_images/eeli.png'),
     Sentence(letter: "G",  word: "Gwienø", sentence: "Gwienø nywøla tøøngø.",                       audioUrl: "sentence_sound/Voice10.mp3"),
-    Sentence(letter: "I",  word: "Iith",   sentence: " Acala töömö ki pïï yi iith.",                audioUrl: "sentence_sound/Voice11.mp3"),
+    Sentence(letter: "I",  word: "Iith",   sentence: " Acala töömö ki pïï yi iith.",                audioUrl: "sentence_sound/Voice11.mp3", imageAsset: 'assets/word_images/iith.png'),
     Sentence(letter: "Ï",  word: "Ïth",    sentence: " Ïth kunynyï kiper winynyö.",                 audioUrl: "sentence_sound/Voice12.mp3"),
     Sentence(letter: "J",  word: "Jääy",   sentence: "Okëëlö a yaa øt göör ki jääy ya dïïttï.",    audioUrl: "sentence_sound/Voice13.mp3"),
     Sentence(letter: "K",  word: "Køøm",   sentence: " Awïïllï opï piny bäät køøm.",               audioUrl: "sentence_sound/Voice14.mp3"),
     Sentence(letter: "L",  word: "Liec",   sentence: " Liec ena lääy mo dwøng døc.",                audioUrl: "sentence_sound/Voice15.mp3"),
-    Sentence(letter: "M",  word: "Maac",   sentence: "Maac liel tier dak.",                         audioUrl: "sentence_sound/Voice16.mp3"),
+    Sentence(letter: "M",  word: "Maac",   sentence: "Maac liel tier dak.",                         audioUrl: "sentence_sound/Voice16.mp3", imageAsset: 'assets/word_images/maac.png'),
     Sentence(letter: "N",  word: "Naam",   sentence: " Opëënö ena naam mo dwøng døc.",              audioUrl: "sentence_sound/Voice17.mp3"),
     Sentence(letter: "Nh", word: "Nhøth",  sentence: " Cwaa mara a nhøth nyilaal.",                 audioUrl: "sentence_sound/Voice18.mp3"),
     Sentence(letter: "Ng", word: "Nguu",   sentence: "Nguu ena kwääny paap.",                       audioUrl: "sentence_sound/Voice19.mp3"),
     Sentence(letter: "Ny", word: "Nyaang", sentence: "Nyaang obuttö ya cuula.",                     audioUrl: "sentence_sound/Voice20.mp3"),
     Sentence(letter: "O",  word: "Odïëk",  sentence: "Odïëk a nyämmö ki diel ya wïtïnnï.",          audioUrl: "sentence_sound/Voice21.mp3"),
-    Sentence(letter: "Ö",  word: "Öök",    sentence: "Öök ena nyi jaath mo di camø.",               audioUrl: "sentence_sound/Voice22.mp3"),
+    Sentence(letter: "Ö",  word: "Öök",    sentence: "Öök ena nyi jaath mo di camø.",               audioUrl: "sentence_sound/Voice22.mp3", imageAsset: 'assets/word_images/ook.png'),
     Sentence(letter: "Ø",  word: "Øttø",   sentence: "Ochään rwädhö ki øttø.",                      audioUrl: "sentence_sound/Voice23.mp3"),
-    Sentence(letter: "P",  word: "Pïën",   sentence: "Pïën kunynyö kiper bëëttö.",                  audioUrl: "sentence_sound/Voice24.mp3"),
+    Sentence(letter: "P",  word: "Pïën",   sentence: "Pïën kunynyö kiper bëëttö.",                  audioUrl: "sentence_sound/Voice24.mp3", imageAsset: 'assets/word_images/pien.png'),
     Sentence(letter: "R",  word: "Rïï",    sentence: "Rïï ena lääy mo nguttë bäär døc.",            audioUrl: "sentence_sound/Voice25.mp3"),
-    Sentence(letter: "T",  word: "Tøng",   sentence: "Tøng kunynyö kiper dwaar.",                   audioUrl: "sentence_sound/Voice26.mp3"),
-    Sentence(letter: "Th", word: "Thoom",  sentence: "Okëëlö pöödö ki thoom bäät ajwöma.",          audioUrl: "sentence_sound/Voice27.mp3"),
+    Sentence(letter: "T",  word: "Tøng",   sentence: "Tøng kunynyö kiper dwaar.",                   audioUrl: "sentence_sound/Voice26.mp3", imageAsset: 'assets/word_images/tong.png'),
+    Sentence(letter: "Th", word: "Thoom",  sentence: "Okëëlö pöödö ki thoom bäät ajwöma.",          audioUrl: "sentence_sound/Voice27.mp3", imageAsset: 'assets/word_images/thoom.png'),
     Sentence(letter: "U",  word: "Uudö",   sentence: "Tøng uudö dwøng døc.",                        audioUrl: "sentence_sound/Voice28.mp3"),
     Sentence(letter: "W",  word: "War",    sentence: "Omään tiette di war mo nyärö.",               audioUrl: "sentence_sound/Voice29.mp3"),
-    Sentence(letter: "Y",  word: "Yiie",   sentence: "Acamduk man yiie ngaam.",                     audioUrl: "sentence_sound/Voice30.mp3"),
+    Sentence(letter: "Y",  word: "Yiie",   sentence: "Acamduk man yiie ngaam.",                     audioUrl: "sentence_sound/Voice30.mp3", imageAsset: 'assets/word_images/house.png'),
   ];
 
   @override
@@ -203,7 +203,7 @@ class _Page3State extends State<Page3> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Letter badge
+                      // Letter badge (or image if available)
                       Container(
                         width: 42,
                         height: 42,
@@ -212,17 +212,25 @@ class _Page3State extends State<Page3> {
                               ? kGreen
                               : kRust.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
+                          image: s.imageAsset != null
+                              ? DecorationImage(
+                                  image: AssetImage(s.imageAsset!),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
                         ),
-                        child: Center(
-                          child: Text(
-                            s.letter,
-                            style: TextStyle(
-                              fontSize: s.letter.length > 1 ? 15 : 20,
-                              fontWeight: FontWeight.bold,
-                              color: isActive ? Colors.white : kRust,
-                            ),
-                          ),
-                        ),
+                        child: s.imageAsset == null
+                            ? Center(
+                                child: Text(
+                                  s.letter,
+                                  style: TextStyle(
+                                    fontSize: s.letter.length > 1 ? 15 : 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: isActive ? Colors.white : kRust,
+                                  ),
+                                ),
+                              )
+                            : null,
                       ),
                       const SizedBox(width: 14),
                       Expanded(
