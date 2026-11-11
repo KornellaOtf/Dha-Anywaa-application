@@ -45,6 +45,39 @@ class _Page3State extends State<Page3> {
     }
   }
 
+  // Icons for each reading word
+  static final _wordIcons = <String, IconData>{
+    'Abäc': Icons.school_rounded,
+    'Ääm': Icons.favorite_rounded,
+    'Bøøgø': Icons.lock_rounded,
+    'Cöör': Icons.lightbulb_rounded,
+    'Digwey': Icons.water_drop_rounded,
+    'Dhieng': Icons.grass_rounded,
+    'Eel': Icons.water_rounded,
+    'Ëëli': Icons.waves_rounded,
+    'Gwienø': Icons.fast_forward_rounded,
+    'Iith': Icons.gavel_rounded,
+    'Ïth': Icons.shield_rounded,
+    'Jääy': Icons.celebration_rounded,
+    'Køøm': Icons.bed_rounded,
+    'Liec': Icons.pets_rounded,
+    'Maac': Icons.local_fire_department_rounded,
+    'Naam': Icons.hotel_rounded,
+    'Nhøth': Icons.visibility_rounded,
+    'Nguu': Icons.air_rounded,
+    'Nyaang': Icons.hearing_rounded,
+    'Odïëk': Icons.agriculture_rounded,
+    'Öök': Icons.sensor_door_rounded,
+    'Øttø': Icons.sensor_door_outlined,
+    'Pïën': Icons.menu_book_rounded,
+    'Rïï': Icons.pets_rounded,
+    'Tøng': Icons.construction_rounded,
+    'Thoom': Icons.spa_rounded,
+    'Uudö': Icons.cloud_rounded,
+    'War': Icons.local_drink_rounded,
+    'Yiie': Icons.home_rounded,
+  };
+
   final List<Sentence> wordAndSentence = [
     Sentence(letter: "A",  word: "Abäc",   sentence: 'Obang nyämö ka abäc mo nyaaththa.',          audioUrl: "sentence_sound/Voice1.mp3"),
     Sentence(letter: "Ä",  word: "Ääm",    sentence: 'Oriemmi äämë di pöö.',                        audioUrl: "sentence_sound/Voice2.mp3"),
@@ -196,11 +229,21 @@ class _Page3State extends State<Page3> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(s.word,
-                                style: TextStyle(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                    color: isActive ? context.c.accent : context.c.text)),
+                            Row(
+                              children: [
+                                Icon(
+                                  _wordIcons[s.word] ?? Icons.text_fields_rounded,
+                                  size: 18,
+                                  color: isActive ? context.c.accent : kRust.withValues(alpha: 0.7),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(s.word,
+                                    style: TextStyle(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.bold,
+                                        color: isActive ? context.c.accent : context.c.text)),
+                              ],
+                            ),
                             const SizedBox(height: 4),
                             Text(s.sentence.trim(),
                                 style: TextStyle(
