@@ -300,14 +300,14 @@ class _OtaUpdatePageState extends State<OtaUpdatePage> {
           ),
         OtaPhase.error => Column(
             children: [
-              _primary('Try again', () => _ota.downloadInBrowser(widget.result)),
+              _primary('Try again', () => _ota.startDownload(widget.result)),
               _plain('Not now', () => Navigator.pop(context)),
             ],
           ),
         _ => Column(
             children: [
-              _primary('Download in browser',
-                  () => _ota.downloadInBrowser(widget.result)),
+              _primary('Download and install',
+                  () => _ota.startDownload(widget.result)),
               _plain('Not now', () => Navigator.pop(context)),
             ],
           ),
