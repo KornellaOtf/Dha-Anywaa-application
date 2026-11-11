@@ -1,11 +1,11 @@
 {
-  "version": "1.4.0",
-  "versionCode": 160,
-  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.4.0/dha-anywaa-v1.4.0.apk",
-  "sha256": "130f907cf591e78467b86008bc9f75a126cc8d7b9fa5110acef76f640b29fed5",
-  "sizeBytes": 63355792,
+  "version": "1.4.1",
+  "versionCode": 161,
+  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.4.1/dha-anywaa-v1.4.1.apk",
+  "sha256": "9bfb87a638eade72b39f293f7155bb099c3da2fa6dfcdf15d7cb4171ec44fa06",
+  "sizeBytes": 63352432,
   "minSupportedVersionCode": 1,
   "mandatory": false,
-  "releaseNotes": "Reading page: all 29 words now use correct images matching the Words page.",
+  "releaseNotes": "Fixed OTA update. Reading page correct images. 63MB APK.",
   "developer": "Kornella Otf"
 }
