@@ -1,44 +1,68 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import '../theme/app_theme.dart';
 
-/// Wël Jwøk - Bible reader in Dha Anywaa
-/// Loads Bible content from assets/holybooks/ANY/OT and NT
+class BibleVerse {
+  final String book;
+  final int chapter;
+  final int verse;
+  final String anywaa;
+  final String english;
+
+  BibleVerse({
+    required this.book,
+    required this.chapter,
+    required this.verse,
+    required this.anywaa,
+    required this.english,
+  });
+
+  factory BibleVerse.fromJson(Map<String, dynamic> json) {
+    return BibleVerse(
+      book: json['book'] as String,
+      chapter: json['chapter'] as int,
+      verse: json['verse'] as int,
+      anywaa: json['anywaa'] as String,
+      english: json['english'] as String,
+    );
+  }
+}
+
 class BiblePage extends StatefulWidget {
-  const BiblePage({super.key});
+  const BiblePage({Key? key}) : super(key: key);
 
   @override
   State<BiblePage> createState() => _BiblePageState();
 }
 
 class _BiblePageState extends State<BiblePage> {
+  List<BibleVerse> _allVerses = [];
   bool _isLoading = true;
-  List<BibleBook> _otBooks = [];
-  List<BibleBook> _ntBooks = [];
-  BibleBook? _selectedBook;
-  int _selectedChapter = 0;
-  BibleChapter? _chapterData;
-  bool _loadingChapter = false;
+  String? _selectedBook;
+  int? _selectedChapter;
+  
+  // Book metadata
+  final Map<String, int> _bookChapterCounts = {};
+  final List<String> _otBooks = [];
+  final List<String> _ntBooks = [];
+  
+  // Audio
   final AudioPlayer _audioPlayer = AudioPlayer();
   bool _isPlaying = false;
-  bool _audioAvailable = false;
-
-  // Reading position tracking
-  String? _lastBookCode;
+  
+  // Last reading position
+  String? _lastBook;
   int? _lastChapter;
 
   @override
   void initState() {
     super.initState();
-    _loadBooks();
+    _loadBible();
     _loadLastPosition();
-    _audioPlayer.onPlayerStateChanged.listen((state) {
-      if (mounted) {
-        setState(() => _isPlaying = state == PlayerState.playing);
-      }
-    });
   }
 
   @override
@@ -47,299 +71,394 @@ class _BiblePageState extends State<BiblePage> {
     super.dispose();
   }
 
+  Future<void> _loadBible() async {
+    try {
+      final String jsonString = await rootBundle.loadString('assets/bible.json');
+      final List<dynamic> jsonData = json.decode(jsonString);
+      
+      setState(() {
+        _allVerses = jsonData.map((v) => BibleVerse.fromJson(v)).toList();
+        _buildBookMetadata();
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading Bible: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _buildBookMetadata() {
+    // Build chapter counts and categorize OT/NT
+    final bookSet = <String>{};
+    for (var verse in _allVerses) {
+      bookSet.add(verse.book);
+      _bookChapterCounts[verse.book] = 
+          (_bookChapterCounts[verse.book] ?? 0) < verse.chapter 
+              ? verse.chapter 
+              : _bookChapterCounts[verse.book]!;
+    }
+    
+    // Split into OT/NT (first 39 books are OT)
+    final books = bookSet.toList();
+    _otBooks.addAll(books.take(39));
+    _ntBooks.addAll(books.skip(39));
+  }
+
   Future<void> _loadLastPosition() async {
     final prefs = await SharedPreferences.getInstance();
-    final lastBook = prefs.getString('bible_last_book');
-    final lastChapter = prefs.getInt('bible_last_chapter');
-    if (lastBook != null && lastChapter != null) {
-      setState(() {
-        _lastBookCode = lastBook;
-        _lastChapter = lastChapter;
-      });
-    }
-  }
-
-  Future<void> _saveLastPosition(String bookCode, int chapter) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('bible_last_book', bookCode);
-    await prefs.setInt('bible_last_chapter', chapter);
-  }
-
-  Future<void> _loadBooks() async {
-    // Load OT books
-    final otCodes = ['GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT',
-        '1SA', '2SA', '1KI', '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST',
-        'JOB', 'PSA', 'PRO', 'ECC', 'SNG', 'ISA', 'JER', 'LAM', 'EZK',
-        'DAN', 'HOS', 'JOL', 'AMO', 'OBA', 'JON', 'MIC', 'NAH', 'HAB',
-        'ZEP', 'HAG', 'ZEC', 'MAL'];
-
-    // Load NT books
-    final ntCodes = ['MAT', 'MRK', 'LUK', 'JHN', 'ACT', 'ROM',
-        '1CO', '2CO', 'GAL', 'EPH', 'PHP', 'COL',
-        '1TH', '2TH', '1TI', '2TI', 'TIT', 'PHM',
-        'HEB', 'JAS', '1PE', '2PE', '1JN', '2JN', '3JN', 'JUD', 'REV'];
-
-    for (final code in otCodes) {
-      try {
-        final json = await _loadBookJson(code, isOT: true);
-        if (json != null) {
-          _otBooks.add(BibleBook(
-            code: code,
-            name: json['chapterName'] ?? code,
-            chapterCount: (json['text'] as List).length,
-            isOT: true,
-          ));
-        }
-      } catch (_) {}
-    }
-
-    for (final code in ntCodes) {
-      try {
-        final json = await _loadBookJson(code, isOT: false);
-        if (json != null) {
-          _ntBooks.add(BibleBook(
-            code: code,
-            name: json['chapterName'] ?? code,
-            chapterCount: (json['text'] as List).length,
-            isOT: false,
-          ));
-        }
-      } catch (_) {}
-    }
-
-    if (mounted) {
-      setState(() => _isLoading = false);
-    }
-  }
-
-  Future<Map<String, dynamic>?> _loadBookJson(String code, {required bool isOT}) async {
-    final path = 'assets/holybooks/ANY/${isOT ? 'OT' : 'NT'}/$code.json';
-    final bytes = await DefaultAssetBundle.of(context).loadString(path);
-    return jsonDecode(bytes) as Map<String, dynamic>;
-  }
-
-  Future<void> _openChapter(BibleBook book, int chapterIndex) async {
     setState(() {
-      _selectedBook = book;
-      _selectedChapter = chapterIndex;
-      _loadingChapter = true;
-      _chapterData = null;
-      _audioAvailable = false;
+      _lastBook = prefs.getString('bible_last_book');
+      _lastChapter = prefs.getInt('bible_last_chapter');
     });
-
-    try {
-      final json = await _loadBookJson(book.code, isOT: book.isOT);
-      if (json != null) {
-        final chapters = json['text'] as List;
-        if (chapterIndex < chapters.length) {
-          final chapter = chapters[chapterIndex] as Map<String, dynamic>;
-          final verses = (chapter['text'] as List).map((v) {
-            final verseMap = v as Map<String, dynamic>;
-            return BibleVerse(
-              number: int.tryParse(verseMap['ID']?.toString() ?? '0') ?? 0,
-              text: verseMap['text']?.toString() ?? '',
-              sectionTitle: verseMap['title']?.toString(),
-            );
-          }).toList();
-          
-          final audioLink = chapter['audioLink']?.toString();
-          
-          setState(() {
-            _chapterData = BibleChapter(
-              name: chapter['name']?.toString() ?? '${book.name} ${chapterIndex + 1}',
-              verses: verses,
-              audioLink: audioLink,
-            );
-            _audioAvailable = audioLink != null && audioLink.isNotEmpty;
-            _loadingChapter = false;
-          });
-          
-          await _saveLastPosition(book.code, chapterIndex);
-          
-          // Log analytics
-          await FirebaseAnalytics.instance.logEvent(
-            name: 'bible_chapter_opened',
-            parameters: {
-              'book': book.code,
-              'book_name': book.name,
-              'chapter': chapterIndex + 1,
-            },
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _loadingChapter = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not load chapter: $e')),
-        );
-      }
-    }
   }
 
-  Future<void> _toggleAudio() async {
-    if (_chapterData?.audioLink == null) return;
+  Future<void> _saveLastPosition(String book, int chapter) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('bible_last_book', book);
+    await prefs.setInt('bible_last_chapter', chapter);
+    setState(() {
+      _lastBook = book;
+      _lastChapter = chapter;
+    });
+    
+    // Analytics
+    FirebaseAnalytics.instance.logEvent(
+      name: 'bible_chapter_opened',
+      parameters: {'book': book, 'chapter': chapter},
+    );
+  }
 
+  List<BibleVerse> _getChapterVerses(String book, int chapter) {
+    return _allVerses
+        .where((v) => v.book == book && v.chapter == chapter)
+        .toList();
+  }
+
+  void _playAudio(String book, int chapter) async {
+    // Audio URL format from Firebase
+    final bookAbbrev = book.replaceAll(' ', '_').toLowerCase();
+    final audioUrl = 
+        'https://firebasestorage.googleapis.com/v0/b/learn-dha-anywaa.appspot.com/o/bible_audio%2F$bookAbbrev%2Fchapter_$chapter.mp3?alt=media';
+    
     if (_isPlaying) {
       await _audioPlayer.pause();
+      setState(() => _isPlaying = false);
     } else {
       try {
-        await _audioPlayer.play(UrlSource(_chapterData!.audioLink!));
-        await FirebaseAnalytics.instance.logEvent(
+        await _audioPlayer.play(UrlSource(audioUrl));
+        setState(() => _isPlaying = true);
+        
+        FirebaseAnalytics.instance.logEvent(
           name: 'bible_audio_played',
-          parameters: {
-            'book': _selectedBook?.code ?? '',
-            'chapter': _selectedChapter + 1,
-          },
+          parameters: {'book': book, 'chapter': chapter},
         );
       } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Could not play audio. Check your connection.')),
-          );
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Audio not available for this chapter')),
+        );
       }
     }
-  }
-
-  void _goBack() {
-    if (_chapterData != null) {
-      setState(() {
-        _chapterData = null;
-        _loadingChapter = false;
-      });
-      _audioPlayer.pause();
-    } else if (_selectedBook != null) {
-      setState(() => _selectedBook = null);
-    } else {
-      Navigator.pop(context);
-    }
-  }
-
-  void _nextChapter() {
-    if (_selectedBook == null) return;
-    if (_selectedChapter < _selectedBook!.chapterCount - 1) {
-      _openChapter(_selectedBook!, _selectedChapter + 1);
-    }
-  }
-
-  void _prevChapter() {
-    if (_selectedChapter > 0) {
-      _openChapter(_selectedBook!, _selectedChapter - 1);
-    }
+    
+    _audioPlayer.onPlayerComplete.listen((_) {
+      setState(() => _isPlaying = false);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: _chapterData == null && _selectedBook == null,
-      onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) _goBack();
-      },
-      child: Scaffold(
-        backgroundColor: const Color(0xFFFAF8F5),
-        appBar: AppBar(
-          backgroundColor: const Color(0xFF2D5016),
-          foregroundColor: Colors.white,
-          title: Text(
-            _chapterData != null
-                ? _chapterData!.name
-                : _selectedBook != null
-                    ? _selectedBook!.name
-                    : 'Wëël Jwøk',
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-          ),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: _goBack,
-          ),
-          actions: [
-            if (_chapterData != null && _audioAvailable) ...[
-              IconButton(
-                icon: Icon(_isPlaying ? Icons.pause_circle : Icons.play_circle),
-                onPressed: _toggleAudio,
-                tooltip: _isPlaying ? 'Pause audio' : 'Play audio',
-              ),
-              const SizedBox(width: 4),
-            ],
-          ],
-        ),
-        body: _buildBody(),
-        bottomNavigationBar: _chapterData != null ? _buildBottomBar() : null,
-      ),
-    );
-  }
-
-  Widget _buildBody() {
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: Color(0xFF2D5016)),
+      return Scaffold(
+        appBar: AppBar(title: const Text('Wëël Jwøk')),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
-    // Show chapter reading view
-    if (_chapterData != null) {
-      return _buildChapterView();
+    if (_selectedBook != null && _selectedChapter != null) {
+      return _buildReadingView();
     }
 
-    // Show chapter selection for a book
     if (_selectedBook != null) {
-      return _buildChapterGrid();
+      return _buildChapterSelection();
     }
 
-    // Show book selection
     return _buildBookSelection();
   }
 
   Widget _buildBookSelection() {
     return DefaultTabController(
       length: 2,
-      child: Column(
-        children: [
-          // Last reading position banner
-          if (_lastBookCode != null && _lastChapter != null)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              color: const Color(0xFFE8F5E9),
-              child: GestureDetector(
-                onTap: () {
-                  // Find the book and open it
-                  final allBooks = [..._otBooks, ..._ntBooks];
-                  final book = allBooks.firstWhere(
-                    (b) => b.code == _lastBookCode,
-                  );
-                  _openChapter(book, _lastChapter!);
-                },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Wëël Jwøk'),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'Old Testament (39)'),
+              Tab(text: 'New Testament (27)'),
+            ],
+          ),
+        ),
+        body: Column(
+          children: [
+            // Continue Reading Banner
+            if (_lastBook != null && _lastChapter != null)
+              Container(
+                color: kGreen.withOpacity(0.1),
+                padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    const Icon(Icons.bookmark_rounded, color: Color(0xFF2D5016), size: 20),
-                    const SizedBox(width: 8),
+                    const Icon(Icons.bookmark, color: kGreen),
+                    const SizedBox(width: 12),
                     Expanded(
-                      child: Text(
-                        'Continue reading: ${_lastBookCode} ${_lastChapter! + 1}',
-                        style: const TextStyle(fontSize: 13, color: Color(0xFF2D5016)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Continue Reading',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text('$_lastBook Chapter $_lastChapter',
+                              style: const TextStyle(fontSize: 12)),
+                        ],
                       ),
                     ),
-                    const Icon(Icons.arrow_forward_ios, size: 14, color: Color(0xFF2D5016)),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _selectedBook = _lastBook;
+                          _selectedChapter = _lastChapter;
+                        });
+                      },
+                      child: const Text('OPEN'),
+                    ),
                   ],
                 ),
               ),
+            Expanded(
+              child: TabBarView(
+                children: [
+                  _buildBookList(_otBooks),
+                  _buildBookList(_ntBooks),
+                ],
+              ),
             ),
-          TabBar(
-            labelColor: const Color(0xFF2D5016),
-            unselectedLabelColor: Colors.grey,
-            indicatorColor: const Color(0xFF2D5016),
-            tabs: const [
-              Tab(text: 'Old Testament'),
-              Tab(text: 'New Testament'),
-            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBookList(List<String> books) {
+    return GridView.builder(
+      padding: const EdgeInsets.all(16),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 2.5,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+      ),
+      itemCount: books.length,
+      itemBuilder: (context, index) {
+        final book = books[index];
+        final chapterCount = _bookChapterCounts[book] ?? 0;
+        
+        return Card(
+          child: InkWell(
+            onTap: () {
+              setState(() {
+                _selectedBook = book;
+              });
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    book,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '$chapterCount chapters',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          Expanded(
-            child: TabBarView(
+        );
+      },
+    );
+  }
+
+  Widget _buildChapterSelection() {
+    final chapterCount = _bookChapterCounts[_selectedBook] ?? 0;
+    
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_selectedBook!),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            setState(() {
+              _selectedBook = null;
+            });
+          },
+        ),
+      ),
+      body: GridView.builder(
+        padding: const EdgeInsets.all(16),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 5,
+          childAspectRatio: 1,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+        ),
+        itemCount: chapterCount,
+        itemBuilder: (context, index) {
+          final chapter = index + 1;
+          
+          return Card(
+            color: kGreen,
+            child: InkWell(
+              onTap: () {
+                _saveLastPosition(_selectedBook!, chapter);
+                setState(() {
+                  _selectedChapter = chapter;
+                });
+              },
+              child: Center(
+                child: Text(
+                  '$chapter',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildReadingView() {
+    final verses = _getChapterVerses(_selectedBook!, _selectedChapter!);
+    
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('$_selectedBook $_selectedChapter'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            setState(() {
+              _selectedChapter = null;
+            });
+          },
+        ),
+      ),
+      body: Column(
+        children: [
+          // Audio Player
+          Container(
+            padding: const EdgeInsets.all(16),
+            color: kGreen.withOpacity(0.1),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _buildBookGrid(_otBooks),
-                _buildBookGrid(_ntBooks),
+                IconButton(
+                  icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
+                  iconSize: 32,
+                  color: kGreen,
+                  onPressed: () => _playAudio(_selectedBook!, _selectedChapter!),
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Listen to this chapter',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ],
+            ),
+          ),
+          
+          // Verses
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: verses.length,
+              itemBuilder: (context, index) {
+                final verse = verses[index];
+                
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: RichText(
+                    text: TextSpan(
+                      style: const TextStyle(
+                        fontSize: 17,
+                        height: 1.7,
+                        color: Colors.black87,
+                      ),
+                      children: [
+                        TextSpan(
+                          text: '${verse.verse} ',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: kGreen,
+                            fontSize: 14,
+                          ),
+                        ),
+                        TextSpan(text: verse.anywaa),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          
+          // Navigation
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              border: Border(top: BorderSide(color: Colors.grey[300]!)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TextButton.icon(
+                  icon: const Icon(Icons.arrow_back),
+                  label: const Text('Previous'),
+                  onPressed: _selectedChapter! > 1
+                      ? () {
+                          final prev = _selectedChapter! - 1;
+                          _saveLastPosition(_selectedBook!, prev);
+                          setState(() => _selectedChapter = prev);
+                        }
+                      : null,
+                ),
+                TextButton.icon(
+                  icon: const Icon(Icons.arrow_forward),
+                  label: const Text('Next'),
+                  onPressed: _selectedChapter! < _bookChapterCounts[_selectedBook!]!
+                      ? () {
+                          final next = _selectedChapter! + 1;
+                          _saveLastPosition(_selectedBook!, next);
+                          setState(() => _selectedChapter = next);
+                        }
+                      : null,
+                ),
               ],
             ),
           ),
@@ -347,315 +466,4 @@ class _BiblePageState extends State<BiblePage> {
       ),
     );
   }
-
-  Widget _buildBookGrid(List<BibleBook> books) {
-    return GridView.builder(
-      padding: const EdgeInsets.all(12),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 3.2,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-      ),
-      itemCount: books.length,
-      itemBuilder: (context, index) {
-        final book = books[index];
-        return GestureDetector(
-          onTap: () {
-            setState(() => _selectedBook = book);
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFE0E0E0)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF5F0E8),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.menu_book_rounded, color: Color(0xFF2D5016), size: 22),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        book.name,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        '${book.chapterCount} chapters',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildChapterGrid() {
-    final book = _selectedBook!;
-    return Column(
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          color: const Color(0xFFF5F0E8),
-          child: Text(
-            book.name,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2D5016),
-            ),
-          ),
-        ),
-        Expanded(
-          child: GridView.builder(
-            padding: const EdgeInsets.all(12),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 5,
-              childAspectRatio: 1,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-            ),
-            itemCount: book.chapterCount,
-            itemBuilder: (context, index) {
-              return GestureDetector(
-                onTap: () => _openChapter(book, index),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFE0E0E0)),
-                  ),
-                  child: Center(
-                    child: Text(
-                      '${index + 1}',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF2D5016),
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildChapterView() {
-    if (_loadingChapter) {
-      return const Center(child: CircularProgressIndicator(color: Color(0xFF2D5016)));
-    }
-
-    final chapter = _chapterData!;
-    final verses = chapter.verses;
-
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-      itemCount: verses.length + 1,
-      itemBuilder: (context, index) {
-        if (index == 0) {
-          // Chapter header
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  chapter.name,
-                  style: const TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2D5016),
-                  ),
-                ),
-                if (_audioAvailable) ...[
-                  const SizedBox(height: 8),
-                  GestureDetector(
-                    onTap: _toggleAudio,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE8F5E9),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            _isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
-                            color: const Color(0xFF2D5016),
-                            size: 22,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            _isPlaying ? 'Pause audio' : 'Listen to this chapter',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: Color(0xFF2D5016),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-                const Divider(height: 32),
-              ],
-            ),
-          );
-        }
-
-        final verse = verses[index - 1];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (verse.sectionTitle != null && verse.sectionTitle!.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                Text(
-                  verse.sectionTitle!,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.brown[700],
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-                const SizedBox(height: 4),
-              ],
-              RichText(
-                text: TextSpan(
-                  style: const TextStyle(
-                    fontSize: 17,
-                    height: 1.7,
-                    color: Color(0xFF1A1A1A),
-                  ),
-                  children: [
-                    TextSpan(
-                      text: '${verse.number} ',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2D5016),
-                      ),
-                    ),
-                    TextSpan(text: verse.text),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildBottomBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey[300]!)),
-      ),
-      child: SafeArea(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            TextButton.icon(
-              onPressed: _selectedChapter > 0 ? _prevChapter : null,
-              icon: const Icon(Icons.chevron_left),
-              label: const Text('Previous'),
-            ),
-            Text(
-              '${_selectedChapter + 1} / ${_selectedBook?.chapterCount ?? 0}',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[700],
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            TextButton.icon(
-              onPressed: _selectedBook != null &&
-                      _selectedChapter < _selectedBook!.chapterCount - 1
-                  ? _nextChapter
-                  : null,
-              icon: const Icon(Icons.chevron_right),
-              label: const Text('Next'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Models ─────────────────────────────────────────────────────────────────
-
-class BibleBook {
-  final String code;
-  final String name;
-  final int chapterCount;
-  final bool isOT;
-
-  const BibleBook({
-    required this.code,
-    required this.name,
-    required this.chapterCount,
-    required this.isOT,
-  });
-}
-
-class BibleChapter {
-  final String name;
-  final List<BibleVerse> verses;
-  final String? audioLink;
-
-  const BibleChapter({
-    required this.name,
-    required this.verses,
-    this.audioLink,
-  });
-}
-
-class BibleVerse {
-  final int number;
-  final String text;
-  final String? sectionTitle;
-
-  const BibleVerse({
-    required this.number,
-    required this.text,
-    this.sectionTitle,
-  });
 }
