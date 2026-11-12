@@ -1,9 +1,9 @@
 {
-  "version": "1.4.9",
-  "versionCode": 169,
-  "downloadUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.4.9/dha-anywaa-v1.4.9.apk",
-  "sha256": "05d755f43665fbfb6bee06077f138ee115bf065ba963a5fc105838647c9a747d",
-  "size": 86151900,
-  "releaseNotes": "v1.4.9 - Welcome + Quiz UI Polish + Daily 5 + Shortcuts + Reminder Fixes:\n\n- Redesigned welcome screen: gradient hero with brand logo glow, 3 feature pills (Audio/Offline/Quizzes), cleaner single-column form\n- Redesigned quit quiz dialog: side-by-side Quit/Keep going buttons, pause icon, calmer tone\n- Daily 5 now works: connected to 38 real vocabulary words (Animals, Birds, Colors, Shapes) with spaced repetition, XP rewards, combo tracking\n- Home screen shortcuts: long-press app icon for Take a Quiz, Ask Anywaa AI, Share App\n- Reminder fixes: fixed date calculation bug at month boundaries, added Android 12+ exact alarm permissions, fixed toggle ON/OFF state sync, added user feedback toasts, re-request permission on time change\n- Share link updated to v1.4.9 (GitHub APK only, no netlify)\n- All emoji-free",
+  "version": "1.4.10",
+  "versionCode": 170,
+  "downloadUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.4.10/dha-anywaa-v1.4.10.apk",
+  "sha256": "d5b885694b14a240d12f059d458259b179ed2b364bf0248ba447c8034fcaf302",
+  "size": 86200000,
+  "releaseNotes": "v1.4.10 - Hotfix: App stuck on icon\n\nFixed startup crash that prevented the app from opening after v1.4.9.\n\nRoot cause: QuickActions.setShortcutItems() and requestExactAlarmsPermission() were called before runApp(), causing a crash on some devices before the app UI was ever shown.\n\nFix:\n- Wrapped QuickActions initialization in try-catch so any failure is non-fatal\n- Moved notification permission request out of main() - it now only happens when the user toggles reminders in Settings\n- Variable scoping fix so quickActions is accessible to runApp()",
   "minSdkVersion": 21
 }

@@ -53,30 +53,35 @@ void main() async {
   // Initialize retention engine for smart notifications
   try {
     await RetentionEngine.instance.initialize();
-    await RetentionEngine.instance.requestPermission();
   } catch (e) {
     debugPrint('Retention engine initialization error: $e');
   }
   
   // Initialize home screen shortcuts (long-press app icon menu)
-  const quickActions = QuickActions();
-  await quickActions.setShortcutItems(<ShortcutItem>[
-    const ShortcutItem(
-      type: 'action_quiz',
-      localizedTitle: 'Take a Quiz',
-      icon: 'ic_launcher',
-    ),
-    const ShortcutItem(
-      type: 'action_ai',
-      localizedTitle: 'Ask Anywaa AI',
-      icon: 'ic_launcher',
-    ),
-    const ShortcutItem(
-      type: 'action_share',
-      localizedTitle: 'Share App',
-      icon: 'ic_launcher',
-    ),
-  ]);
+  // Wrapped in try-catch: if this fails on certain devices, app must still start
+  final quickActions = const QuickActions();
+  try {
+    await quickActions.setShortcutItems(<ShortcutItem>[
+      const ShortcutItem(
+        type: 'action_quiz',
+        localizedTitle: 'Take a Quiz',
+        icon: 'ic_launcher',
+      ),
+      const ShortcutItem(
+        type: 'action_ai',
+        localizedTitle: 'Ask Anywaa AI',
+        icon: 'ic_launcher',
+      ),
+      const ShortcutItem(
+        type: 'action_share',
+        localizedTitle: 'Share App',
+        icon: 'ic_launcher',
+      ),
+    ]);
+  } catch (e) {
+    debugPrint('Quick actions initialization error: $e');
+  }
+
   
   // Load the saved preference first so the correct theme is applied from the
   // very first frame instead of flashing the system theme on relaunch.
