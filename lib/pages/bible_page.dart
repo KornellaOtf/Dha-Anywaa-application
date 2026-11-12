@@ -1,21 +1,24 @@
+import 'dart:async';
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../theme/app_theme.dart';
+
 import '../services/analytics_service.dart';
 
-// ── Colour palette used only inside this page ────────────────────────────────
-const _kInk     = Color(0xFF1A1A2E);   // near-black background
-const _kParch   = Color(0xFFF6EFE3);   // warm parchment
-const _kGold    = Color(0xFFC9993A);   // gold accent
-const _kGoldSoft= Color(0xFFE8C87A);   // lighter gold for verse numbers
-const _kForest  = Color(0xFF1F4D3A);   // brand green
-const _kForestLt= Color(0xFF2D6A4F);   // lighter green
+// ─── Palette ──────────────────────────────────────────────────────────────────
+const _kDark    = Color(0xFF0F1923); // reading background (night)
+const _kLight   = Color(0xFFF5EDD8); // reading background (day)
+const _kSurface = Color(0xFF1A2535); // card/appbar surface (night)
+const _kGold    = Color(0xFFC9993A); // accent
+const _kGreen   = Color(0xFF1F4D3A); // audio playing tint
+const _kInkDay  = Color(0xFF1A1A2E); // text on light
+const _kSubDay  = Color(0xFF5A5F70); // sub-text on light
 
-// ── Data model ───────────────────────────────────────────────────────────────
+// ─── Model ────────────────────────────────────────────────────────────────────
 class BibleVerse {
   final String book;
   final int    chapter;
@@ -40,79 +43,91 @@ class BibleVerse {
       );
 }
 
-// ── Page ─────────────────────────────────────────────────────────────────────
+// ─── Page ─────────────────────────────────────────────────────────────────────
 class BiblePage extends StatefulWidget {
-  const BiblePage({Key? key}) : super(key: key);
+  const BiblePage({super.key});
 
   @override
   State<BiblePage> createState() => _BiblePageState();
 }
 
-class _BiblePageState extends State<BiblePage> with TickerProviderStateMixin {
-  // ── data ──────────────────────────────────────────────────────────────────
-  List<BibleVerse>   _allVerses         = [];
-  Map<String, int>   _bookChapterCounts = {};
-  List<String>       _otBooks           = [];
-  List<String>       _ntBooks           = [];
-  bool               _isLoading         = true;
+class _BiblePageState extends State<BiblePage> with SingleTickerProviderStateMixin {
 
-  // ── navigation state ──────────────────────────────────────────────────────
-  String? _selectedBook;
-  int?    _selectedChapter;
+  // data
+  List<BibleVerse>  _all              = [];
+  final Map<String, int>  _chapterCounts    = {};
+  List<String>      _otBooks          = [];
+  List<String>      _ntBooks          = [];
+  bool              _loading          = true;
 
-  // ── continue reading ──────────────────────────────────────────────────────
+  // nav
+  String? _book;
+  int?    _chapter;
+
+  // last-read
   String? _lastBook;
   int?    _lastChapter;
 
-  // ── reading prefs ─────────────────────────────────────────────────────────
-  double _fontSize       = 18;
-  bool   _showEnglish    = false;
-  bool   _nightMode      = true;   // dark = true, light = false
+  // prefs
+  double _fontSize    = 18;
+  bool   _showEng     = false;
+  bool   _night       = true;
 
-  // ── audio ─────────────────────────────────────────────────────────────────
-  final AudioPlayer _audio    = AudioPlayer();
-  bool              _isPlaying = false;
+  // audio
+  final AudioPlayer   _player    = AudioPlayer();
+  bool                _playing   = false;
+  bool                _buffering = false;
+  String?             _loadedUrl;
+  StreamSubscription? _doneSub;
+  StreamSubscription? _stateSub;   // tracks unexpected stops/errors
 
-  // ── search ────────────────────────────────────────────────────────────────
-  bool   _searchOpen = false;
-  String _searchQuery= '';
-  List<BibleVerse> _searchResults = [];
-  final _searchCtrl  = TextEditingController();
+  // search
+  bool             _searchOpen    = false;
+  String           _query         = '';
+  List<BibleVerse> _results       = [];
+  final _searchCtrl               = TextEditingController();
 
-  // ── animations ────────────────────────────────────────────────────────────
+  // fade-in animation
   late final AnimationController _fadeCtrl;
   late final Animation<double>   _fadeAnim;
+
+  // ─── lifecycle ──────────────────────────────────────────────────────────────
 
   @override
   void initState() {
     super.initState();
-    _fadeCtrl = AnimationController(vsync: this,
-        duration: const Duration(milliseconds: 400));
+    _fadeCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 350));
     _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeIn);
-    _loadBible();
+    _loadData();
     _loadPrefs();
   }
 
   @override
   void dispose() {
-    _audio.dispose();
+    _doneSub?.cancel();
+    _stateSub?.cancel();
+    _player.stop();
+    _player.dispose();
     _fadeCtrl.dispose();
     _searchCtrl.dispose();
     super.dispose();
   }
 
-  // ── loaders ───────────────────────────────────────────────────────────────
+  // ─── data loading ───────────────────────────────────────────────────────────
 
-  Future<void> _loadBible() async {
+  Future<void> _loadData() async {
     try {
-      final raw  = await rootBundle.loadString('assets/bible.json');
-      final list = json.decode(raw) as List<dynamic>;
-      final verses = list.map((v) => BibleVerse.fromJson(v)).toList();
+      final raw    = await rootBundle.loadString('assets/bible.json');
+      final list   = json.decode(raw) as List<dynamic>;
+      final verses = list.map((v) => BibleVerse.fromJson(v as Map<String, dynamic>)).toList();
       _buildMeta(verses);
-      setState(() { _allVerses = verses; _isLoading = false; });
-      _fadeCtrl.forward();
-    } catch (e) {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() { _all = verses; _loading = false; });
+        _fadeCtrl.forward();
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -120,8 +135,8 @@ class _BiblePageState extends State<BiblePage> with TickerProviderStateMixin {
     final seen = <String>{};
     for (final v in verses) {
       seen.add(v.book);
-      final cur = _bookChapterCounts[v.book] ?? 0;
-      if (v.chapter > cur) _bookChapterCounts[v.book] = v.chapter;
+      final cur = _chapterCounts[v.book] ?? 0;
+      if (v.chapter > cur) _chapterCounts[v.book] = v.chapter;
     }
     final books = seen.toList();
     _otBooks = books.take(39).toList();
@@ -130,320 +145,329 @@ class _BiblePageState extends State<BiblePage> with TickerProviderStateMixin {
 
   Future<void> _loadPrefs() async {
     final p = await SharedPreferences.getInstance();
+    if (!mounted) return;
     setState(() {
-      _lastBook      = p.getString('bible_last_book');
-      _lastChapter   = p.getInt('bible_last_chapter');
-      _fontSize      = p.getDouble('bible_font_size') ?? 18;
-      _showEnglish   = p.getBool('bible_show_english') ?? false;
-      _nightMode     = p.getBool('bible_night_mode') ?? true;
+      _lastBook    = p.getString('bible_last_book');
+      _lastChapter = p.getInt('bible_last_chapter');
+      _fontSize    = p.getDouble('bible_font_size') ?? 18;
+      _showEng     = p.getBool('bible_show_eng') ?? false;
+      _night       = p.getBool('bible_night') ?? true;
     });
+  }
+
+  Future<void> _savePref(String key, dynamic val) async {
+    final p = await SharedPreferences.getInstance();
+    if (val is double) await p.setDouble(key, val);
+    if (val is bool)   await p.setBool(key, val);
   }
 
   Future<void> _savePosition(String book, int chapter) async {
     final p = await SharedPreferences.getInstance();
     await p.setString('bible_last_book', book);
     await p.setInt('bible_last_chapter', chapter);
-    setState(() { _lastBook = book; _lastChapter = chapter; });
+    if (mounted) setState(() { _lastBook = book; _lastChapter = chapter; });
     AnalyticsService.instance.logBibleChapterOpened(book, chapter);
   }
 
-  Future<void> _savePref(String key, dynamic value) async {
-    final p = await SharedPreferences.getInstance();
-    if (value is double)  await p.setDouble(key, value);
-    if (value is bool)    await p.setBool(key, value);
+  // ─── helpers ────────────────────────────────────────────────────────────────
+
+  List<BibleVerse> _verses(String book, int chapter) =>
+      _all.where((v) => v.book == book && v.chapter == chapter).toList();
+
+  int get _maxChapter => _chapterCounts[_book ?? ''] ?? 1;
+
+  // ─── audio ──────────────────────────────────────────────────────────────────
+
+  String _audioUrl(String book, int chapter) {
+    final slug = book
+        .toLowerCase()
+        .replaceAll(' ', '_')
+        .replaceAll(RegExp(r"[^a-z0-9_]"), '');
+    return 'https://firebasestorage.googleapis.com/v0/b/learn-dha-anywaa.appspot.com'
+        '/o/bible_audio%2F$slug%2Fchapter_$chapter.mp3?alt=media';
   }
 
-  // ── helpers ───────────────────────────────────────────────────────────────
+  Future<void> _toggleAudio() async {
+    // Pause if currently playing
+    if (_playing) {
+      await _player.pause();
+      if (mounted) setState(() => _playing = false);
+      return;
+    }
 
-  List<BibleVerse> _chapterVerses(String book, int chapter) => _allVerses
-      .where((v) => v.book == book && v.chapter == chapter)
-      .toList();
+    final url = _audioUrl(_book!, _chapter!);
+
+    // Resume if same URL already loaded
+    if (_loadedUrl == url) {
+      await _player.resume();
+      if (mounted) setState(() => _playing = true);
+      return;
+    }
+
+    // Load new chapter
+    if (mounted) setState(() { _buffering = true; _playing = false; });
+
+    await _doneSub?.cancel();
+    _doneSub = null;
+
+    try {
+      await _player.stop();
+      await _player.setSource(UrlSource(url));
+      await _player.resume();
+      _loadedUrl = url;
+
+      _doneSub = _player.onPlayerComplete.listen((_) {
+        if (mounted) setState(() { _playing = false; _buffering = false; });
+      });
+
+      // Also watch for unexpected state changes (network drop, etc.)
+      await _stateSub?.cancel();
+      _stateSub = _player.onPlayerStateChanged.listen((state) {
+        if (state == PlayerState.stopped && _playing) {
+          if (mounted) setState(() { _playing = false; _buffering = false; });
+        }
+      });
+
+      AnalyticsService.instance.logBibleAudioPlayed(_book!, _chapter!);
+
+      if (mounted) setState(() { _playing = true; _buffering = false; });
+    } catch (e) {
+      _loadedUrl = null;
+      if (mounted) {
+        setState(() { _playing = false; _buffering = false; });
+        final msg = e.toString().toLowerCase().contains('404') ||
+                e.toString().toLowerCase().contains('not found')
+            ? 'No audio for this chapter yet'
+            : 'Could not load audio — check connection';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(msg),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _stopAudio() async {
+    await _doneSub?.cancel();
+    await _stateSub?.cancel();
+    _doneSub   = null;
+    _stateSub  = null;
+    _loadedUrl = null;
+    await _player.stop();
+    if (mounted) setState(() { _playing = false; _buffering = false; });
+  }
+
+  // ─── search ─────────────────────────────────────────────────────────────────
 
   void _search(String q) {
     q = q.trim().toLowerCase();
-    if (q.isEmpty) { setState(() => _searchResults = []); return; }
+    if (q.isEmpty) { setState(() => _results = []); return; }
     setState(() {
-      _searchResults = _allVerses
+      _results = _all
           .where((v) =>
               v.anywaa.toLowerCase().contains(q) ||
               v.english.toLowerCase().contains(q))
           .take(100)
           .toList();
     });
-    // Log search after results computed
-    AnalyticsService.instance.logBibleSearch(q, _searchResults.length);
+    AnalyticsService.instance.logBibleSearch(q, _results.length);
   }
 
-  Future<void> _toggleAudio() async {
-    final bookSlug = _selectedBook!.replaceAll(' ', '_').toLowerCase();
-    final url =
-        'https://firebasestorage.googleapis.com/v0/b/learn-dha-anywaa.appspot.com/o/'
-        'bible_audio%2F$bookSlug%2Fchapter_$_selectedChapter.mp3?alt=media';
-    if (_isPlaying) {
-      await _audio.pause();
-      setState(() => _isPlaying = false);
-    } else {
-      try {
-        await _audio.play(UrlSource(url));
-        setState(() => _isPlaying = true);
-        _audio.onPlayerComplete.listen((_) => setState(() => _isPlaying = false));
-        AnalyticsService.instance.logBibleAudioPlayed(_selectedBook!, _selectedChapter!);
-      } catch (_) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Audio not available for this chapter yet'),
-          ));
-        }
-      }
-    }
-  }
-
-  // ── routing ───────────────────────────────────────────────────────────────
+  // ─── routing ────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return _buildSplash();
-
-    if (_searchOpen) return _buildSearchView();
-
-    if (_selectedBook != null && _selectedChapter != null) {
-      return _buildReadingView();
-    }
-    if (_selectedBook != null) return _buildChapterGrid();
-    return _buildLibrary();
+    if (_loading) return _splash();
+    if (_searchOpen) return _searchView();
+    if (_book != null && _chapter != null) return _readingView();
+    if (_book != null) return _chapterGrid();
+    return _library();
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
+  // ════════════════════════════════════════════════════════════════════════════
   // SPLASH
-  // ══════════════════════════════════════════════════════════════════════════
+  // ════════════════════════════════════════════════════════════════════════════
 
-  Widget _buildSplash() {
-    return Scaffold(
-      backgroundColor: _kInk,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('✝', style: GoogleFonts.playfairDisplay(
-              fontSize: 64, color: _kGold)),
-            const SizedBox(height: 20),
-            Text('Wëël Jwøk', style: GoogleFonts.playfairDisplay(
-              fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
-            const SizedBox(height: 32),
-            const SizedBox(
-              width: 40,
-              child: LinearProgressIndicator(
-                valueColor: AlwaysStoppedAnimation(_kGold),
-                backgroundColor: Colors.white12,
-              ),
+  Widget _splash() => Scaffold(
+    backgroundColor: _kDark,
+    body: Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.menu_book_rounded, size: 56, color: _kGold),
+          const SizedBox(height: 18),
+          Text('Wëël Jwøk',
+              style: GoogleFonts.playfairDisplay(
+                  color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 28),
+          SizedBox(
+            width: 36,
+            child: LinearProgressIndicator(
+              color: _kGold,
+              backgroundColor: Colors.white12,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // LIBRARY  (book selection)
-  // ══════════════════════════════════════════════════════════════════════════
+  // ════════════════════════════════════════════════════════════════════════════
+  // LIBRARY
+  // ════════════════════════════════════════════════════════════════════════════
 
-  Widget _buildLibrary() {
-    final bg   = _nightMode ? _kInk    : _kParch;
-    final text = _nightMode ? Colors.white : _kInk;
+  Widget _library() {
+    final bg   = _night ? _kDark  : _kLight;
+    final fg   = _night ? Colors.white : _kInkDay;
 
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         backgroundColor: bg,
-        body: NestedScrollView(
-          headerSliverBuilder: (_, __) => [
-            SliverAppBar(
-              expandedHeight: 200,
-              pinned: true,
-              backgroundColor: _nightMode ? _kInk : _kParch,
-              foregroundColor: text,
-              elevation: 0,
-              flexibleSpace: FlexibleSpaceBar(
-                background: _buildLibraryHero(),
-                collapseMode: CollapseMode.parallax,
+        appBar: AppBar(
+          backgroundColor: _night ? _kSurface : Colors.white,
+          foregroundColor: fg,
+          elevation: 0,
+          title: Text('Wëël Jwøk',
+              style: GoogleFonts.playfairDisplay(
+                  color: fg, fontWeight: FontWeight.bold, fontSize: 20)),
+          actions: [
+            IconButton(
+              tooltip: 'Search',
+              icon: Icon(Icons.search, color: fg),
+              onPressed: () => setState(() => _searchOpen = true),
+            ),
+            IconButton(
+              tooltip: _night ? 'Day mode' : 'Night mode',
+              icon: Icon(
+                _night ? Icons.wb_sunny_outlined : Icons.nights_stay_outlined,
+                color: fg,
               ),
-              actions: [
-                IconButton(
-                  icon: Icon(Icons.search, color: text),
-                  onPressed: () => setState(() => _searchOpen = true),
-                ),
-                IconButton(
-                  icon: Icon(_nightMode ? Icons.wb_sunny_outlined
-                                        : Icons.nights_stay_outlined,
-                      color: text),
-                  onPressed: () {
-                    setState(() => _nightMode = !_nightMode);
-                    _savePref('bible_night_mode', _nightMode);
-                  },
-                ),
-              ],
-              bottom: TabBar(
-                labelColor: _kGold,
-                unselectedLabelColor: text.withOpacity(0.5),
-                indicatorColor: _kGold,
-                indicatorWeight: 3,
-                labelStyle: const TextStyle(
-                    fontWeight: FontWeight.bold, fontSize: 13),
-                tabs: [
-                  Tab(text: 'Old Testament  ${_otBooks.length}'),
-                  Tab(text: 'New Testament  ${_ntBooks.length}'),
-                ],
+              onPressed: () {
+                setState(() => _night = !_night);
+                _savePref('bible_night', _night);
+              },
+            ),
+          ],
+          bottom: TabBar(
+            labelColor: _kGold,
+            unselectedLabelColor: fg.withValues(alpha: 0.45),
+            indicatorColor: _kGold,
+            indicatorWeight: 2.5,
+            labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+            tabs: [
+              Tab(text: 'Old Testament (${_otBooks.length})'),
+              Tab(text: 'New Testament (${_ntBooks.length})'),
+            ],
+          ),
+        ),
+        body: Column(
+          children: [
+            // Continue reading strip
+            if (_lastBook != null && _lastChapter != null)
+              _ContinueBanner(
+                book:    _lastBook!,
+                chapter: _lastChapter!,
+                night:   _night,
+                onTap: () => setState(() {
+                  _book    = _lastBook;
+                  _chapter = _lastChapter;
+                }),
+              ),
+            Expanded(
+              child: FadeTransition(
+                opacity: _fadeAnim,
+                child: TabBarView(children: [
+                  _bookList(_otBooks),
+                  _bookList(_ntBooks),
+                ]),
               ),
             ),
           ],
-          body: Column(
-            children: [
-              // ── Continue reading banner ─────────────────────────────────
-              if (_lastBook != null && _lastChapter != null)
-                _ContinueBanner(
-                  book:    _lastBook!,
-                  chapter: _lastChapter!,
-                  night:   _nightMode,
-                  onTap: () {
-                    setState(() {
-                      _selectedBook    = _lastBook;
-                      _selectedChapter = _lastChapter;
-                    });
-                  },
+        ),
+      ),
+    );
+  }
+
+  Widget _bookList(List<String> books) {
+    final fg  = _night ? Colors.white : _kInkDay;
+    final sub = _night ? Colors.white38 : _kSubDay;
+    final div = _night ? Colors.white10 : Colors.black.withValues(alpha: 0.07);
+
+    return ListView.separated(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      itemCount: books.length,
+      separatorBuilder: (_, __) => Divider(color: div, height: 1, indent: 56),
+      itemBuilder: (_, i) {
+        final book     = books[i];
+        final chapters = _chapterCounts[book] ?? 0;
+        final isLast   = book == _lastBook;
+
+        return ListTile(
+          leading: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: isLast
+                  ? _kGold.withValues(alpha: 0.18)
+                  : (_night ? Colors.white.withValues(alpha: 0.07) : Colors.black.withValues(alpha: 0.06)),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Center(
+              child: Text(
+                '${i + 1}',
+                style: TextStyle(
+                  color:      isLast ? _kGold : fg.withValues(alpha: 0.55),
+                  fontSize:   12,
+                  fontWeight: FontWeight.bold,
                 ),
-              Expanded(
-                child: TabBarView(children: [
-                  _buildBookGrid(_otBooks),
-                  _buildBookGrid(_ntBooks),
-                ]),
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+          title: Text(book,
+              style: TextStyle(
+                  color: fg,
+                  fontSize: 15,
+                  fontWeight: isLast ? FontWeight.w700 : FontWeight.w500)),
+          subtitle: Text(
+              isLast ? '$chapters chapters  ·  Last read ch.$_lastChapter' : '$chapters chapters',
+              style: TextStyle(color: sub, fontSize: 12)),
+          trailing: Icon(Icons.chevron_right,
+              color: fg.withValues(alpha: 0.3), size: 20),
+          onTap: () => setState(() => _book = book),
+        );
+      },
     );
   }
 
-  Widget _buildLibraryHero() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: _nightMode
-              ? [const Color(0xFF0D1B2A), _kInk]
-              : [const Color(0xFF2D6A4F), _kParch],
-        ),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 20, 24, 48),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: _kGold.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                          color: _kGold.withOpacity(0.5), width: 1),
-                    ),
-                    child: Text('Dha Anywaa · English',
-                        style: TextStyle(
-                            color: _kGoldSoft,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600)),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Text('Wëël Jwøk',
-                  style: GoogleFonts.playfairDisplay(
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white)),
-              const SizedBox(height: 4),
-              Text('${_allVerses.length.toString().replaceAllMapped(
-                    RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-                    (m) => '${m[1]},',
-                  )} verses · 66 books',
-                  style: TextStyle(
-                      color: Colors.white.withOpacity(0.65),
-                      fontSize: 13)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBookGrid(List<String> books) {
-    final bg   = _nightMode ? _kInk    : _kParch;
-    final card = _nightMode ? const Color(0xFF1E2A3A) : Colors.white;
-    final text = _nightMode ? Colors.white : _kInk;
-    final sub  = _nightMode ? Colors.white38 : Colors.black38;
-
-    return FadeTransition(
-      opacity: _fadeAnim,
-      child: GridView.builder(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          childAspectRatio: 1.0,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-        ),
-        itemCount: books.length,
-        itemBuilder: (_, i) {
-          final book     = books[i];
-          final chapters = _bookChapterCounts[book] ?? 0;
-          final number   = i + 1;
-
-          return _BookCell(
-            book:     book,
-            number:   number,
-            chapters: chapters,
-            card:     card,
-            text:     text,
-            sub:      sub,
-            onTap: () => setState(() => _selectedBook = book),
-          );
-        },
-      ),
-    );
-  }
-
-  // ══════════════════════════════════════════════════════════════════════════
+  // ════════════════════════════════════════════════════════════════════════════
   // CHAPTER GRID
-  // ══════════════════════════════════════════════════════════════════════════
+  // ════════════════════════════════════════════════════════════════════════════
 
-  Widget _buildChapterGrid() {
-    final total = _bookChapterCounts[_selectedBook] ?? 0;
-    final bg    = _nightMode ? _kInk    : _kParch;
-    final text  = _nightMode ? Colors.white : _kInk;
+  Widget _chapterGrid() {
+    final total = _chapterCounts[_book] ?? 0;
+    final bg    = _night ? _kDark  : _kLight;
+    final fg    = _night ? Colors.white : _kInkDay;
 
     return Scaffold(
       backgroundColor: bg,
       appBar: AppBar(
-        backgroundColor: bg,
-        foregroundColor: text,
+        backgroundColor: _night ? _kSurface : Colors.white,
+        foregroundColor: fg,
         elevation: 0,
-        title: Text(_selectedBook!,
-            style: GoogleFonts.playfairDisplay(
-                fontWeight: FontWeight.bold,
-                color: text)),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, color: text),
-          onPressed: () => setState(() => _selectedBook = null),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: fg, size: 20),
+          onPressed: () => setState(() => _book = null),
         ),
+        title: Text(_book!,
+            style: GoogleFonts.playfairDisplay(
+                color: fg, fontWeight: FontWeight.bold, fontSize: 20)),
         actions: [
           IconButton(
-            icon: Icon(Icons.search, color: text),
+            icon: Icon(Icons.search, color: fg),
             onPressed: () => setState(() => _searchOpen = true),
           ),
         ],
@@ -452,15 +476,14 @@ class _BiblePageState extends State<BiblePage> with TickerProviderStateMixin {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-            child: Text(
-              '$total chapters',
-              style: TextStyle(color: text.withOpacity(0.5), fontSize: 13),
-            ),
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 10),
+            child: Text('$total chapters',
+                style: TextStyle(
+                    color: fg.withValues(alpha: 0.45), fontSize: 13)),
           ),
           Expanded(
             child: GridView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 5,
                 childAspectRatio: 1,
@@ -469,17 +492,15 @@ class _BiblePageState extends State<BiblePage> with TickerProviderStateMixin {
               ),
               itemCount: total,
               itemBuilder: (_, i) {
-                final ch = i + 1;
-                final isCurrent =
-                    _lastBook == _selectedBook && _lastChapter == ch;
-
+                final ch        = i + 1;
+                final isCurrent = _lastBook == _book && _lastChapter == ch;
                 return _ChapterCell(
-                  chapter:  ch,
-                  isCurrent: isCurrent,
-                  night:    _nightMode,
+                  number:    ch,
+                  current:   isCurrent,
+                  night:     _night,
                   onTap: () {
-                    _savePosition(_selectedBook!, ch);
-                    setState(() => _selectedChapter = ch);
+                    _savePosition(_book!, ch);
+                    setState(() => _chapter = ch);
                   },
                 );
               },
@@ -490,16 +511,15 @@ class _BiblePageState extends State<BiblePage> with TickerProviderStateMixin {
     );
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
+  // ════════════════════════════════════════════════════════════════════════════
   // READING VIEW
-  // ══════════════════════════════════════════════════════════════════════════
+  // ════════════════════════════════════════════════════════════════════════════
 
-  Widget _buildReadingView() {
-    final verses   = _chapterVerses(_selectedBook!, _selectedChapter!);
-    final maxCh    = _bookChapterCounts[_selectedBook!] ?? 1;
-    final bg       = _nightMode ? const Color(0xFF12191F) : _kParch;
-    final textCol  = _nightMode ? const Color(0xFFE8E0D5) : const Color(0xFF1A1A2E);
-    final subCol   = _nightMode ? const Color(0xFF9BA8A0) : const Color(0xFF5B625D);
+  Widget _readingView() {
+    final verses  = _verses(_book!, _chapter!);
+    final bg      = _night ? _kDark  : _kLight;
+    final fg      = _night ? const Color(0xFFE8E0D5) : _kInkDay;
+    final sub     = _night ? const Color(0xFF8A9A92)  : _kSubDay;
 
     return Scaffold(
       backgroundColor: bg,
@@ -507,75 +527,99 @@ class _BiblePageState extends State<BiblePage> with TickerProviderStateMixin {
         child: Column(
           children: [
 
-            // ── Top bar ──────────────────────────────────────────────────
-            _ReadingTopBar(
-              book:      _selectedBook!,
-              chapter:   _selectedChapter!,
-              maxChapter: maxCh,
-              night:     _nightMode,
-              isPlaying: _isPlaying,
-              showEng:   _showEnglish,
-              fontSize:  _fontSize,
-              onBack: () => setState(() => _selectedChapter = null),
-              onAudio:   _toggleAudio,
-              onToggleEnglish: () {
-                setState(() => _showEnglish = !_showEnglish);
-                _savePref('bible_show_english', _showEnglish);
-                AnalyticsService.instance.logBibleToggleEnglish(_showEnglish);
-              },
-              onFontSize: (v) {
-                setState(() => _fontSize = v);
-                _savePref('bible_font_size', v);
-              },
-              onNight: () {
-                setState(() => _nightMode = !_nightMode);
-                _savePref('bible_night_mode', _nightMode);
-              },
-            ),
+            // ── App bar ────────────────────────────────────────────────────
+            Container(
+              color: _night ? _kSurface : Colors.white,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.arrow_back_ios_new_rounded,
+                            color: _night ? Colors.white : _kInkDay, size: 20),
+                        onPressed: () {
+                          _stopAudio();
+                          setState(() => _chapter = null);
+                        },
+                      ),
+                      Expanded(
+                        child: Column(
+                          children: [
+                            Text(_book!,
+                                style: GoogleFonts.playfairDisplay(
+                                    color: _night ? Colors.white : _kInkDay,
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold)),
+                            Text('Chapter $_chapter of $_maxChapter',
+                                style: TextStyle(
+                                    color: (_night ? Colors.white : _kInkDay)
+                                        .withValues(alpha: 0.45),
+                                    fontSize: 11)),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.tune_rounded,
+                            color: _night ? Colors.white : _kInkDay, size: 22),
+                        onPressed: () => _showSettings(),
+                      ),
+                    ],
+                  ),
 
-            // ── Verses ───────────────────────────────────────────────────
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
-                // +1 for the chapter header item at index 0
-                itemCount: verses.length + 1,
-                itemBuilder: (_, i) {
-                  // Index 0: decorative chapter header
-                  if (i == 0) {
-                    return _ChapterHeader(
-                      book:    _selectedBook!,
-                      chapter: _selectedChapter!,
-                      night:   _nightMode,
-                    );
-                  }
-                  final verse = verses[i - 1];
-                  return _VerseItem(
-                    verse:       verse,
-                    textColor:   textCol,
-                    subColor:    subCol,
-                    fontSize:    _fontSize,
-                    showEnglish: _showEnglish,
-                    night:       _nightMode,
-                    isFirst:     i == 1,
-                  );
-                },
+                  // ── Audio bar ──────────────────────────────────────────
+                  _AudioBar(
+                    playing:   _playing,
+                    buffering: _buffering,
+                    night:     _night,
+                    onTap:     _buffering ? null : _toggleAudio,
+                  ),
+                ],
               ),
             ),
 
-            // ── Bottom nav ───────────────────────────────────────────────
-            _ChapterNavBar(
-              chapter:   _selectedChapter!,
-              maxChapter: maxCh,
-              night:     _nightMode,
+            // ── Verses ────────────────────────────────────────────────────
+            Expanded(
+              child: verses.isEmpty
+                  ? Center(
+                      child: Text(
+                        'No verses found for this chapter',
+                        style: TextStyle(
+                            color: (_night ? Colors.white : _kInkDay)
+                                .withValues(alpha: 0.4),
+                            fontSize: 15),
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
+                      itemCount: verses.length,
+                      itemBuilder: (_, i) => _VerseRow(
+                        verse:      verses[i],
+                        textColor:  fg,
+                        subColor:   sub,
+                        fontSize:   _fontSize,
+                        showEng:    _showEng,
+                        night:      _night,
+                      ),
+                    ),
+            ),
+
+            // ── Bottom nav ────────────────────────────────────────────────
+            _BottomNav(
+              chapter:    _chapter!,
+              maxChapter: _maxChapter,
+              night:      _night,
               onPrev: () {
-                final p = _selectedChapter! - 1;
-                _savePosition(_selectedBook!, p);
-                setState(() => _selectedChapter = p);
+                _stopAudio();
+                final prev = _chapter! - 1;
+                _savePosition(_book!, prev);
+                setState(() => _chapter = prev);
               },
               onNext: () {
-                final n = _selectedChapter! + 1;
-                _savePosition(_selectedBook!, n);
-                setState(() => _selectedChapter = n);
+                _stopAudio();
+                final next = _chapter! + 1;
+                _savePosition(_book!, next);
+                setState(() => _chapter = next);
               },
             ),
           ],
@@ -584,49 +628,141 @@ class _BiblePageState extends State<BiblePage> with TickerProviderStateMixin {
     );
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // SEARCH VIEW
-  // ══════════════════════════════════════════════════════════════════════════
+  void _showSettings() {
+    final bg = _night ? _kSurface : Colors.white;
+    final fg = _night ? Colors.white : _kInkDay;
 
-  Widget _buildSearchView() {
-    final bg   = _nightMode ? _kInk    : _kParch;
-    final text = _nightMode ? Colors.white : _kInk;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: bg,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => StatefulBuilder(
+        builder: (ctx, local) => Padding(
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // drag handle
+              Center(
+                child: Container(
+                  width: 32, height: 4,
+                  decoration: BoxDecoration(
+                    color: fg.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text('Reading settings',
+                  style: TextStyle(
+                      color: fg, fontSize: 17, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 20),
+
+              // font size
+              Text('Font size',
+                  style: TextStyle(color: fg.withValues(alpha: 0.55), fontSize: 13)),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Text('A',
+                      style: TextStyle(
+                          color: fg.withValues(alpha: 0.45), fontSize: 14)),
+                  Expanded(
+                    child: Slider(
+                      value: _fontSize,
+                      min: 14, max: 26, divisions: 6,
+                      activeColor: _kGold,
+                      inactiveColor: fg.withValues(alpha: 0.12),
+                      onChanged: (v) {
+                        local(() {});
+                        setState(() => _fontSize = v);
+                        _savePref('bible_font_size', v);
+                      },
+                    ),
+                  ),
+                  Text('A',
+                      style: TextStyle(
+                          color: fg.withValues(alpha: 0.45), fontSize: 22)),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              // Show English
+              _PrefRow(
+                label: 'Show English translation',
+                value: _showEng,
+                fg: fg,
+                onChanged: (v) {
+                  local(() {});
+                  setState(() => _showEng = v);
+                  _savePref('bible_show_eng', v);
+                  AnalyticsService.instance.logBibleToggleEnglish(v);
+                },
+              ),
+              const SizedBox(height: 4),
+
+              // Night mode
+              _PrefRow(
+                label: 'Night mode',
+                value: _night,
+                fg: fg,
+                onChanged: (v) {
+                  local(() {});
+                  setState(() => _night = v);
+                  _savePref('bible_night', v);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // SEARCH
+  // ════════════════════════════════════════════════════════════════════════════
+
+  Widget _searchView() {
+    final bg  = _night ? _kDark  : _kLight;
+    final fg  = _night ? Colors.white : _kInkDay;
+    final div = _night ? Colors.white10 : Colors.black.withValues(alpha: 0.07);
 
     return Scaffold(
       backgroundColor: bg,
       appBar: AppBar(
-        backgroundColor: bg,
-        foregroundColor: text,
+        backgroundColor: _night ? _kSurface : Colors.white,
+        foregroundColor: fg,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, color: text),
-          onPressed: () {
-            setState(() {
-              _searchOpen   = false;
-              _searchQuery  = '';
-              _searchResults= [];
-              _searchCtrl.clear();
-            });
-          },
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: fg, size: 20),
+          onPressed: () => setState(() {
+            _searchOpen = false;
+            _query      = '';
+            _results    = [];
+            _searchCtrl.clear();
+          }),
         ),
         title: TextField(
           controller: _searchCtrl,
           autofocus: true,
-          style: TextStyle(color: text, fontSize: 16),
+          style: TextStyle(color: fg, fontSize: 16),
           decoration: InputDecoration(
             hintText: 'Search in Anywaa or English…',
-            hintStyle: TextStyle(color: text.withOpacity(0.4)),
+            hintStyle: TextStyle(color: fg.withValues(alpha: 0.35)),
             border: InputBorder.none,
           ),
           onChanged: (v) {
-            _searchQuery = v;
+            _query = v;
             _search(v);
           },
         ),
         actions: [
-          if (_searchQuery.isNotEmpty)
+          if (_query.isNotEmpty)
             IconButton(
-              icon: Icon(Icons.clear, color: text.withOpacity(0.6)),
+              icon: Icon(Icons.clear, color: fg.withValues(alpha: 0.5)),
               onPressed: () {
                 _searchCtrl.clear();
                 _search('');
@@ -634,53 +770,62 @@ class _BiblePageState extends State<BiblePage> with TickerProviderStateMixin {
             ),
         ],
       ),
-      body: _searchResults.isEmpty
+      body: _results.isEmpty
           ? Center(
               child: Text(
-                _searchQuery.isEmpty
-                    ? 'Type to search the Bible'
-                    : 'No results found',
-                style: TextStyle(color: text.withOpacity(0.4), fontSize: 16),
+                _query.isEmpty ? 'Type to search the Bible' : 'No results found',
+                style: TextStyle(color: fg.withValues(alpha: 0.35), fontSize: 15),
               ),
             )
-          : ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: _searchResults.length,
-              separatorBuilder: (_, __) => Divider(
-                color: text.withOpacity(0.1), height: 1),
-              itemBuilder: (_, i) {
-                final v = _searchResults[i];
-                return ListTile(
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                  title: Text(
-                    v.anywaa,
-                    style: TextStyle(
-                        color: text, fontSize: 15, height: 1.5),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+          : Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('${_results.length} results',
+                        style: TextStyle(
+                            color: fg.withValues(alpha: 0.4), fontSize: 12)),
                   ),
-                  subtitle: Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      '${v.book} ${v.chapter}:${v.verse}',
-                      style: TextStyle(color: _kGold, fontSize: 12,
-                          fontWeight: FontWeight.w600),
-                    ),
+                ),
+                Expanded(
+                  child: ListView.separated(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    itemCount: _results.length,
+                    separatorBuilder: (_, __) => Divider(color: div, height: 1),
+                    itemBuilder: (_, i) {
+                      final v = _results[i];
+                      return ListTile(
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        title: Text(v.anywaa,
+                            style: TextStyle(color: fg, fontSize: 14, height: 1.5),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis),
+                        subtitle: Padding(
+                          padding: const EdgeInsets.only(top: 3),
+                          child: Text('${v.book}  ${v.chapter}:${v.verse}',
+                              style: TextStyle(
+                                  color: _kGold,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600)),
+                        ),
+                        onTap: () {
+                          _savePosition(v.book, v.chapter);
+                          setState(() {
+                            _book        = v.book;
+                            _chapter     = v.chapter;
+                            _searchOpen  = false;
+                            _query       = '';
+                            _results     = [];
+                            _searchCtrl.clear();
+                          });
+                        },
+                      );
+                    },
                   ),
-                  onTap: () {
-                    _savePosition(v.book, v.chapter);
-                    setState(() {
-                      _selectedBook    = v.book;
-                      _selectedChapter = v.chapter;
-                      _searchOpen      = false;
-                      _searchQuery     = '';
-                      _searchResults   = [];
-                      _searchCtrl.clear();
-                    });
-                  },
-                );
-              },
+                ),
+              ],
             ),
     );
   }
@@ -690,11 +835,11 @@ class _BiblePageState extends State<BiblePage> with TickerProviderStateMixin {
 // SUB-WIDGETS
 // ════════════════════════════════════════════════════════════════════════════
 
-// ── Continue reading banner ──────────────────────────────────────────────────
+// ── Continue reading banner ───────────────────────────────────────────────────
 class _ContinueBanner extends StatelessWidget {
-  final String book;
-  final int    chapter;
-  final bool   night;
+  final String       book;
+  final int          chapter;
+  final bool         night;
   final VoidCallback onTap;
 
   const _ContinueBanner({
@@ -706,138 +851,42 @@ class _ContinueBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF1F4D3A), Color(0xFF2D6A4F)],
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          decoration: BoxDecoration(
+            color: _kGreen.withValues(alpha: night ? 0.85 : 0.75),
+            border: Border(
+              bottom: BorderSide(color: _kGreen.withValues(alpha: 0.3)),
+            ),
           ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: _kForest.withOpacity(0.4),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.bookmark_rounded,
-                  color: _kGoldSoft, size: 20),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Continue reading',
-                      style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.5)),
-                  const SizedBox(height: 2),
-                  Text('$book  $chapter',
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold)),
-                ],
-              ),
-            ),
-            const Icon(Icons.arrow_forward_ios_rounded,
-                color: Colors.white54, size: 16),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Book cell ────────────────────────────────────────────────────────────────
-class _BookCell extends StatelessWidget {
-  final String book;
-  final int    number;
-  final int    chapters;
-  final Color  card;
-  final Color  text;
-  final Color  sub;
-  final VoidCallback onTap;
-
-  const _BookCell({
-    required this.book,
-    required this.number,
-    required this.chapters,
-    required this.card,
-    required this.text,
-    required this.sub,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: card,
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.12),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Row(
             children: [
-              // Book number badge
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 7, vertical: 2),
-                decoration: BoxDecoration(
-                  color: _kGold.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(6),
+              Icon(Icons.bookmark_rounded, color: _kGold, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Continue reading',
+                        style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.65),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.4)),
+                    const SizedBox(height: 2),
+                    Text('$book · Chapter $chapter',
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold)),
+                  ],
                 ),
-                child: Text(
-                  '$number',
-                  style: TextStyle(
-                      color: _kGold,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold),
-                ),
               ),
-              const Spacer(),
-              Text(
-                book,
-                style: GoogleFonts.playfairDisplay(
-                    color: text,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 2),
-              Text(
-                '$chapters ch',
-                style: TextStyle(color: sub, fontSize: 10),
-              ),
+              Icon(Icons.chevron_right, color: Colors.white54, size: 20),
             ],
           ),
         ),
@@ -846,57 +895,51 @@ class _BookCell extends StatelessWidget {
   }
 }
 
-// ── Chapter cell ─────────────────────────────────────────────────────────────
+// ── Chapter grid cell ─────────────────────────────────────────────────────────
 class _ChapterCell extends StatelessWidget {
-  final int  chapter;
-  final bool isCurrent;
-  final bool night;
+  final int          number;
+  final bool         current;
+  final bool         night;
   final VoidCallback onTap;
 
   const _ChapterCell({
-    required this.chapter,
-    required this.isCurrent,
+    required this.number,
+    required this.current,
     required this.night,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bg = isCurrent
+    final bg = current
         ? _kGold
         : night
             ? const Color(0xFF1E2A3A)
             : Colors.white;
-    final fg = isCurrent ? Colors.white : (night ? Colors.white : _kInk);
+    final fg = current ? Colors.white : (night ? Colors.white70 : _kInkDay);
 
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 180),
         decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(12),
-          border: !isCurrent
-              ? Border.all(
+          borderRadius: BorderRadius.circular(10),
+          border: current
+              ? null
+              : Border.all(
                   color: night
-                      ? Colors.white.withOpacity(0.08)
-                      : Colors.black.withOpacity(0.08))
-              : null,
-          boxShadow: isCurrent
-              ? [BoxShadow(
-                  color: _kGold.withOpacity(0.4),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3))]
-              : null,
+                      ? Colors.white.withValues(alpha: 0.07)
+                      : Colors.black.withValues(alpha: 0.07)),
         ),
         child: Center(
           child: Text(
-            '$chapter',
+            '$number',
             style: TextStyle(
-                color: fg,
-                fontSize: 17,
-                fontWeight:
-                    isCurrent ? FontWeight.bold : FontWeight.w500),
+              color:      fg,
+              fontSize:   16,
+              fontWeight: current ? FontWeight.bold : FontWeight.w500,
+            ),
           ),
         ),
       ),
@@ -904,526 +947,153 @@ class _ChapterCell extends StatelessWidget {
   }
 }
 
-// ── Reading top bar ──────────────────────────────────────────────────────────
-class _ReadingTopBar extends StatelessWidget {
-  final String   book;
-  final int      chapter;
-  final int      maxChapter;
-  final bool     night;
-  final bool     isPlaying;
-  final bool     showEng;
-  final double   fontSize;
-  final VoidCallback onBack;
-  final VoidCallback onAudio;
-  final VoidCallback onToggleEnglish;
-  final ValueChanged<double> onFontSize;
-  final VoidCallback onNight;
+// ── Audio bar ─────────────────────────────────────────────────────────────────
+class _AudioBar extends StatelessWidget {
+  final bool      playing;
+  final bool      buffering;
+  final bool      night;
+  final VoidCallback? onTap;
 
-  const _ReadingTopBar({
-    required this.book,
-    required this.chapter,
-    required this.maxChapter,
+  const _AudioBar({
+    required this.playing,
+    required this.buffering,
     required this.night,
-    required this.isPlaying,
-    required this.showEng,
-    required this.fontSize,
-    required this.onBack,
-    required this.onAudio,
-    required this.onToggleEnglish,
-    required this.onFontSize,
-    required this.onNight,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bg   = night ? _kInk    : _kParch;
-    final text = night ? Colors.white : _kInk;
+    final fg = night ? Colors.white : _kInkDay;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: bg,
-        border: Border(
-          bottom: BorderSide(
-              color: night
-                  ? Colors.white.withOpacity(0.08)
-                  : Colors.black.withOpacity(0.08)),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+        decoration: BoxDecoration(
+          color: playing
+              ? _kGreen
+              : (night
+                  ? Colors.white.withValues(alpha: 0.07)
+                  : Colors.black.withValues(alpha: 0.06)),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: playing ? _kGreen : fg.withValues(alpha: 0.1),
+          ),
         ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Row 1: back + title + settings
-          Padding(
-            padding: const EdgeInsets.fromLTRB(4, 8, 8, 0),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: Icon(Icons.arrow_back_ios_new_rounded,
-                      color: text, size: 20),
-                  onPressed: onBack,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (buffering)
+              SizedBox(
+                width: 20, height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: _kGold,
                 ),
-                Expanded(
-                  child: Column(
-                    children: [
-                      Text(book,
-                          style: GoogleFonts.playfairDisplay(
-                              color: text,
-                              fontSize: 17,
-                              fontWeight: FontWeight.bold)),
-                      Text('Chapter $chapter of $maxChapter',
-                          style: TextStyle(
-                              color: text.withOpacity(0.5),
-                              fontSize: 11)),
-                    ],
-                  ),
-                ),
-                // Settings icon opens bottom sheet
-                IconButton(
-                  icon: Icon(Icons.tune_rounded, color: text, size: 22),
-                  onPressed: () => _showSettings(context),
-                ),
-              ],
-            ),
-          ),
-          // Row 2: audio bar
-          GestureDetector(
-            onTap: onAudio,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              margin: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: isPlaying
-                    ? _kForest.withOpacity(0.9)
-                    : (night
-                        ? Colors.white.withOpacity(0.06)
-                        : Colors.black.withOpacity(0.05)),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isPlaying
-                      ? _kForest
-                      : text.withOpacity(0.1),
-                  width: 1,
-                ),
+              )
+            else
+              Icon(
+                playing
+                    ? Icons.pause_circle_filled_rounded
+                    : Icons.play_circle_fill_rounded,
+                color: playing ? Colors.white : _kGold,
+                size: 22,
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    isPlaying
-                        ? Icons.pause_circle_filled_rounded
-                        : Icons.play_circle_fill_rounded,
-                    color: isPlaying ? Colors.white : _kGold,
-                    size: 24,
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    isPlaying
-                        ? 'Listening…'
-                        : 'Listen to this chapter',
-                    style: TextStyle(
-                      color: isPlaying
-                          ? Colors.white
-                          : text.withOpacity(0.7),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  if (isPlaying) ...[
-                    const SizedBox(width: 8),
-                    _AudioWave(),
-                  ],
-                ],
+            const SizedBox(width: 10),
+            Text(
+              buffering
+                  ? 'Loading audio…'
+                  : playing
+                      ? 'Pause'
+                      : 'Listen to this chapter',
+              style: TextStyle(
+                color:      playing ? Colors.white : fg.withValues(alpha: 0.65),
+                fontSize:   14,
+                fontWeight: FontWeight.w500,
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showSettings(BuildContext context) {
-    final bg   = night ? const Color(0xFF1A2332) : Colors.white;
-    final text = night ? Colors.white : _kInk;
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: bg,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (_) => StatefulBuilder(
-        builder: (ctx, setLocal) => Padding(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: text.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text('Reading settings',
-                  style: TextStyle(
-                      color: text,
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold)),
-              const SizedBox(height: 20),
-
-              // Font size
-              Text('Font size',
-                  style: TextStyle(
-                      color: text.withOpacity(0.6), fontSize: 13)),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(Icons.text_fields_rounded,
-                      color: text.withOpacity(0.5), size: 18),
-                  Expanded(
-                    child: Slider(
-                      value: fontSize,
-                      min: 14,
-                      max: 26,
-                      divisions: 6,
-                      activeColor: _kGold,
-                      inactiveColor: text.withOpacity(0.1),
-                      onChanged: (v) {
-                        setLocal(() {});
-                        onFontSize(v);
-                      },
-                    ),
-                  ),
-                  Icon(Icons.text_fields_rounded,
-                      color: text.withOpacity(0.5), size: 24),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              // Show English toggle
-              _SettingsRow(
-                label: 'Show English translation',
-                value: showEng,
-                text:  text,
-                onChanged: (v) {
-                  setLocal(() {});
-                  onToggleEnglish();
-                },
-              ),
-
-              const SizedBox(height: 8),
-
-              // Night mode toggle
-              _SettingsRow(
-                label: 'Night mode',
-                value: night,
-                text:  text,
-                onChanged: (v) {
-                  setLocal(() {});
-                  onNight();
-                },
-              ),
+            if (playing && !buffering) ...[
+              const SizedBox(width: 8),
+              Icon(Icons.graphic_eq_rounded,
+                  color: Colors.white.withValues(alpha: 0.7), size: 18),
             ],
-          ),
+          ],
         ),
       ),
     );
   }
 }
 
-// ── Settings row ─────────────────────────────────────────────────────────────
-class _SettingsRow extends StatelessWidget {
-  final String label;
-  final bool   value;
-  final Color  text;
-  final ValueChanged<bool> onChanged;
-
-  const _SettingsRow({
-    required this.label,
-    required this.value,
-    required this.text,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label,
-            style: TextStyle(color: text, fontSize: 15)),
-        Switch(
-          value: value,
-          activeColor: _kGold,
-          onChanged: onChanged,
-        ),
-      ],
-    );
-  }
-}
-
-// ── Chapter decorative header ─────────────────────────────────────────────────
-class _ChapterHeader extends StatelessWidget {
-  final String book;
-  final int    chapter;
-  final bool   night;
-
-  const _ChapterHeader({
-    required this.book,
-    required this.chapter,
-    required this.night,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final text = night ? Colors.white : _kInk;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(0, 20, 0, 28),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // Thin gold divider line with cross icon
-          Row(
-            children: [
-              Expanded(child: Divider(color: _kGold.withOpacity(0.3), height: 1)),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Icon(Icons.add, color: _kGold.withOpacity(0.5), size: 14),
-              ),
-              Expanded(child: Divider(color: _kGold.withOpacity(0.3), height: 1)),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // Book name
-          Text(
-            book.toUpperCase(),
-            style: TextStyle(
-              color:         _kGold.withOpacity(0.7),
-              fontSize:      11,
-              fontWeight:    FontWeight.bold,
-              letterSpacing: 3,
-            ),
-          ),
-          const SizedBox(height: 6),
-
-          // Chapter number — large and serif
-          Text(
-            'Chapter $chapter',
-            style: GoogleFonts.playfairDisplay(
-              color:      text,
-              fontSize:   28,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Bottom separator
-          Row(
-            children: [
-              Expanded(child: Divider(color: _kGold.withOpacity(0.2), height: 1)),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Container(
-                  width: 5,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color:  _kGold.withOpacity(0.4),
-                    shape:  BoxShape.circle,
-                  ),
-                ),
-              ),
-              Expanded(child: Divider(color: _kGold.withOpacity(0.2), height: 1)),
-            ],
-          ),
-          const SizedBox(height: 8),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Verse item ───────────────────────────────────────────────────────────────
-class _VerseItem extends StatelessWidget {
+// ── Verse row ─────────────────────────────────────────────────────────────────
+class _VerseRow extends StatelessWidget {
   final BibleVerse verse;
   final Color      textColor;
   final Color      subColor;
   final double     fontSize;
-  final bool       showEnglish;
+  final bool       showEng;
   final bool       night;
-  // verse 1 gets a chapter-opening treatment
-  final bool       isFirst;
 
-  const _VerseItem({
+  const _VerseRow({
     required this.verse,
     required this.textColor,
     required this.subColor,
     required this.fontSize,
-    required this.showEnglish,
+    required this.showEng,
     required this.night,
-    this.isFirst = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Verse 1: big drop-cap style opener
-    if (isFirst) return _buildOpeningVerse(context);
-    return _buildNormalVerse(context);
-  }
-
-  // ── Verse 1: chapter opener ───────────────────────────────────────────────
-  Widget _buildOpeningVerse(BuildContext context) {
-    final cardBg = night
-        ? const Color(0xFF1E2D40).withOpacity(0.7)
-        : _kGold.withOpacity(0.06);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 24),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color:        cardBg,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-            color: _kGold.withOpacity(0.25), width: 1),
-        boxShadow: night
-            ? [BoxShadow(
-                color: Colors.black.withOpacity(0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 4))]
-            : [BoxShadow(
-                color: _kGold.withOpacity(0.12),
-                blurRadius: 10,
-                offset: const Offset(0, 3))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Gold "1" badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [_kGold, _kGoldSoft],
-              ),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Text('1',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5)),
-          ),
-          const SizedBox(height: 14),
-
-          // Anywaa text — larger for opening verse
-          Text(
-            verse.anywaa,
-            style: GoogleFonts.playfairDisplay(
-              color:      textColor,
-              fontSize:   fontSize + 2,
-              height:     1.8,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-
-          // English
-          if (showEnglish) ...[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
-              decoration: BoxDecoration(
-                color: _kGold.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(10),
-                border: Border(
-                  left: BorderSide(
-                      color: _kGold.withOpacity(0.6), width: 3),
-                ),
-              ),
-              child: Text(
-                verse.english,
-                style: TextStyle(
-                  color:      subColor,
-                  fontSize:   fontSize - 2,
-                  height:     1.65,
-                  fontStyle:  FontStyle.italic,
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  // ── Normal verse ─────────────────────────────────────────────────────────
-  Widget _buildNormalVerse(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.only(bottom: 22),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Verse number column — fixed width, right-aligned
+          // Verse number
           SizedBox(
-            width: 32,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 3),
-              child: Text(
-                '${verse.verse}',
-                textAlign: TextAlign.right,
-                style: TextStyle(
-                  color:      _kGold.withOpacity(0.75),
-                  fontSize:   12,
-                  fontWeight: FontWeight.bold,
-                  height:     fontSize / 12 * 1.75,
-                ),
+            width: 30,
+            child: Text(
+              '${verse.verse}',
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                color:      _kGold.withValues(alpha: 0.7),
+                fontSize:   11,
+                fontWeight: FontWeight.bold,
+                height:     fontSize / 11 * 1.75,
               ),
             ),
           ),
-
           const SizedBox(width: 14),
-
-          // Verse text
+          // Text body
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Anywaa
                 SelectableText(
                   verse.anywaa,
                   style: TextStyle(
-                    color:      textColor,
-                    fontSize:   fontSize,
-                    height:     1.8,
+                    color:         textColor,
+                    fontSize:      fontSize,
+                    height:        1.8,
                     letterSpacing: 0.1,
                   ),
                 ),
-
-                // English (indented, italic, gold border)
-                if (showEnglish) ...[
-                  const SizedBox(height: 8),
+                if (showEng) ...[
+                  const SizedBox(height: 6),
                   Container(
                     padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
                     decoration: BoxDecoration(
                       color: night
-                          ? Colors.white.withOpacity(0.04)
-                          : _kGold.withOpacity(0.05),
+                          ? Colors.white.withValues(alpha: 0.04)
+                          : Colors.black.withValues(alpha: 0.04),
                       borderRadius: const BorderRadius.only(
-                        topRight:    Radius.circular(8),
-                        bottomRight: Radius.circular(8),
-                        bottomLeft:  Radius.circular(8),
+                        topRight:    Radius.circular(6),
+                        bottomRight: Radius.circular(6),
+                        bottomLeft:  Radius.circular(6),
                       ),
                       border: Border(
-                        left: BorderSide(
-                            color: _kGold.withOpacity(0.45), width: 2.5),
+                        left: BorderSide(color: _kGold.withValues(alpha: 0.4), width: 2),
                       ),
                     ),
                     child: Text(
@@ -1446,15 +1116,15 @@ class _VerseItem extends StatelessWidget {
   }
 }
 
-// ── Chapter nav bar ───────────────────────────────────────────────────────────
-class _ChapterNavBar extends StatelessWidget {
-  final int  chapter;
-  final int  maxChapter;
-  final bool night;
+// ── Bottom nav ────────────────────────────────────────────────────────────────
+class _BottomNav extends StatelessWidget {
+  final int          chapter;
+  final int          maxChapter;
+  final bool         night;
   final VoidCallback onPrev;
   final VoidCallback onNext;
 
-  const _ChapterNavBar({
+  const _BottomNav({
     required this.chapter,
     required this.maxChapter,
     required this.night,
@@ -1464,63 +1134,45 @@ class _ChapterNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg   = night ? const Color(0xFF111822) : Colors.white;
-    final text = night ? Colors.white : _kInk;
+    final bg   = night ? _kSurface : Colors.white;
+    final fg   = night ? Colors.white : _kInkDay;
+    final divC = night ? Colors.white10 : Colors.black.withValues(alpha: 0.08);
 
     return Container(
       decoration: BoxDecoration(
         color: bg,
-        border: Border(
-          top: BorderSide(
-              color: night
-                  ? Colors.white.withOpacity(0.08)
-                  : Colors.black.withOpacity(0.08)),
-        ),
+        border: Border(top: BorderSide(color: divC)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Row(
         children: [
           // Previous
-          _NavBtn(
-            label: 'Previous',
-            icon:  Icons.arrow_back_ios_rounded,
-            align: MainAxisAlignment.start,
+          _NavButton(
+            label:   'Previous',
+            icon:    Icons.arrow_back_ios_rounded,
+            leading: true,
             enabled: chapter > 1,
-            text:  text,
-            night: night,
-            onTap: onPrev,
+            fg:      fg,
+            onTap:   onPrev,
           ),
-
           // Chapter indicator
           Expanded(
             child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 6),
-                decoration: BoxDecoration(
-                  color: _kGold.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  '$chapter / $maxChapter',
-                  style: const TextStyle(
-                      color: _kGold,
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold),
-                ),
+              child: Text(
+                '$chapter / $maxChapter',
+                style: const TextStyle(
+                    color: _kGold, fontSize: 13, fontWeight: FontWeight.bold),
               ),
             ),
           ),
-
           // Next
-          _NavBtn(
-            label: 'Next',
-            icon:  Icons.arrow_forward_ios_rounded,
-            align: MainAxisAlignment.end,
+          _NavButton(
+            label:   'Next',
+            icon:    Icons.arrow_forward_ios_rounded,
+            leading: false,
             enabled: chapter < maxChapter,
-            text:  text,
-            night: night,
-            onTap: onNext,
+            fg:      fg,
+            onTap:   onNext,
           ),
         ],
       ),
@@ -1528,96 +1180,68 @@ class _ChapterNavBar extends StatelessWidget {
   }
 }
 
-class _NavBtn extends StatelessWidget {
-  final String             label;
-  final IconData           icon;
-  final MainAxisAlignment  align;
-  final bool               enabled;
-  final Color              text;
-  final bool               night;
-  final VoidCallback       onTap;
+class _NavButton extends StatelessWidget {
+  final String       label;
+  final IconData     icon;
+  final bool         leading;
+  final bool         enabled;
+  final Color        fg;
+  final VoidCallback onTap;
 
-  const _NavBtn({
+  const _NavButton({
     required this.label,
     required this.icon,
-    required this.align,
+    required this.leading,
     required this.enabled,
-    required this.text,
-    required this.night,
+    required this.fg,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final col = enabled ? text : text.withOpacity(0.25);
-
+    final col = enabled ? fg : fg.withValues(alpha: 0.22);
     return GestureDetector(
       onTap: enabled ? onTap : null,
       child: Row(
-        mainAxisAlignment: align,
         mainAxisSize: MainAxisSize.min,
-        children: align == MainAxisAlignment.start
-            ? [Icon(icon, color: col, size: 14),
-               const SizedBox(width: 6),
-               Text(label, style: TextStyle(
-                   color: col, fontWeight: FontWeight.w600))]
-            : [Text(label, style: TextStyle(
-                   color: col, fontWeight: FontWeight.w600)),
-               const SizedBox(width: 6),
-               Icon(icon, color: col, size: 14)],
+        children: leading
+            ? [
+                Icon(icon, color: col, size: 13),
+                const SizedBox(width: 5),
+                Text(label,
+                    style: TextStyle(color: col, fontWeight: FontWeight.w600)),
+              ]
+            : [
+                Text(label,
+                    style: TextStyle(color: col, fontWeight: FontWeight.w600)),
+                const SizedBox(width: 5),
+                Icon(icon, color: col, size: 13),
+              ],
       ),
     );
   }
 }
 
-// ── Animated audio wave (3 bars) ─────────────────────────────────────────────
-class _AudioWave extends StatefulWidget {
-  @override
-  State<_AudioWave> createState() => _AudioWaveState();
-}
+// ── Settings row ──────────────────────────────────────────────────────────────
+class _PrefRow extends StatelessWidget {
+  final String             label;
+  final bool               value;
+  final Color              fg;
+  final ValueChanged<bool> onChanged;
 
-class _AudioWaveState extends State<_AudioWave>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 700))
-      ..repeat(reverse: true);
-  }
+  const _PrefRow({
+    required this.label,
+    required this.value,
+    required this.fg,
+    required this.onChanged,
+  });
 
   @override
-  void dispose() { _ctrl.dispose(); super.dispose(); }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _ctrl,
-      builder: (_, __) {
-        final t = _ctrl.value;
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            _bar(0.3 + 0.7 * t),
-            const SizedBox(width: 2),
-            _bar(0.7 - 0.5 * t),
-            const SizedBox(width: 2),
-            _bar(0.5 + 0.5 * t),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _bar(double h) => Container(
-        width: 3,
-        height: 4 + 10 * h,
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.8),
-          borderRadius: BorderRadius.circular(2),
-        ),
+  Widget build(BuildContext context) => Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(color: fg, fontSize: 15)),
+          Switch(value: value, activeTrackColor: _kGold, onChanged: onChanged),
+        ],
       );
 }
