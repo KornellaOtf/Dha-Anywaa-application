@@ -1,11 +1,11 @@
 {
-  "version": "1.6.1",
-  "versionCode": 183,
-  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.6.1/dha-anywaa-v1.6.1-arm64.apk",
-  "sha256": "d2d5ca2d1794c663dd1601f1f89c61839cdc3ab9a7742de938823e621101b9ac",
-  "sizeBytes": 51934002,
+  "version": "1.6.2",
+  "versionCode": 184,
+  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.6.2/dha-anywaa-v1.6.2-arm64.apk",
+  "sha256": "8321818877235dd6f65cd699fb85dd287639ce3556deb54304feaa8563a211b2",
+  "sizeBytes": 51999538,
   "minSupportedVersionCode": 1,
   "mandatory": false,
-  "releaseNotes": "v1.6.1 — Bible UI cleanup, Show English toggle fix, Daily Five completion fix, split APKs (50% smaller)",
+  "releaseNotes": "v1.6.2 — Bible: no splash, hero library, 3-col book grid, clean English translation block",
   "developer": "Kornella Otf"
 }
