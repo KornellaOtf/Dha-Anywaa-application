@@ -220,10 +220,12 @@ class _BiblePageState extends State<BiblePage> with SingleTickerProviderStateMix
         if (mounted) setState(() { _playing = false; _buffering = false; });
       });
 
-      // Also watch for unexpected state changes (network drop, etc.)
+      // Watch for unexpected stops (network drop, OS audio interrupt, etc.)
+      // We cancel this sub before calling _stopAudio so it won't double-fire.
       await _stateSub?.cancel();
       _stateSub = _player.onPlayerStateChanged.listen((state) {
-        if (state == PlayerState.stopped && _playing) {
+        if (!_playing) return; // already stopped intentionally, ignore
+        if (state == PlayerState.stopped || state == PlayerState.completed) {
           if (mounted) setState(() { _playing = false; _buffering = false; });
         }
       });
