@@ -6,7 +6,7 @@ class ShareHelper {
   static final ShareHelper instance = ShareHelper._();
   
   static const String _apkUrl =
-      'https://github.com/KornellaOtf/Dha-Anywaa-application/releases/latest/download/dha-anywaa-v1.4.11.apk';
+      'https://github.com/KornellaOtf/Dha-Anywaa-application/releases/latest/download/dha-anywaa-v1.4.12.apk';
 
   /// Generic share (used from menu)
   Future<void> shareApp() async {

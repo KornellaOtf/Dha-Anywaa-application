@@ -1061,13 +1061,6 @@ class _HomePageState extends State<HomePage> {
                   MaterialPageRoute(builder: (_) => const SettingsPage(),
                       settings: const RouteSettings(name: 'settings')));
             }),
-            _drawerTile(context, Icons.privacy_tip_outlined, 'Privacy Policy',
-                () {
-              Navigator.pop(context);
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const PrivacyPolicyPage(),
-                      settings: const RouteSettings(name: 'privacy_policy')));
-            }),
             _drawerTile(context, Icons.gavel_outlined, 'Terms of Use',
                 () {
               Navigator.pop(context);
