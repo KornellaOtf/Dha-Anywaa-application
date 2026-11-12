@@ -1,9 +1,9 @@
 {
-  "version": "1.4.7",
-  "versionCode": 167,
-  "downloadUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.4.7/dha-anywaa-v1.4.7.apk",
-  "sha256": "98f80b836e0d5ead011cc48f4f7467bbee318b998ff72a4a6d8c5e96dd0f6891",
-  "size": 63963136,
-  "releaseNotes": "Addiction System Update:\n- Added Daily 5 spaced repetition learning system\n- Smart notifications with comeback bonuses\n- Confetti celebrations for quiz completions (70%+ score)\n- Level up and streak milestone animations\n- Notification settings in Settings (choose your reminder time)\n- All celebrations are emoji-free and respectful\n- Improved retention mechanics based on Duolingo research",
+  "version": "1.4.8",
+  "versionCode": 168,
+  "downloadUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.4.8/dha-anywaa-v1.4.8.apk",
+  "sha256": "a76faec548e80176cdd7a707ef01c55bb74809d6a2f4a1542feac9b0a4bd1d10",
+  "size": 85900512,
+  "releaseNotes": "v1.4.8 - Redesigned Home + Share + Viral Growth:\n\n- Redesigned home page: compact header with time-aware greeting, stats strip (streak/XP/level), hero continue card with progress, quick action pills (Daily 5, Quiz, Reading)\n- Share button in drawer: Share Dha Anywaa with friends on WhatsApp\n- Share button in Settings: Invite a Friend section\n- Share quiz score: appears on 70%+ quiz results\n- Personal Best leaderboard: weekly word count vs personal record with progress bar\n- Quick Challenge micro-loop: 30-second word learning sessions (coming soon)\n- Audit fixes: removed dead NotificationService call, added streak/level-up celebrations to quiz results, fixed comeback bonus XP awarding, added streak_milestone and comeback_bonus_claimed analytics events\n- All emoji-free",
   "minSdkVersion": 21
 }

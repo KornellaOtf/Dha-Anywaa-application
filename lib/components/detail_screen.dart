@@ -79,6 +79,7 @@ class _DetailScreenState extends State<DetailScreen> {
       if (mounted) {
         // Streak milestone takes priority over level up
         if (gam.streakBonus > 0) {
+          AnalyticsService.instance.logStreakMilestone(gam.streakDays);
           CelebrationHelper.showStreakMilestone(context, gam.streakDays);
         } else if (gam.leveledUp) {
           CelebrationHelper.showLevelUp(context, gam.level);

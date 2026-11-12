@@ -62,6 +62,9 @@ class GamificationService {
   /// Call when the user gets a combo (several correct in a row).
   Future<GamState> onCombo() => _award(xpCombo);
 
+  /// Award an arbitrary XP bonus (e.g. comeback bonus).
+  Future<GamState> awardBonus(int xp) => _award(xp);
+
   /// Set the daily goal (XP target). [minutes] is 5/10/15 -> mapped to XP.
   Future<void> setDailyGoal(int minutes) async {
     final p = await SharedPreferences.getInstance();

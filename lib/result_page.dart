@@ -1,5 +1,7 @@
 import 'package:dha_anywaaa/services/analytics_service.dart';
 import 'package:dha_anywaaa/services/gamification_service.dart';
+import 'package:dha_anywaaa/services/leaderboard_service.dart';
+import 'package:dha_anywaaa/services/share_helper.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:dha_anywaaa/widgets/celebration_widget.dart';
 import 'package:flutter/material.dart';
@@ -23,6 +25,7 @@ class _ResultState extends State<Result> {
     super.initState();
     AnalyticsService.instance.logFinishQuiz(widget.finalResult, widget.total);
     _awardXp();
+    _trackQuizStats();
     // Fire confetti for a good score (7+ out of 10, or 70%+)
     WidgetsBinding.instance.addPostFrameCallback((_) => _maybeCelebrate());
   }
@@ -34,10 +37,32 @@ class _ResultState extends State<Result> {
     }
   }
 
+  Future<void> _trackQuizStats() async {
+    final pct = widget.total > 0 ? (widget.finalResult / widget.total * 100).round() : 0;
+    await LeaderboardService.instance.incrementQuizzes();
+    await LeaderboardService.instance.updateBestQuizScore(pct);
+  }
+
   Future<void> _awardXp() async {
     final gam = await GamificationService.instance
         .onQuizFinish(widget.finalResult);
-    if (mounted) setState(() => _gam = gam);
+    if (mounted) {
+      setState(() => _gam = gam);
+      // Check for streak milestone or level up AFTER score confetti clears
+      // Use a slight delay so it doesn't stack on top of the quiz confetti
+      if (gam.streakBonus > 0) {
+        Future.delayed(const Duration(seconds: 3), () {
+          if (mounted) {
+            AnalyticsService.instance.logStreakMilestone(gam.streakDays);
+            CelebrationHelper.showStreakMilestone(context, gam.streakDays);
+          }
+        });
+      } else if (gam.leveledUp) {
+        Future.delayed(const Duration(seconds: 3), () {
+          if (mounted) CelebrationHelper.showLevelUp(context, gam.level);
+        });
+      }
+    }
   }
 
   String _message() {
@@ -222,37 +247,33 @@ class _ResultState extends State<Result> {
               const Spacer(flex: 3),
 
               // ── Share button ──────────────────────────────────────────────
-              SizedBox(
-                width: double.infinity,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(14),
-                      boxShadow: const [kShadowSoft]),
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.share_outlined, size: 18),
-                    label: const Text('Share score'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: context.c.accent,
-                      side: BorderSide(color: context.c.accent, width: 1.5),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+              if (pct >= 70)
+                SizedBox(
+                  width: double.infinity,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: const [kShadowSoft]),
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.share_outlined, size: 18),
+                      label: const Text('Share your score'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: context.c.accent,
+                        side: BorderSide(color: context.c.accent, width: 1.5),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      onPressed: () async {
+                        await ShareHelper.instance.shareQuizResult(
+                          widget.finalResult, 
+                          widget.total,
+                        );
+                      },
                     ),
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(
-                          text:
-                              'I scored ${widget.finalResult}/${widget.total} ($pct%) on the Dha Anywaa quiz!'));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content:
-                              Text('Score copied to clipboard'),
-                        ),
-                      );
-                    },
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
+              if (pct >= 70) const SizedBox(height: 12),
 
               // ── Try again ─────────────────────────────────────────────────
               SizedBox(

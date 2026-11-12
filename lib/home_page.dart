@@ -6,9 +6,10 @@ import 'package:dha_anywaaa/help.dart';
 import 'package:dha_anywaaa/privacy_policy_page.dart';
 import 'package:dha_anywaaa/services/analytics_service.dart';
 import 'package:dha_anywaaa/services/gamification_service.dart';
+import 'package:dha_anywaaa/services/leaderboard_service.dart';
 import 'package:dha_anywaaa/services/ota_service.dart';
-import 'package:dha_anywaaa/services/notification_service.dart';
 import 'package:dha_anywaaa/services/retention_engine.dart';
+import 'package:dha_anywaaa/services/share_helper.dart';
 import 'package:dha_anywaaa/settings_page.dart';
 import 'package:dha_anywaaa/terms_page.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
@@ -104,15 +105,16 @@ class _HomePageState extends State<HomePage> {
       if (eligible) {
         final bonusXp = await RetentionEngine.instance.claimComebackBonus();
         if (bonusXp > 0 && mounted) {
+          // Award the actual bonus XP amount
+          await GamificationService.instance.awardBonus(bonusXp);
+          AnalyticsService.instance.logComebackBonus(bonusXp);
           // Show celebration
           CelebrationHelper.show(
             context,
             type: CelebrationType.confetti,
             message: 'Welcome back! +$bonusXp XP bonus!',
           );
-          // Award the XP
-          await GamificationService.instance.onLessonComplete();
-          // Reload stats
+          // Reload stats to reflect new XP
           _load();
         }
       }
@@ -122,14 +124,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _initNotifications() async {
-    try {
-      // Request permission first (required on Android 13+)
-      await NotificationService().requestPermission();
-      // Then initialize with settings
-      await NotificationService().initialize();
-    } catch (e) {
-      debugPrint('Failed to initialize notifications: $e');
-    }
+    // RetentionEngine.initialize() already called in main.dart.
+    // Nothing extra needed here.
   }
 
   Future<void> _checkForUpdate() async {
@@ -206,42 +202,54 @@ class _HomePageState extends State<HomePage> {
         onRefresh: _load,
         child: CustomScrollView(
           slivers: [
-            // ── Greeting ────────────────────────────────────────────────────
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
-                child: _buildGreeting(),
-              ),
-            ),
-            // ── Daily 5 card (NEW!) ─────────────────────────────────────────
+            // ── Header ──────────────────────────────────────────────────────
+            SliverToBoxAdapter(child: _buildHeader(context)),
+
+            // ── Stats strip ─────────────────────────────────────────────────
+            if (_gamState != null)
+              SliverToBoxAdapter(child: _buildStatsStrip(context)),
+
+            // ── Hero continue card ───────────────────────────────────────────
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(24, 4, 24, 0),
-              sliver: SliverToBoxAdapter(child: _buildDailyFiveCard(context)),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+              sliver: SliverToBoxAdapter(child: _buildHeroCard(context)),
             ),
-            // ── Continue card ───────────────────────────────────────────────
+
+            // ── Quick actions row ────────────────────────────────────────────
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
-              sliver: SliverToBoxAdapter(child: _buildContinueCard(context)),
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+              sliver: SliverToBoxAdapter(child: _buildQuickActions(context)),
             ),
-            // ── Quiz highlight card ──────────────────────────────────────────
+
+            // ── Personal Best (only when user has data) ──────────────────────
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
-              sliver: SliverToBoxAdapter(child: _buildQuizCard(context)),
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+              sliver: SliverToBoxAdapter(child: _buildPersonalBestCard(context)),
             ),
+
             // ── Explore header ──────────────────────────────────────────────
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(24, 28, 24, 8),
+              padding: const EdgeInsets.fromLTRB(20, 28, 20, 10),
               sliver: SliverToBoxAdapter(
-                child: Text('Explore',
-                    style: GoogleFonts.playfairDisplay(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        color: context.c.text)),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Explore',
+                        style: GoogleFonts.playfairDisplay(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                            color: context.c.text)),
+                    Text('${categories.length} topics',
+                        style: TextStyle(
+                            fontSize: 13, color: context.c.textSub)),
+                  ],
+                ),
               ),
             ),
+
             // ── Category grid ───────────────────────────────────────────────
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
               sliver: SliverGrid(
                 delegate: SliverChildBuilderDelegate(
                   (_, i) => _buildCategoryCard(context, i),
@@ -249,9 +257,9 @@ class _HomePageState extends State<HomePage> {
                 ),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  mainAxisSpacing: 14,
-                  crossAxisSpacing: 14,
-                  childAspectRatio: 1.22,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 1.15,
                 ),
               ),
             ),
@@ -261,99 +269,269 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildGreeting() {
-    final gam = _gamState;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Welcome back',
-                      style: TextStyle(fontSize: 13, color: context.c.textSub)),
-                  const SizedBox(height: 2),
-                  Text(
-                    _name.isEmpty ? 'Learner' : _name,
-                    style: GoogleFonts.playfairDisplay(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w700,
-                        color: context.c.text),
-                  ),
-                ],
-              ),
+  // ── Redesigned header: compact, name + menu ──────────────────────────────
+  Widget _buildHeader(BuildContext context) {
+    final hour = DateTime.now().hour;
+    final greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(greeting,
+                    style: TextStyle(fontSize: 13, color: context.c.textSub)),
+                const SizedBox(height: 2),
+                Text(
+                  _name.isEmpty ? 'Learner' : _name,
+                  style: GoogleFonts.playfairDisplay(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w700,
+                      color: context.c.text,
+                      height: 1.1),
+                ),
+              ],
             ),
-            // ── Daily goal ring ─────────────────────────────────────────────
-            if (gam != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: SizedBox(
-                  width: 52,
-                  height: 52,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      SizedBox(
-                        width: 52,
-                        height: 52,
-                        child: CircularProgressIndicator(
-                          value: gam.dailyGoalPct,
-                          strokeWidth: 5,
-                          backgroundColor: context.c.border,
-                          valueColor: AlwaysStoppedAnimation(
-                              gam.dailyGoalMet ? kGreen : kGold),
-                        ),
+          ),
+          // Daily goal ring
+          if (_gamState != null)
+            GestureDetector(
+              onTap: () => _scaffoldKey.currentState?.openDrawer(),
+              child: Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: context.c.card,
+                  boxShadow: const [kShadowSoft],
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox(
+                      width: 46,
+                      height: 46,
+                      child: CircularProgressIndicator(
+                        value: _gamState!.dailyGoalPct,
+                        strokeWidth: 4,
+                        backgroundColor: context.c.border,
+                        valueColor: AlwaysStoppedAnimation(
+                            _gamState!.dailyGoalMet ? kGreen : kGold),
                       ),
-                      Icon(
-                        gam.dailyGoalMet
-                            ? Icons.check_rounded
-                            : Icons.bolt_rounded,
-                        size: 20,
-                        color: gam.dailyGoalMet ? kGreen : kGold,
-                      ),
-                    ],
-                  ),
+                    ),
+                    Icon(
+                      _gamState!.dailyGoalMet ? Icons.check_rounded : Icons.bolt_rounded,
+                      size: 18,
+                      color: _gamState!.dailyGoalMet ? kGreen : kGold,
+                    ),
+                  ],
                 ),
               ),
+            )
+          else
+            GestureDetector(
+              onTap: () => _scaffoldKey.currentState?.openDrawer(),
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: context.c.card,
+                  boxShadow: const [kShadowSoft],
+                ),
+                child: Icon(Icons.menu_rounded, color: context.c.text, size: 20),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // ── Stats strip: streak + XP + level in one scannable line ──────────────
+  Widget _buildStatsStrip(BuildContext context) {
+    final gam = _gamState!;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: context.c.card,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: context.c.border),
+        ),
+        child: Row(
+          children: [
+            _StatItem(
+              icon: Icons.local_fire_department_rounded,
+              color: kRust,
+              value: '${gam.streakDays}',
+              label: 'day streak',
+            ),
+            _vDivider(context),
+            _StatItem(
+              icon: Icons.star_rounded,
+              color: kGold,
+              value: '${gam.xp}',
+              label: 'total XP',
+            ),
+            _vDivider(context),
+            _StatItem(
+              icon: Icons.military_tech_rounded,
+              color: context.c.accent,
+              value: 'Lv ${gam.level}',
+              label: '${(gam.levelPct * 100).toInt()}% to next',
+            ),
           ],
         ),
-        if (gam != null) ...[
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              // ── Streak chip ───────────────────────────────────────────────
-              _StatChip(
-                icon: Icons.local_fire_department_rounded,
-                color: kRust,
-                label: '${gam.streakDays} day streak',
-              ),
-              const SizedBox(width: 10),
-              // ── XP chip ───────────────────────────────────────────────────
-              _StatChip(
-                icon: Icons.star_rounded,
-                color: kGold,
-                label: '${gam.xp} XP · Lv ${gam.level}',
-              ),
-            ],
-          ),
-          // ── Level progress bar ───────────────────────────────────────────
-          const SizedBox(height: 10),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: gam.levelPct,
-              minHeight: 4,
-              backgroundColor: context.c.border,
-              valueColor: AlwaysStoppedAnimation(context.c.accent),
-            ),
+      ),
+    );
+  }
+
+  Widget _vDivider(BuildContext context) => Container(
+        width: 1,
+        height: 32,
+        margin: const EdgeInsets.symmetric(horizontal: 12),
+        color: context.c.border,
+      );
+
+  // ── Hero card: Continue + progress, the main CTA ────────────────────────
+  Widget _buildHeroCard(BuildContext context) {
+    final progress = _lastRouteTotal > 0
+        ? _lastRouteProgress / _lastRouteTotal
+        : 0.0;
+    final pct = (progress * 100).toInt();
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [kGreen, kGreenMid],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: kGreen.withOpacity(0.35),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () async {
+            await _savedData.setLastRoute(_lastRoute);
+            if (!mounted) return;
+            // ignore: use_build_context_synchronously
+            Navigator.pushNamed(context, _lastRoute).then((_) => _load());
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text('Continue learning',
+                          style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white.withOpacity(0.9))),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text('Go',
+                          style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: kGreen)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Text(_lastRouteName,
+                    style: GoogleFonts.playfairDisplay(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white)),
+                const SizedBox(height: 14),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 8,
+                    backgroundColor: Colors.white.withOpacity(0.25),
+                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  _lastRouteProgress > 0
+                      ? '$_lastRouteProgress / $_lastRouteTotal learned  ·  $pct%'
+                      : 'Start your first lesson',
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white.withOpacity(0.85)),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Quick actions: Daily 5 + Quiz + Reading as pill buttons ─────────────
+  Widget _buildQuickActions(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _QuickActionButton(
+            icon: Icons.school_rounded,
+            label: 'Daily 5',
+            color: const Color(0xFF7C3AED),
+            onTap: () => _startDailyFive(context),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _QuickActionButton(
+            icon: Icons.quiz_rounded,
+            label: 'Quiz',
+            color: kGold,
+            onTap: () => Navigator.pushNamed(context, 'quiz').then((_) => _load()),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _QuickActionButton(
+            icon: Icons.menu_book_rounded,
+            label: 'Reading',
+            color: kRust,
+            onTap: () => Navigator.pushNamed(context, 'reading').then((_) => _load()),
+          ),
+        ),
       ],
     );
   }
+
 
   Widget _buildDailyFiveCard(BuildContext context) {
     return FutureBuilder<bool>(
@@ -471,132 +649,166 @@ class _HomePageState extends State<HomePage> {
     // ).then((_) => _load());
   }
 
-  Widget _buildContinueCard(BuildContext context) {
-    final progress = _lastRouteTotal > 0
-        ? _lastRouteProgress / _lastRouteTotal
-        : 0.0;
-    return DecoratedBox(
-      decoration: cardDeco(context),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: () async {
-            await _savedData.setLastRoute(_lastRoute);
-            if (!mounted) return;
-            // ignore: use_build_context_synchronously
-            Navigator.pushNamed(context, _lastRoute).then((_) => _load());
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Continue',
-                          style: TextStyle(fontSize: 12, color: context.c.textSub)),
-                      const SizedBox(height: 2),
-                      Text(_lastRouteName,
-                          style: GoogleFonts.playfairDisplay(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                              color: context.c.text)),
-                      if (_lastRouteProgress > 0) ...[
-                        const SizedBox(height: 10),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(3),
-                          child: LinearProgressIndicator(
-                            value: progress,
-                            minHeight: 5,
-                            backgroundColor: context.c.border,
-                            color: context.c.accent,
+  Widget _buildPersonalBestCard(BuildContext context) {
+    return FutureBuilder<Map<String, int>>(
+      future: LeaderboardService.instance.getWeeklyStats(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const SizedBox.shrink();
+        }
+        
+        final stats = snapshot.data!;
+        final weeklyWords = stats['weeklyWords']!;
+        final personalBest = stats['personalBest']!;
+        final totalWords = stats['totalWords']!;
+        
+        // Don't show if they haven't learned anything yet
+        if (totalWords == 0) {
+          return const SizedBox.shrink();
+        }
+        
+        final progress = personalBest > 0 ? (weeklyWords / personalBest).clamp(0.0, 1.0) : 0.0;
+        final beatBest = weeklyWords > personalBest && personalBest > 0;
+        
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: beatBest
+                  ? [const Color(0xFFFFD700).withOpacity(0.8), const Color(0xFFFFAA00).withOpacity(0.8)]
+                  : [const Color(0xFF6B46C1), const Color(0xFF9F7AEA)],
+            ),
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: const [kShadowSoft],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(18),
+              onTap: beatBest 
+                  ? () async {
+                      await ShareHelper.instance.sharePersonalBest(weeklyWords);
+                    }
+                  : null,
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          beatBest ? 'New Personal Best!' : 'This Week',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                            '$_lastRouteProgress / $_lastRouteTotal learned',
-                            style: TextStyle(
-                                fontSize: 11, color: context.c.textSub)),
+                        Icon(
+                          beatBest ? Icons.emoji_events : Icons.trending_up,
+                          color: Colors.white,
+                          size: 28,
+                        ),
                       ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          '$weeklyWords',
+                          style: const TextStyle(
+                            fontSize: 40,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            height: 1,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: Text(
+                            'words',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.white.withOpacity(0.9),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (personalBest > 0) ...[
+                      const SizedBox(height: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Personal Best: $personalBest',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.white.withOpacity(0.85),
+                                ),
+                              ),
+                              Text(
+                                '${(progress * 100).toInt()}%',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white.withOpacity(0.95),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: progress,
+                              backgroundColor: Colors.white.withOpacity(0.3),
+                              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                              minHeight: 8,
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
-                  ),
+                    if (beatBest) ...[
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.share,
+                            color: Colors.white.withOpacity(0.9),
+                            size: 16,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Tap to share your achievement',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white.withOpacity(0.9),
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Icon(Icons.chevron_right_rounded, color: context.c.textSub),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildQuizCard(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.pushNamed(context, 'quiz');
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [kGreen, kGreenMid],
-          ),
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: const [kShadowSoft],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: const Icon(Icons.quiz_rounded,
-                  color: Colors.white, size: 28),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Test your skills!',
-                      style: GoogleFonts.playfairDisplay(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white)),
-                  const SizedBox(height: 2),
-                  Text('Take the quiz and see how much you\'ve learned',
-                      style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.white.withValues(alpha: 0.85))),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text('Start',
-                  style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: kGreen)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildCategoryCard(BuildContext context, int i) {
     final cat         = categories[i];
@@ -832,6 +1044,10 @@ class _HomePageState extends State<HomePage> {
                 ),
               );
             }),
+            _drawerTile(context, Icons.share_outlined, 'Share Dha Anywaa', () async {
+              Navigator.pop(context);
+              await ShareHelper.instance.shareApp();
+            }, subtitle: 'Invite friends to learn'),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Divider(),
@@ -899,6 +1115,7 @@ class _HomePageState extends State<HomePage> {
     Color color = kGreen,
     Widget? leading,
     Widget? trailing,
+    String? subtitle,
   }) {
     final iconColor = color == kGreen ? context.c.accent : color;
     return ListTile(
@@ -918,6 +1135,9 @@ class _HomePageState extends State<HomePage> {
               fontWeight: FontWeight.w600,
               fontSize: 15,
               color: color == kRust ? color : context.c.text)),
+      subtitle: subtitle != null 
+          ? Text(subtitle, style: TextStyle(fontSize: 13, color: Colors.grey[600]))
+          : null,
       trailing: trailing,
       onTap: onTap,
     );
@@ -984,6 +1204,97 @@ class _StatChip extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                   color: color)),
         ],
+      ),
+    );
+  }
+}
+
+// ── Stat item for the stats strip (icon + value + label) ──────────────────
+class _StatItem extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String value;
+  final String label;
+  const _StatItem({
+    required this.icon,
+    required this.color,
+    required this.value,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 16, color: color),
+              const SizedBox(width: 4),
+              Text(value,
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: context.c.text)),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text(label,
+              style: TextStyle(fontSize: 11, color: context.c.textSub)),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Quick action pill button ──────────────────────────────────────────────
+class _QuickActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+  const _QuickActionButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: context.c.card,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: context.c.border),
+          ),
+          child: Column(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, size: 20, color: color),
+              ),
+              const SizedBox(height: 8),
+              Text(label,
+                  style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: context.c.text)),
+            ],
+          ),
+        ),
       ),
     );
   }

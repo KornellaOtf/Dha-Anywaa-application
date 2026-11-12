@@ -99,4 +99,14 @@ class AnalyticsService {
         name: 'toggle_sound',
         parameters: {'enabled': enabled ? 1 : 0},
       );
+
+  Future<void> logStreakMilestone(int days) => _fa.logEvent(
+        name: 'streak_milestone',
+        parameters: {'days': days},
+      );
+
+  Future<void> logComebackBonus(int bonusXp) => _fa.logEvent(
+        name: 'comeback_bonus_claimed',
+        parameters: {'bonus_xp': bonusXp},
+      );
 }

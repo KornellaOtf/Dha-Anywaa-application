@@ -131,6 +131,8 @@ class _CelebrationOverlayState extends State<CelebrationOverlay>
         return const Icon(Icons.local_fire_department, size: 64, color: Colors.orange);
       case CelebrationType.confetti:
         return const Icon(Icons.celebration, size: 64, color: Color(0xFF2D5016));
+      case CelebrationType.quickWin:
+        return const Icon(Icons.check_circle, size: 64, color: Colors.green);
     }
   }
 
@@ -144,6 +146,8 @@ class _CelebrationOverlayState extends State<CelebrationOverlay>
         return 'Streak Master!';
       case CelebrationType.confetti:
         return 'Amazing!';
+      case CelebrationType.quickWin:
+        return 'Great!';
     }
   }
 }
@@ -239,6 +243,7 @@ enum CelebrationType {
   levelUp,
   streakMilestone,
   confetti,
+  quickWin,
 }
 
 /// Helper to show celebrations easily

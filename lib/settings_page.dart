@@ -9,6 +9,7 @@ import 'package:dha_anywaaa/ota_update_page.dart';
 import 'package:dha_anywaaa/services/ota_service.dart';
 import 'package:dha_anywaaa/services/analytics_service.dart';
 import 'package:dha_anywaaa/services/retention_engine.dart';
+import 'package:dha_anywaaa/services/share_helper.dart';
 import 'package:dha_anywaaa/terms_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -196,6 +197,18 @@ class _SettingsPageState extends State<SettingsPage> {
                           strokeWidth: 2, color: kGreen))
                   : Icon(Icons.chevron_right, color: context.c.border),
               onTap: _checking ? null : _checkForUpdates,
+            ),
+          ]),
+          const SizedBox(height: 24),
+
+          _section('Invite Friends', [
+            _row(
+              icon: Icons.share_outlined,
+              iconColor: kGreen,
+              title: 'Invite a Friend',
+              subtitle: 'Share the app on WhatsApp, Telegram, or SMS',
+              trailing: Icon(Icons.chevron_right, color: context.c.border),
+              onTap: () => ShareHelper.instance.shareApp(),
             ),
           ]),
           const SizedBox(height: 24),
