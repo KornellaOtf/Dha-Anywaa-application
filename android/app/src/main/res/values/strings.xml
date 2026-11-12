@@ -9,6 +9,8 @@
     <string name="ai_short">AI Helper</string>
     <string name="ai_long">Ask Anywaa AI</string>
     
+    <string name="bible_short">Bible</string>
+    <string name="bible_long">Wel Jwok</string>    
     <string name="share_short">Share</string>
     <string name="share_long">Share App</string>
 </resources>

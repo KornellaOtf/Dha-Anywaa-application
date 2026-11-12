@@ -27,6 +27,19 @@
     </shortcut>
     
     <shortcut
+        android:shortcutId="action_bible"
+        android:enabled="true"
+        android:icon="@mipmap/launcher_icon"
+        android:shortcutShortLabel="@string/bible_short"
+        android:shortcutLongLabel="@string/bible_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.kornellaotf.learn_dha_anywaa"
+            android:targetClass="com.kornellaotf.learn_dha_anywaa.MainActivity" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+    
+    <shortcut
         android:shortcutId="action_share"
         android:enabled="true"
         android:icon="@mipmap/launcher_icon"

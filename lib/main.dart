@@ -17,6 +17,7 @@ import 'package:dha_anywaaa/pages/page1.dart';
 import 'package:dha_anywaaa/pages/page2.dart';
 import 'package:dha_anywaaa/pages/page3.dart';
 import 'package:dha_anywaaa/pages/page4.dart';
+import 'package:dha_anywaaa/pages/bible_page.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:dha_anywaaa/wraper.dart';
 import 'package:flutter/material.dart';
@@ -73,6 +74,11 @@ void main() async {
         icon: 'ic_launcher',
       ),
       const ShortcutItem(
+        type: 'action_bible',
+        localizedTitle: 'Wëël Jwøk',
+        icon: 'ic_launcher',
+      ),
+      const ShortcutItem(
         type: 'action_share',
         localizedTitle: 'Share App',
         icon: 'ic_launcher',
@@ -120,6 +126,8 @@ class _MyAppState extends State<MyApp> {
         _navigatorKey.currentState?.pushNamed('quiz');
       } else if (type == 'action_ai') {
         _navigatorKey.currentState?.pushNamed('anywaa_ai');
+      } else if (type == 'action_bible') {
+        _navigatorKey.currentState?.pushNamed('bible');
       } else if (type == 'action_share') {
         ShareHelper.instance.shareApp();
       }
@@ -149,6 +157,7 @@ class _MyAppState extends State<MyApp> {
         'shape': (context) => const Shpae(),
         'reading': (context) => const Page3(),
         'quiz': (context) => const Page4(),
+        'bible': (context) => const BiblePage(),
         'anywaa_ai': (context) => const AnywaaAiPage(),
         'home_page': (context) => const HomePage(),
         'name_entry': (context) => const NameEntry(),

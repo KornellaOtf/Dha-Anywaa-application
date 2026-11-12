@@ -4,6 +4,7 @@ import 'package:dha_anywaaa/components/savedData.dart';
 import 'package:dha_anywaaa/dictionary_coming_soon_page.dart';
 import 'package:dha_anywaaa/help.dart';
 import 'package:dha_anywaaa/pages/daily_five_page.dart';
+import 'package:dha_anywaaa/pages/bible_page.dart';
 import 'package:dha_anywaaa/privacy_policy_page.dart';
 import 'package:dha_anywaaa/services/analytics_service.dart';
 import 'package:dha_anywaaa/services/gamification_service.dart';
@@ -1027,6 +1028,12 @@ class _HomePageState extends State<HomePage> {
               Navigator.push(context,
                   MaterialPageRoute(builder: (_) => const AnywaaAiPage(),
                       settings: const RouteSettings(name: 'anywaa_ai')));
+            }, color: kGreen),
+            _drawerTile(context, Icons.menu_book_rounded, 'Wëël Jwøk', () {
+              Navigator.pop(context);
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const BiblePage(),
+                      settings: const RouteSettings(name: 'bible')));
             }, color: kGreen),
             _drawerTile(context, Icons.menu_book_rounded, 'Dictionary', () {
               Navigator.pop(context);
