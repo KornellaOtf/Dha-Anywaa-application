@@ -5,8 +5,10 @@ class ShareHelper {
   
   static final ShareHelper instance = ShareHelper._();
   
+  // Points to the GitHub releases page — always shows the latest version.
+  // No need to update this URL on each release.
   static const String _apkUrl =
-      'https://github.com/KornellaOtf/Dha-Anywaa-application/releases/latest/download/dha-anywaa-v1.5.0.apk';
+      'https://github.com/KornellaOtf/Dha-Anywaa-application/releases/latest';
 
   /// Generic share (used from menu)
   Future<void> shareApp() async {
