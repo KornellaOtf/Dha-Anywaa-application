@@ -54,12 +54,8 @@ android {
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
-        ndk {
-            // arm64-v8a: all modern Android phones (2015+)
-            // armeabi-v7a: older 32-bit phones
-            // x86_64 removed — emulator only, saves ~19MB from APK
-            abiFilters 'armeabi-v7a', 'arm64-v8a'
-        }
+        // Note: ABI filtering is handled by flutter build --split-per-abi flag
+        // No ndk abiFilters needed here
     }
 
     signingConfigs {
@@ -74,6 +70,10 @@ android {
     buildTypes {
         release {
             signingConfig signingConfigs.release
+            // Shrink & obfuscate Dart/Java code
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }

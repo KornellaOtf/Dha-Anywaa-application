@@ -639,7 +639,14 @@ class _BiblePageState extends State<BiblePage> with SingleTickerProviderStateMix
       backgroundColor: bg,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (_) => StatefulBuilder(
+      builder: (_) {
+        // Local mirrors of outer state — StatefulBuilder can't see outer
+        // setState() calls, so we keep our own copies and sync both.
+        var localShowEng = _showEng;
+        var localNight   = _night;
+        var localFontSize = _fontSize;
+
+        return StatefulBuilder(
         builder: (ctx, local) => Padding(
           padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
           child: Column(
@@ -673,12 +680,12 @@ class _BiblePageState extends State<BiblePage> with SingleTickerProviderStateMix
                           color: fg.withValues(alpha: 0.45), fontSize: 14)),
                   Expanded(
                     child: Slider(
-                      value: _fontSize,
+                      value: localFontSize,
                       min: 14, max: 26, divisions: 6,
                       activeColor: _kGold,
                       inactiveColor: fg.withValues(alpha: 0.12),
                       onChanged: (v) {
-                        local(() {});
+                        local(() => localFontSize = v);
                         setState(() => _fontSize = v);
                         _savePref('bible_font_size', v);
                       },
@@ -694,10 +701,10 @@ class _BiblePageState extends State<BiblePage> with SingleTickerProviderStateMix
               // Show English
               _PrefRow(
                 label: 'Show English translation',
-                value: _showEng,
+                value: localShowEng,
                 fg: fg,
                 onChanged: (v) {
-                  local(() {});
+                  local(() => localShowEng = v);
                   setState(() => _showEng = v);
                   _savePref('bible_show_eng', v);
                   AnalyticsService.instance.logBibleToggleEnglish(v);
@@ -708,10 +715,10 @@ class _BiblePageState extends State<BiblePage> with SingleTickerProviderStateMix
               // Night mode
               _PrefRow(
                 label: 'Night mode',
-                value: _night,
+                value: localNight,
                 fg: fg,
                 onChanged: (v) {
-                  local(() {});
+                  local(() => localNight = v);
                   setState(() => _night = v);
                   _savePref('bible_night', v);
                 },
@@ -719,7 +726,8 @@ class _BiblePageState extends State<BiblePage> with SingleTickerProviderStateMix
             ],
           ),
         ),
-      ),
+      );
+      },
     );
   }
 

@@ -8,8 +8,10 @@ import 'package:dha_anywaaa/pages/bible_page.dart';
 import 'package:dha_anywaaa/privacy_policy_page.dart';
 import 'package:dha_anywaaa/services/analytics_service.dart';
 import 'package:dha_anywaaa/services/gamification_service.dart';
+import 'package:dha_anywaaa/services/learning_engine.dart';
 import 'package:dha_anywaaa/services/leaderboard_service.dart';
 import 'package:dha_anywaaa/services/ota_service.dart';
+import 'package:dha_anywaaa/services/learning_engine.dart';
 import 'package:dha_anywaaa/services/retention_engine.dart';
 import 'package:dha_anywaaa/services/share_helper.dart';
 import 'package:dha_anywaaa/services/word_aggregator.dart';
@@ -620,13 +622,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<bool> _checkDailyFiveStatus() async {
-    // Check if today's Daily 5 was completed
-    // For now, this will integrate with LearningEngine once you connect your word data
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final today = DateTime.now().toIso8601String().substring(0, 10);
-      final lastCompleted = prefs.getString('daily_five_completed') ?? '';
-      return lastCompleted == today;
+      // Use LearningEngine directly — it writes 'learn_daily_completed_date'
+      // with its own _todayStr() format. This was previously reading
+      // 'daily_five_completed', a key that was never written anywhere.
+      return await LearningEngine.instance.isDailyCompleted();
     } catch (e) {
       return false;
     }
