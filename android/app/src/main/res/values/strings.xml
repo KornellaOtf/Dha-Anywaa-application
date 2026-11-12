@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Learn Dha Anywaa</string>
+    
+    <!-- Shortcut labels -->
+    <string name="quiz_short">Quiz</string>
+    <string name="quiz_long">Take a Quiz</string>
+    
+    <string name="ai_short">AI Helper</string>
+    <string name="ai_long">Ask Anywaa AI</string>
+    
+    <string name="share_short">Share</string>
+    <string name="share_long">Share App</string>
+</resources>

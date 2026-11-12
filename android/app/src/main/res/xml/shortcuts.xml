@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="action_quiz"
+        android:enabled="true"
+        android:icon="@mipmap/launcher_icon"
+        android:shortcutShortLabel="@string/quiz_short"
+        android:shortcutLongLabel="@string/quiz_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.kornellaotf.learn_dha_anywaa"
+            android:targetClass="com.kornellaotf.learn_dha_anywaa.MainActivity" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+    
+    <shortcut
+        android:shortcutId="action_ai"
+        android:enabled="true"
+        android:icon="@mipmap/launcher_icon"
+        android:shortcutShortLabel="@string/ai_short"
+        android:shortcutLongLabel="@string/ai_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.kornellaotf.learn_dha_anywaa"
+            android:targetClass="com.kornellaotf.learn_dha_anywaa.MainActivity" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+    
+    <shortcut
+        android:shortcutId="action_share"
+        android:enabled="true"
+        android:icon="@mipmap/launcher_icon"
+        android:shortcutShortLabel="@string/share_short"
+        android:shortcutLongLabel="@string/share_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.kornellaotf.learn_dha_anywaa"
+            android:targetClass="com.kornellaotf.learn_dha_anywaa.MainActivity" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+</shortcuts>

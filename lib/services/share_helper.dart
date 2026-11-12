@@ -6,10 +6,8 @@ class ShareHelper {
   static final ShareHelper instance = ShareHelper._();
   
   static const String _apkUrl =
-      'https://github.com/KornellaOtf/Dha-Anywaa-application/releases/latest/download/dha-anywaa-v1.4.7.apk';
-  
-  static const String _website = 'https://dha-anywaa-app.netlify.app/';
-  
+      'https://github.com/KornellaOtf/Dha-Anywaa-application/releases/latest/download/dha-anywaa-v1.4.9.apk';
+
   /// Generic share (used from menu)
   Future<void> shareApp() async {
     await Share.share(
@@ -17,8 +15,7 @@ class ShareHelper {
       'Free\n'
       '100% Offline\n'
       'Beginner-friendly\n\n'
-      'Download here: $_apkUrl\n\n'
-      'Or visit: $_website',
+      'Download here:\n$_apkUrl',
       subject: 'Learn Dha Anywaa',
     );
   }

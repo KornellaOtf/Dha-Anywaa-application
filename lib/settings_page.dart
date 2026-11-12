@@ -157,13 +157,34 @@ class _SettingsPageState extends State<SettingsPage> {
                 activeColor: kGreen,
                 onChanged: (enabled) async {
                   if (enabled) {
+                    // Request permission first
+                    final permissionGranted = await RetentionEngine.instance.requestPermission();
+                    
+                    if (!permissionGranted) {
+                      if (mounted) {
+                        _toast('Please enable notifications in Settings');
+                      }
+                      return;
+                    }
+                    
+                    // Enable notifications
                     await RetentionEngine.instance.enableNotifications(
                       preferredHour: _reminderHour,
                     );
+                    
+                    if (mounted) {
+                      setState(() => _notificationsEnabled = true);
+                      _toast('Daily reminders enabled');
+                    }
                   } else {
+                    // Disable notifications
                     await RetentionEngine.instance.disableNotifications();
+                    
+                    if (mounted) {
+                      setState(() => _notificationsEnabled = false);
+                      _toast('Daily reminders disabled');
+                    }
                   }
-                  setState(() => _notificationsEnabled = enabled);
                 },
               ),
             ),
@@ -324,10 +345,22 @@ class _SettingsPageState extends State<SettingsPage> {
       helpText: 'Choose your reminder time',
     );
     if (picked != null && mounted) {
+      // Make sure notifications are still enabled and permission is granted
+      final permissionGranted = await RetentionEngine.instance.requestPermission();
+      
+      if (!permissionGranted) {
+        _toast('Please enable notifications in Settings');
+        return;
+      }
+      
       await RetentionEngine.instance.enableNotifications(
         preferredHour: picked.hour,
       );
-      setState(() => _reminderHour = picked.hour);
+      setState(() {
+        _reminderHour = picked.hour;
+        _notificationsEnabled = true;
+      });
+      _toast('Reminder set for ${_formatHour(picked.hour)}');
     }
   }
 

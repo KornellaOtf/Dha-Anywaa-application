@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import '../services/learning_engine.dart';
 import '../services/gamification_service.dart';
+import '../services/word_aggregator.dart';
 
 /// Daily 5: the core learning session.
 /// 5 quick questions mixing due, weak and new words.
 /// Immediate feedback, XP rewards, combo tracking.
 class DailyFivePage extends StatefulWidget {
-  final List<WordData> allWords; // Your full vocabulary
+  final List<WordData> allWords;
 
   const DailyFivePage({Key? key, required this.allWords}) : super(key: key);
 
@@ -52,7 +53,6 @@ class _DailyFivePageState extends State<DailyFivePage> {
     final responseTime = DateTime.now().difference(_startTime).inMilliseconds;
     final word = _sessionWords[_currentIndex];
 
-    // Record in learning engine
     await _learning.recordReview(
       wordId: word.id,
       correct: correct,
@@ -60,8 +60,7 @@ class _DailyFivePageState extends State<DailyFivePage> {
       questionType: 'picture_to_word',
     );
 
-    // Award XP
-    int xp = correct ? GamificationService.xpCorrectAnswer : 1; // 1 XP for trying
+    int xp = correct ? GamificationService.xpCorrectAnswer : 1;
     if (correct) {
       _combo++;
       if (_combo >= 3) {
@@ -79,7 +78,6 @@ class _DailyFivePageState extends State<DailyFivePage> {
       _totalXp += xp + gam.streakBonus;
     });
 
-    // Auto-advance after 1.5 seconds
     await Future.delayed(const Duration(milliseconds: 1500));
     _nextQuestion();
   }
@@ -112,6 +110,13 @@ class _DailyFivePageState extends State<DailyFivePage> {
     );
   }
 
+  String _getWrongChoice(WordData word) {
+    final otherWords = widget.allWords.where((w) => w.id != word.id).toList();
+    if (otherWords.isEmpty) return 'Unknown';
+    otherWords.shuffle();
+    return otherWords.first.anywaa;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) {
@@ -133,9 +138,9 @@ class _DailyFivePageState extends State<DailyFivePage> {
     final progress = (_currentIndex + 1) / _sessionWords.length;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFAF0), // Cream
+      backgroundColor: const Color(0xFFFFFAF0),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF2D5016), // Dark green
+        backgroundColor: const Color(0xFF2D5016),
         foregroundColor: Colors.white,
         title: Text('Daily 5 (${_currentIndex + 1}/${_sessionWords.length})'),
         actions: [
@@ -146,7 +151,9 @@ class _DailyFivePageState extends State<DailyFivePage> {
                 child: Row(
                   children: [
                     const Icon(Icons.bolt, color: Colors.amber, size: 20),
-                    Text('$_combo', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    Text('$_combo',
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
@@ -155,27 +162,23 @@ class _DailyFivePageState extends State<DailyFivePage> {
       ),
       body: Column(
         children: [
-          // Progress bar
           LinearProgressIndicator(
             value: progress,
             backgroundColor: Colors.grey[300],
             valueColor: const AlwaysStoppedAnimation(Color(0xFF2D5016)),
           ),
-
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(24),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Question
                   const Text(
                     'What is this?',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+                    style:
+                        TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 32),
-
-                  // Picture
                   Container(
                     width: 200,
                     height: 200,
@@ -193,20 +196,20 @@ class _DailyFivePageState extends State<DailyFivePage> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(16),
                       child: Image.asset(
-                        word.imagePath,
+                        word.imageUrl,
                         fit: BoxFit.cover,
+                        errorBuilder: (context, error, child) => const Center(
+                          child: Icon(Icons.image, size: 64, color: Colors.grey),
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 48),
-
-                  // Answer choices (2 options for speed)
                   if (!_answered) ...[
-                    _buildChoice(word.anywaaWord, true),
+                    _buildChoice(word.anywaa, true),
                     const SizedBox(height: 12),
-                    _buildChoice(word.wrongChoice, false),
+                    _buildChoice(_getWrongChoice(word), false),
                   ] else ...[
-                    // Feedback
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -215,15 +218,21 @@ class _DailyFivePageState extends State<DailyFivePage> {
                             : Colors.red.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: _lastAnswerCorrect == true ? Colors.green : Colors.red,
+                          color: _lastAnswerCorrect == true
+                              ? Colors.green
+                              : Colors.red,
                           width: 2,
                         ),
                       ),
                       child: Row(
                         children: [
                           Icon(
-                            _lastAnswerCorrect == true ? Icons.check_circle : Icons.cancel,
-                            color: _lastAnswerCorrect == true ? Colors.green : Colors.red,
+                            _lastAnswerCorrect == true
+                                ? Icons.check_circle
+                                : Icons.cancel,
+                            color: _lastAnswerCorrect == true
+                                ? Colors.green
+                                : Colors.red,
                             size: 32,
                           ),
                           const SizedBox(width: 12),
@@ -232,20 +241,25 @@ class _DailyFivePageState extends State<DailyFivePage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  _lastAnswerCorrect == true ? 'Correct!' : 'Not quite',
+                                  _lastAnswerCorrect == true
+                                      ? 'Correct!'
+                                      : 'Not quite',
                                   style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
-                                    color: _lastAnswerCorrect == true ? Colors.green : Colors.red,
+                                    color: _lastAnswerCorrect == true
+                                        ? Colors.green
+                                        : Colors.red,
                                   ),
                                 ),
                                 Text(
-                                  word.anywaaWord,
+                                  word.anywaa,
                                   style: const TextStyle(fontSize: 18),
                                 ),
                                 Text(
-                                  word.englishWord,
-                                  style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                                  word.english,
+                                  style: TextStyle(
+                                      fontSize: 14, color: Colors.grey[700]),
                                 ),
                               ],
                             ),
@@ -268,7 +282,8 @@ class _DailyFivePageState extends State<DailyFivePage> {
       onTap: () => _onAnswer(isCorrect),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+        padding:
+            const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -317,24 +332,23 @@ class SessionSummaryPage extends StatelessWidget {
                 style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 48),
-
               _buildStat('Words reviewed', '$wordsReviewed'),
               _buildStat('XP earned', '+$xpEarned'),
               if (maxCombo >= 3) _buildStat('Best combo', '$maxCombo'),
-
               const SizedBox(height: 48),
-
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF2D5016),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text('Continue', style: TextStyle(fontSize: 18)),
+                child:
+                    const Text('Continue', style: TextStyle(fontSize: 18)),
               ),
             ],
           ),
@@ -352,30 +366,11 @@ class SessionSummaryPage extends StatelessWidget {
           Text(label, style: const TextStyle(fontSize: 18)),
           Text(
             value,
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+                fontSize: 24, fontWeight: FontWeight.bold),
           ),
         ],
       ),
     );
   }
-}
-
-// ══════════════════════════════════════════════════════════════════════════
-// Word data model (adapt this to your existing structure)
-// ══════════════════════════════════════════════════════════════════════════
-
-class WordData {
-  final String id;
-  final String anywaaWord;
-  final String englishWord;
-  final String imagePath;
-  final String wrongChoice; // For multiple choice (you can generate this)
-
-  const WordData({
-    required this.id,
-    required this.anywaaWord,
-    required this.englishWord,
-    required this.imagePath,
-    required this.wrongChoice,
-  });
 }

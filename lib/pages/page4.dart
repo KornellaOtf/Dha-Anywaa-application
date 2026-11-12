@@ -42,7 +42,7 @@ class _Page4State extends State<Page4> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           insetPadding:
-              const EdgeInsets.symmetric(horizontal: 30, vertical: 24),
+              const EdgeInsets.symmetric(horizontal: 36, vertical: 24),
           child: TweenAnimationBuilder<double>(
             tween: Tween(begin: 0.92, end: 1.0),
             duration: const Duration(milliseconds: 220),
@@ -50,71 +50,88 @@ class _Page4State extends State<Page4> {
             builder: (_, scale, child) =>
                 Transform.scale(scale: scale, child: child),
             child: Container(
-              padding: const EdgeInsets.fromLTRB(24, 28, 24, 22),
+              padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
               decoration: BoxDecoration(
                 color: c.card,
-                borderRadius: BorderRadius.circular(26),
+                borderRadius: BorderRadius.circular(24),
                 boxShadow: const [kShadowCard],
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // Icon
                   Center(
                     child: Container(
-                      width: 70,
-                      height: 70,
+                      width: 64,
+                      height: 64,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: kRust.withValues(alpha: 0.12),
-                        border: Border.all(
-                            color: kRust.withValues(alpha: 0.18)),
+                        color: kGold.withValues(alpha: 0.12),
                       ),
-                      child: const Icon(Icons.directions_run_rounded,
-                          color: kRust, size: 32),
+                      child: const Icon(Icons.pause_circle_rounded,
+                          color: kGold, size: 32),
                     ),
                   ),
-                  const SizedBox(height: 18),
-                  Text('Quit the quiz?',
+                  const SizedBox(height: 16),
+
+                  // Title
+                  Text('Take a break?',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
                           color: c.text,
                           height: 1.25)),
+
+                  // Message
                   const SizedBox(height: 8),
                   Text(
-                      'You have not finished yet. If you quit now, your answers so far will be lost.',
+                      'Your progress on this quiz won\'t be saved. You can always try again later.',
                       textAlign: TextAlign.center,
                       style:
                           TextStyle(fontSize: 14, height: 1.5, color: c.textSub)),
                   const SizedBox(height: 24),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: kGreen,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
-                    ),
-                    onPressed: () => Navigator.pop(ctx, false),
-                    child: const Text('Keep going',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16)),
-                  ),
-                  const SizedBox(height: 6),
-                  TextButton(
-                    style: TextButton.styleFrom(
-                      foregroundColor: kRust,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
-                    ),
-                    onPressed: () => Navigator.pop(ctx, true),
-                    child: const Text('Quit anyway',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w700, fontSize: 15)),
+
+                  // Side-by-side buttons
+                  Row(
+                    children: [
+                      // Quit
+                      Expanded(
+                        child: TextButton(
+                          style: TextButton.styleFrom(
+                            foregroundColor: kRust,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                                side: BorderSide(color: kRust.withValues(alpha: 0.3))),
+                          ),
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: const Text('Quit',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w700, fontSize: 15)),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+
+                      // Keep going
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: kGreen,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14)),
+                          ),
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: const Text('Keep going',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 15)),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

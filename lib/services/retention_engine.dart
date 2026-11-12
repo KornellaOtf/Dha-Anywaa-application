@@ -69,10 +69,20 @@ class RetentionEngine {
 
   /// Request notification permission (Android 13+)
   Future<bool> requestPermission() async {
-    final result = await _notifications
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-        ?.requestNotificationsPermission();
-    return result ?? false;
+    final androidImpl = _notifications
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    
+    if (androidImpl == null) return false;
+    
+    // Request POST_NOTIFICATIONS permission (Android 13+)
+    final notificationPermission = await androidImpl.requestNotificationsPermission();
+    
+    // Request exact alarm permission (Android 12+)
+    // Note: On Android 12+, exact alarms require explicit permission
+    // Users may need to enable this in Settings > Apps > Learn Dha Anywaa > Alarms & reminders
+    final exactAlarmPermission = await androidImpl.requestExactAlarmsPermission();
+    
+    return (notificationPermission ?? false) && (exactAlarmPermission ?? true);
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -199,8 +209,9 @@ class RetentionEngine {
 
   Duration _timeUntilTomorrow(int targetHour) {
     final now = DateTime.now();
-    final tomorrow = DateTime(now.year, now.month, now.day + 1, targetHour);
-    return tomorrow.difference(now);
+    final tomorrow = now.add(const Duration(days: 1));
+    final targetTime = DateTime(tomorrow.year, tomorrow.month, tomorrow.day, targetHour);
+    return targetTime.difference(now);
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -245,6 +256,17 @@ class RetentionEngine {
         p.getInt(_kLastOpenTime) ?? 0,
       ),
     );
+  }
+
+  /// Check if the app can schedule exact alarms (Android 12+)
+  Future<bool> canScheduleExactAlarms() async {
+    final androidImpl = _notifications
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    
+    if (androidImpl == null) return false;
+    
+    // On Android 12+, check if SCHEDULE_EXACT_ALARM permission is granted
+    return await androidImpl.canScheduleExactNotifications() ?? false;
   }
 }
 

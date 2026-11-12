@@ -1,9 +1,9 @@
 {
-  "version": "1.4.8",
-  "versionCode": 168,
-  "downloadUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.4.8/dha-anywaa-v1.4.8.apk",
-  "sha256": "a76faec548e80176cdd7a707ef01c55bb74809d6a2f4a1542feac9b0a4bd1d10",
-  "size": 85900512,
-  "releaseNotes": "v1.4.8 - Redesigned Home + Share + Viral Growth:\n\n- Redesigned home page: compact header with time-aware greeting, stats strip (streak/XP/level), hero continue card with progress, quick action pills (Daily 5, Quiz, Reading)\n- Share button in drawer: Share Dha Anywaa with friends on WhatsApp\n- Share button in Settings: Invite a Friend section\n- Share quiz score: appears on 70%+ quiz results\n- Personal Best leaderboard: weekly word count vs personal record with progress bar\n- Quick Challenge micro-loop: 30-second word learning sessions (coming soon)\n- Audit fixes: removed dead NotificationService call, added streak/level-up celebrations to quiz results, fixed comeback bonus XP awarding, added streak_milestone and comeback_bonus_claimed analytics events\n- All emoji-free",
+  "version": "1.4.9",
+  "versionCode": 169,
+  "downloadUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.4.9/dha-anywaa-v1.4.9.apk",
+  "sha256": "05d755f43665fbfb6bee06077f138ee115bf065ba963a5fc105838647c9a747d",
+  "size": 86151900,
+  "releaseNotes": "v1.4.9 - Welcome + Quiz UI Polish + Daily 5 + Shortcuts + Reminder Fixes:\n\n- Redesigned welcome screen: gradient hero with brand logo glow, 3 feature pills (Audio/Offline/Quizzes), cleaner single-column form\n- Redesigned quit quiz dialog: side-by-side Quit/Keep going buttons, pause icon, calmer tone\n- Daily 5 now works: connected to 38 real vocabulary words (Animals, Birds, Colors, Shapes) with spaced repetition, XP rewards, combo tracking\n- Home screen shortcuts: long-press app icon for Take a Quiz, Ask Anywaa AI, Share App\n- Reminder fixes: fixed date calculation bug at month boundaries, added Android 12+ exact alarm permissions, fixed toggle ON/OFF state sync, added user feedback toasts, re-request permission on time change\n- Share link updated to v1.4.9 (GitHub APK only, no netlify)\n- All emoji-free",
   "minSdkVersion": 21
 }

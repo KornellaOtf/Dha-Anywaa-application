@@ -3,6 +3,7 @@ import 'package:dha_anywaaa/anywaa_ai_page.dart';
 import 'package:dha_anywaaa/components/savedData.dart';
 import 'package:dha_anywaaa/dictionary_coming_soon_page.dart';
 import 'package:dha_anywaaa/help.dart';
+import 'package:dha_anywaaa/pages/daily_five_page.dart';
 import 'package:dha_anywaaa/privacy_policy_page.dart';
 import 'package:dha_anywaaa/services/analytics_service.dart';
 import 'package:dha_anywaaa/services/gamification_service.dart';
@@ -10,6 +11,7 @@ import 'package:dha_anywaaa/services/leaderboard_service.dart';
 import 'package:dha_anywaaa/services/ota_service.dart';
 import 'package:dha_anywaaa/services/retention_engine.dart';
 import 'package:dha_anywaaa/services/share_helper.dart';
+import 'package:dha_anywaaa/services/word_aggregator.dart';
 import 'package:dha_anywaaa/settings_page.dart';
 import 'package:dha_anywaaa/terms_page.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
@@ -630,23 +632,16 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _startDailyFive(BuildContext context) {
-    // For now, show a coming soon message
-    // Once you connect your word data, this will navigate to DailyFivePage
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Daily 5 feature coming in next update! Connect your word data to enable.'),
-        backgroundColor: kGreen,
-        duration: const Duration(seconds: 3),
+    // Navigate to Daily Five with actual word data
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DailyFivePage(
+          allWords: WordAggregator.instance.getAllWords(),
+        ),
+        settings: const RouteSettings(name: 'daily_five'),
       ),
-    );
-    
-    // TODO: Replace above with this once word data is connected:
-    // Navigator.push(
-    //   context,
-    //   MaterialPageRoute(
-    //     builder: (_) => DailyFivePage(allWords: yourWordDataHere),
-    //   ),
-    // ).then((_) => _load());
+    ).then((_) => _load());
   }
 
   Widget _buildPersonalBestCard(BuildContext context) {
