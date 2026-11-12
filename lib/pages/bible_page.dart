@@ -190,7 +190,7 @@ class _BiblePageState extends State<BiblePage> with TickerProviderStateMixin {
         _audio.onPlayerComplete.listen((_) => setState(() => _isPlaying = false));
         FirebaseAnalytics.instance.logEvent(
           name: 'bible_audio_played',
-          parameters: {'book': _selectedBook, 'chapter': _selectedChapter},
+          parameters: {'book': _selectedBook ?? '', 'chapter': _selectedChapter ?? 0},
         );
       } catch (_) {
         if (mounted) {
