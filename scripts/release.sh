@@ -42,13 +42,17 @@ echo "[2/8] Building APK (--target-platform android-arm,android-arm64)..."
 flutter build apk --release --target-platform android-arm,android-arm64
 echo "Built: $(ls -lh ${APK_PATH} | awk '{print $5}')"
 
-# ── Step 3: Compute SHA256 and size from the ACTUAL built APK ───────────────
+# ── Step 3: Compute SHA256, size, and ACTUAL versionCode from built APK ─────
 echo ""
-echo "[3/8] Computing SHA256 and file size..."
-SHA256=$(shasum -a 256 "${APK_PATH}" | cut -d' ' -f1)
+echo "[3/8] Computing SHA256, file size, and actual versionCode..."
+SHA256=$(sha256sum "${APK_PATH}" | cut -d' ' -f1)
 SIZE=$(wc -c < "${APK_PATH}")
-echo "SHA256: ${SHA256}"
-echo "Size:   ${SIZE} bytes ($((SIZE / 1048576)) MB)"
+# Read the real versionCode baked into the APK — split-per-abi multiplies it
+ACTUAL_VERSION_CODE=$(aapt dump badging "${APK_PATH}" 2>/dev/null \
+  | grep -o "versionCode='[0-9]*'" | grep -o "[0-9]*" || echo "${BUILD}")
+echo "SHA256:       ${SHA256}"
+echo "Size:         ${SIZE} bytes ($((SIZE / 1048576)) MB)"
+echo "versionCode:  ${ACTUAL_VERSION_CODE} (pubspec base: ${BUILD})"
 
 # ── Step 4: Write manifest.json with the CORRECT hash ───────────────────────
 echo ""
@@ -56,7 +60,7 @@ echo "[4/8] Writing manifest.json..."
 cat > "${MANIFEST}" << EOF
 {
   "version": "${VERSION}",
-  "versionCode": ${BUILD},
+  "versionCode": ${ACTUAL_VERSION_CODE},
   "apkUrl": "https://github.com/${REPO}/releases/download/v${VERSION}/${APK_NAME}",
   "sha256": "${SHA256}",
   "sizeBytes": ${SIZE},
@@ -71,7 +75,7 @@ cat "${MANIFEST}"
 # ── Step 5: Verify the hash matches BEFORE committing ────────────────────────
 echo ""
 echo "[5/8] Verifying SHA256 matches..."
-ACTUAL_SHA=$(shasum -a 256 "${APK_PATH}" | cut -d' ' -f1)
+ACTUAL_SHA=$(sha256sum "${APK_PATH}" | cut -d' ' -f1)
 MANIFEST_SHA=$(python3 -c "import json; print(json.load(open('${MANIFEST}'))['sha256'])")
 if [ "${ACTUAL_SHA}" != "${MANIFEST_SHA}" ]; then
   echo "ERROR: SHA256 mismatch! APK=${ACTUAL_SHA} manifest=${MANIFEST_SHA}"
