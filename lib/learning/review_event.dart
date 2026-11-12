@@ -1,4 +1,4 @@
-import 'package:dha_anywaa_app/learning/fsrs_engine.dart';
+import 'package:dha_anywaaa/learning/fsrs_engine.dart';
 
 /// Append-only log entry for every review
 /// Used for analytics and algorithm tuning

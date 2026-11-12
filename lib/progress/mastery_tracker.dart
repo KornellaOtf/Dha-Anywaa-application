@@ -1,4 +1,4 @@
-import 'package:dha_anywaa_app/learning/card_state.dart';
+import 'package:dha_anywaaa/learning/card_state.dart';
 
 /// Tracks mastery progress by category
 /// Mastery = words with stability > 21 days (retained for 3 weeks)

@@ -1,5 +1,5 @@
 import 'dart:math' as math;
-import 'package:dha_anywaa_app/learning/card_state.dart';
+import 'package:dha_anywaaa/learning/card_state.dart';
 
 /// FSRS-6 (Free Spaced Repetition Scheduler) Algorithm
 /// Based on: https://github.com/open-spaced-repetition/fsrs4anki

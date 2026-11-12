@@ -1,5 +1,5 @@
 import 'dart:math' as math;
-import 'package:dha_anywaa_app/learning/card_state.dart';
+import 'package:dha_anywaaa/learning/card_state.dart';
 
 /// Builds Daily 5 learning sessions
 /// Smart card selection for habit formation

@@ -1,4 +1,4 @@
-import 'package:dha_anywaa_app/learning/fsrs_engine.dart';
+import 'package:dha_anywaaa/learning/fsrs_engine.dart';
 
 /// Maps user answer to FSRS rating
 /// Current: binary correct/incorrect → Again/Good

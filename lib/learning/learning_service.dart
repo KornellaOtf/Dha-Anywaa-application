@@ -1,10 +1,10 @@
-import 'package:dha_anywaa_app/learning/card_state.dart';
-import 'package:dha_anywaa_app/learning/card_repository.dart';
-import 'package:dha_anywaa_app/learning/fsrs_engine.dart';
-import 'package:dha_anywaa_app/learning/session_builder.dart';
-import 'package:dha_anywaa_app/learning/review_event.dart';
-import 'package:dha_anywaa_app/learning/rating_mapper.dart';
-import 'package:dha_anywaa_app/progress/xp_system.dart';
+import 'package:dha_anywaaa/learning/card_state.dart';
+import 'package:dha_anywaaa/learning/card_repository.dart';
+import 'package:dha_anywaaa/learning/fsrs_engine.dart';
+import 'package:dha_anywaaa/learning/session_builder.dart';
+import 'package:dha_anywaaa/learning/review_event.dart';
+import 'package:dha_anywaaa/learning/rating_mapper.dart';
+import 'package:dha_anywaaa/progress/xp_system.dart';
 
 /// Main learning service - coordinates FSRS algorithm with persistence
 /// Singleton service that manages the entire learning system

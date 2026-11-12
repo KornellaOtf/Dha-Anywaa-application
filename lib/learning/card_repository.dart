@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:dha_anywaa_app/learning/card_state.dart';
-import 'package:dha_anywaa_app/learning/review_event.dart';
-import 'package:dha_anywaa_app/progress/xp_system.dart';
+import 'package:dha_anywaaa/learning/card_state.dart';
+import 'package:dha_anywaaa/learning/review_event.dart';
+import 'package:dha_anywaaa/progress/xp_system.dart';
 
 /// Persistent storage for FSRS card states and review history
 class CardRepository {
