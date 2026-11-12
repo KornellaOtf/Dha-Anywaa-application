@@ -2,6 +2,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:dha_anywaaa/components/savedData.dart';
 import 'package:dha_anywaaa/letters_and_sound.dart';
 import 'package:dha_anywaaa/services/analytics_service.dart';
+import 'package:dha_anywaaa/services/gamification_service.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
@@ -114,10 +115,11 @@ class _Page1State extends State<Page1> with SingleTickerProviderStateMixin {
     final newVal = !_learned[i];
     await _savedData.setLearned(_category, i, value: newVal);
     
-    // Log lesson completion when marking as learned
+    // Log lesson completion and award XP when marking as learned
     if (newVal) {
       final letterId = _letters[i].capitalLetter;
       AnalyticsService.instance.logCompleteLesson('alphabet', letterId);
+      GamificationService.instance.onLessonComplete();
     }
     
     final count = await _savedData.learnedCount(_category, _letters.length);

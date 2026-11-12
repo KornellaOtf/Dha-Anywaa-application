@@ -1,5 +1,7 @@
 import 'package:dha_anywaaa/services/analytics_service.dart';
+import 'package:dha_anywaaa/services/gamification_service.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
+import 'package:dha_anywaaa/widgets/celebration_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -14,11 +16,28 @@ class Result extends StatefulWidget {
 }
 
 class _ResultState extends State<Result> {
+  GamState? _gam;
+
   @override
   void initState() {
     super.initState();
-    // Log quiz completion to analytics
     AnalyticsService.instance.logFinishQuiz(widget.finalResult, widget.total);
+    _awardXp();
+    // Fire confetti for a good score (7+ out of 10, or 70%+)
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeCelebrate());
+  }
+
+  void _maybeCelebrate() {
+    final pct = widget.total > 0 ? widget.finalResult / widget.total : 0.0;
+    if (pct >= 0.7) {
+      CelebrationHelper.showQuizComplete(context, widget.finalResult, widget.total);
+    }
+  }
+
+  Future<void> _awardXp() async {
+    final gam = await GamificationService.instance
+        .onQuizFinish(widget.finalResult);
+    if (mounted) setState(() => _gam = gam);
   }
 
   String _message() {
@@ -103,6 +122,58 @@ class _ResultState extends State<Result> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 36),
+
+              // ── XP earned ─────────────────────────────────────────────────
+              if (_gam != null && _gam!.awardedXp > 0)
+                TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0, end: 1),
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeOutBack,
+                  builder: (_, v, child) =>
+                      Transform.scale(scale: v, child: child),
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 20),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: kGold.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(30),
+                      border: Border.all(
+                          color: kGold.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.star_rounded,
+                            size: 18, color: kGold),
+                        const SizedBox(width: 6),
+                        Text(
+                          '+${_gam!.awardedXp} XP  ·  Level ${_gam!.level}',
+                          style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: kGold),
+                        ),
+                        if (_gam!.streakBonus > 0) ...[
+                          const SizedBox(width: 10),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.local_fire_department_rounded,
+                                  size: 14, color: kRust),
+                              const SizedBox(width: 4),
+                              Text('${_gam!.streakDays} day streak!',
+                                  style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: kRust)),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
 
               // ── Score ring ────────────────────────────────────────────────
               TweenAnimationBuilder<double>(

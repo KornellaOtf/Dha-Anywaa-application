@@ -1,6 +1,7 @@
 import 'package:dha_anywaaa/app_settings.dart';
 import 'package:dha_anywaaa/anywaa_ai_page.dart';
 import 'package:dha_anywaaa/services/ota_service.dart';
+import 'package:dha_anywaaa/services/retention_engine.dart';
 import 'package:dha_anywaaa/components/animal.dart';
 import 'package:dha_anywaaa/components/bird.dart';
 import 'package:dha_anywaaa/components/body_part.dart';
@@ -21,19 +22,39 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:timezone/data/latest_all.dart' as tz;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  // Initialize timezone data for notifications
+  tz.initializeTimeZones();
+  
   // Initialize Firebase (Analytics only - no FCM for now)
   try {
     await Firebase.initializeApp();
+    // Set user properties so Firebase can segment users by app version
+    // and distribution channel. Helps replace "(not set)" with real data.
+    final analytics = FirebaseAnalytics.instance;
+    final pkgInfo = await PackageInfo.fromPlatform();
+    await analytics.setUserProperty(name: 'app_version', value: pkgInfo.version);
+    await analytics.setUserProperty(name: 'build_number', value: pkgInfo.buildNumber);
+    await analytics.setUserProperty(name: 'distribution', value: 'github');
   } catch (e) {
     debugPrint('Firebase initialization error: $e');
   }
 
   // Initialize background downloader so OTA downloads survive backgrounding
   await OtaService.initialize();
+  
+  // Initialize retention engine for smart notifications
+  try {
+    await RetentionEngine.instance.initialize();
+    await RetentionEngine.instance.requestPermission();
+  } catch (e) {
+    debugPrint('Retention engine initialization error: $e');
+  }
   
   // Load the saved preference first so the correct theme is applied from the
   // very first frame instead of flashing the system theme on relaunch.

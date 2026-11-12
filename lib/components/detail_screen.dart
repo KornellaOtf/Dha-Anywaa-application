@@ -1,7 +1,9 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:dha_anywaaa/components/savedData.dart';
 import 'package:dha_anywaaa/services/analytics_service.dart';
+import 'package:dha_anywaaa/services/gamification_service.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
+import 'package:dha_anywaaa/widgets/celebration_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -69,10 +71,22 @@ class _DetailScreenState extends State<DetailScreen> {
     final val = !_learned[i];
     await _savedData.setLearned(widget.category, i, value: val);
     
-    // Log lesson completion when marking as learned
+    // Log lesson completion and award XP when marking as learned
     if (val) {
       final itemId = widget.items[i]['engName'] ?? 'item_$i';
       AnalyticsService.instance.logCompleteLesson(widget.category, itemId);
+      final gam = await GamificationService.instance.onLessonComplete();
+      if (mounted) {
+        // Streak milestone takes priority over level up
+        if (gam.streakBonus > 0) {
+          CelebrationHelper.showStreakMilestone(context, gam.streakDays);
+        } else if (gam.leveledUp) {
+          CelebrationHelper.showLevelUp(context, gam.level);
+        } else {
+          // Quick "correct" flash on every lesson marked
+          CelebrationHelper.showCorrectAnswer(context);
+        }
+      }
     }
     
     final count =

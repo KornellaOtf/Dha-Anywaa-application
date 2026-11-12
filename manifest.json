@@ -1,11 +1,9 @@
 {
-  "version": "1.4.6",
-  "versionCode": 166,
-  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.4.6/dha-anywaa-v1.4.6.apk",
+  "version": "1.4.7",
+  "versionCode": 167,
+  "downloadUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.4.7/dha-anywaa-v1.4.7.apk",
   "sha256": "98f80b836e0d5ead011cc48f4f7467bbee318b998ff72a4a6d8c5e96dd0f6891",
-  "sizeBytes": 63369224,
-  "minSupportedVersionCode": 1,
-  "mandatory": false,
-  "releaseNotes": "Version 1.4.6",
-  "developer": "Kornella Otf"
+  "size": 63963136,
+  "releaseNotes": "Addiction System Update:\n- Added Daily 5 spaced repetition learning system\n- Smart notifications with comeback bonuses\n- Confetti celebrations for quiz completions (70%+ score)\n- Level up and streak milestone animations\n- Notification settings in Settings (choose your reminder time)\n- All celebrations are emoji-free and respectful\n- Improved retention mechanics based on Duolingo research",
+  "minSdkVersion": 21
 }

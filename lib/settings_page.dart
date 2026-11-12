@@ -8,6 +8,7 @@ import 'package:dha_anywaaa/privacy_policy_page.dart';
 import 'package:dha_anywaaa/ota_update_page.dart';
 import 'package:dha_anywaaa/services/ota_service.dart';
 import 'package:dha_anywaaa/services/analytics_service.dart';
+import 'package:dha_anywaaa/services/retention_engine.dart';
 import 'package:dha_anywaaa/terms_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -27,12 +28,24 @@ class _SettingsPageState extends State<SettingsPage> {
   String _appVersion = '';
   String _name       = '';
   bool   _checking   = false;
+  bool   _notificationsEnabled = false;
+  int    _reminderHour = 19;
 
   @override
   void initState() {
     super.initState();
     _loadName();
     _loadVersion();
+    _loadNotificationSettings();
+  }
+
+  Future<void> _loadNotificationSettings() async {
+    final stats = await RetentionEngine.instance.getStats();
+    if (!mounted) return;
+    setState(() {
+      _notificationsEnabled = stats.notificationsEnabled;
+      _reminderHour = stats.preferredHour;
+    });
   }
 
   Future<void> _loadName() async {
@@ -127,6 +140,40 @@ class _SettingsPageState extends State<SettingsPage> {
               trailing: _valueChevron(_name.isEmpty ? 'Not set' : _name),
               onTap: _editName,
             ),
+          ]),
+          const SizedBox(height: 24),
+
+          _section('Reminders', [
+            _row(
+              icon: Icons.notifications_outlined,
+              iconColor: kGreen,
+              title: 'Daily reminder',
+              subtitle: _notificationsEnabled
+                  ? 'Reminds you at ${_formatHour(_reminderHour)} every day'
+                  : 'Off',
+              trailing: Switch(
+                value: _notificationsEnabled,
+                activeColor: kGreen,
+                onChanged: (enabled) async {
+                  if (enabled) {
+                    await RetentionEngine.instance.enableNotifications(
+                      preferredHour: _reminderHour,
+                    );
+                  } else {
+                    await RetentionEngine.instance.disableNotifications();
+                  }
+                  setState(() => _notificationsEnabled = enabled);
+                },
+              ),
+            ),
+            if (_notificationsEnabled)
+              _row(
+                icon: Icons.access_time_rounded,
+                iconColor: kGold,
+                title: 'Reminder time',
+                trailing: _valueChevron(_formatHour(_reminderHour)),
+                onTap: _pickReminderTime,
+              ),
           ]),
           const SizedBox(height: 24),
 
@@ -254,6 +301,27 @@ class _SettingsPageState extends State<SettingsPage> {
       AnalyticsService.instance.logChangeTheme(picked.name);
       settings.setThemeMode(picked);
     }
+  }
+
+  // ── Reminder time picker ──────────────────────────────────────────────────
+  Future<void> _pickReminderTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: _reminderHour, minute: 0),
+      helpText: 'Choose your reminder time',
+    );
+    if (picked != null && mounted) {
+      await RetentionEngine.instance.enableNotifications(
+        preferredHour: picked.hour,
+      );
+      setState(() => _reminderHour = picked.hour);
+    }
+  }
+
+  String _formatHour(int hour) {
+    final suffix = hour >= 12 ? 'PM' : 'AM';
+    final display = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+    return '$display:00 $suffix';
   }
 
   // ── Name editor ───────────────────────────────────────────────────────────

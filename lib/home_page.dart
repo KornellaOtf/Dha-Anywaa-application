@@ -2,20 +2,23 @@ import 'package:dha_anywaaa/about.dart';
 import 'package:dha_anywaaa/anywaa_ai_page.dart';
 import 'package:dha_anywaaa/components/savedData.dart';
 import 'package:dha_anywaaa/dictionary_coming_soon_page.dart';
-import 'package:dha_anywaaa/dictionary_page.dart';
 import 'package:dha_anywaaa/help.dart';
 import 'package:dha_anywaaa/privacy_policy_page.dart';
 import 'package:dha_anywaaa/services/analytics_service.dart';
+import 'package:dha_anywaaa/services/gamification_service.dart';
 import 'package:dha_anywaaa/services/ota_service.dart';
 import 'package:dha_anywaaa/services/notification_service.dart';
+import 'package:dha_anywaaa/services/retention_engine.dart';
 import 'package:dha_anywaaa/settings_page.dart';
 import 'package:dha_anywaaa/terms_page.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:dha_anywaaa/vowelLetter.dart';
 import 'package:dha_anywaaa/widgets/body.dart';
 import 'package:dha_anywaaa/widgets/brand_leaf.dart';
+import 'package:dha_anywaaa/widgets/celebration_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Items per category: used to calculate progress %.
 const Map<String, int> _categoryTotals = {
@@ -64,6 +67,7 @@ class _HomePageState extends State<HomePage> {
   int _lastRouteTotal = 29;
   Map<String, int> _learnedCounts = {};
   int _bottomNavIndex = 0;
+  GamState? _gamState;
 
   final List<Map<String, String>> categories = [
     {'engName': 'Numbers',   'anyName': 'Kwäänë',   'imageLink': 'assets/category_image/numbers_2.png', 'route': 'number'},
@@ -84,10 +88,37 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _load();
+    // Track app open for retention engine
+    RetentionEngine.instance.onAppOpen();
+    // Check for comeback bonus
+    _checkComebackBonus();
     // Initialize notification service
     _initNotifications();
     // Run update check after the first frame so it never blocks the UI.
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkForUpdate());
+  }
+
+  Future<void> _checkComebackBonus() async {
+    try {
+      final eligible = await RetentionEngine.instance.isComebackEligible();
+      if (eligible) {
+        final bonusXp = await RetentionEngine.instance.claimComebackBonus();
+        if (bonusXp > 0 && mounted) {
+          // Show celebration
+          CelebrationHelper.show(
+            context,
+            type: CelebrationType.confetti,
+            message: 'Welcome back! +$bonusXp XP bonus!',
+          );
+          // Award the XP
+          await GamificationService.instance.onLessonComplete();
+          // Reload stats
+          _load();
+        }
+      }
+    } catch (e) {
+      debugPrint('Comeback bonus check failed: $e');
+    }
   }
 
   Future<void> _initNotifications() async {
@@ -122,6 +153,8 @@ class _HomePageState extends State<HomePage> {
       counts[cat.key] = await _savedData.learnedCount(cat.key, cat.value);
     }
 
+    final gam = await GamificationService.instance.load();
+
     if (!mounted) return;
     setState(() {
       _name = name == 'guess' ? '' : name;
@@ -129,6 +162,7 @@ class _HomePageState extends State<HomePage> {
       _lastRouteProgress = progress;
       _lastRouteTotal = total;
       _learnedCounts = counts;
+      _gamState = gam;
     });
   }
 
@@ -179,10 +213,20 @@ class _HomePageState extends State<HomePage> {
                 child: _buildGreeting(),
               ),
             ),
-            // ── Continue card ───────────────────────────────────────────────
+            // ── Daily 5 card (NEW!) ─────────────────────────────────────────
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(24, 4, 24, 0),
+              sliver: SliverToBoxAdapter(child: _buildDailyFiveCard(context)),
+            ),
+            // ── Continue card ───────────────────────────────────────────────
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
               sliver: SliverToBoxAdapter(child: _buildContinueCard(context)),
+            ),
+            // ── Quiz highlight card ──────────────────────────────────────────
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+              sliver: SliverToBoxAdapter(child: _buildQuizCard(context)),
             ),
             // ── Explore header ──────────────────────────────────────────────
             SliverPadding(
@@ -218,16 +262,213 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildGreeting() {
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text('Welcome back',
-          style: TextStyle(fontSize: 13, color: context.c.textSub)),
-      const SizedBox(height: 2),
-      Text(
-        _name.isEmpty ? 'Learner' : _name,
-        style: GoogleFonts.playfairDisplay(
-            fontSize: 32, fontWeight: FontWeight.w700, color: context.c.text),
+    final gam = _gamState;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Welcome back',
+                      style: TextStyle(fontSize: 13, color: context.c.textSub)),
+                  const SizedBox(height: 2),
+                  Text(
+                    _name.isEmpty ? 'Learner' : _name,
+                    style: GoogleFonts.playfairDisplay(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w700,
+                        color: context.c.text),
+                  ),
+                ],
+              ),
+            ),
+            // ── Daily goal ring ─────────────────────────────────────────────
+            if (gam != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: SizedBox(
+                  width: 52,
+                  height: 52,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      SizedBox(
+                        width: 52,
+                        height: 52,
+                        child: CircularProgressIndicator(
+                          value: gam.dailyGoalPct,
+                          strokeWidth: 5,
+                          backgroundColor: context.c.border,
+                          valueColor: AlwaysStoppedAnimation(
+                              gam.dailyGoalMet ? kGreen : kGold),
+                        ),
+                      ),
+                      Icon(
+                        gam.dailyGoalMet
+                            ? Icons.check_rounded
+                            : Icons.bolt_rounded,
+                        size: 20,
+                        color: gam.dailyGoalMet ? kGreen : kGold,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
+        if (gam != null) ...[
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              // ── Streak chip ───────────────────────────────────────────────
+              _StatChip(
+                icon: Icons.local_fire_department_rounded,
+                color: kRust,
+                label: '${gam.streakDays} day streak',
+              ),
+              const SizedBox(width: 10),
+              // ── XP chip ───────────────────────────────────────────────────
+              _StatChip(
+                icon: Icons.star_rounded,
+                color: kGold,
+                label: '${gam.xp} XP · Lv ${gam.level}',
+              ),
+            ],
+          ),
+          // ── Level progress bar ───────────────────────────────────────────
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: gam.levelPct,
+              minHeight: 4,
+              backgroundColor: context.c.border,
+              valueColor: AlwaysStoppedAnimation(context.c.accent),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildDailyFiveCard(BuildContext context) {
+    return FutureBuilder<bool>(
+      future: _checkDailyFiveStatus(),
+      builder: (context, snapshot) {
+        final completed = snapshot.data ?? false;
+        
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: completed 
+                ? [kGreen.withOpacity(0.6), kGreenMid.withOpacity(0.6)]
+                : [kGreen, kGreenMid],
+            ),
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: const [kShadowSoft],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(18),
+              onTap: completed 
+                ? null 
+                : () => _startDailyFive(context),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        completed ? Icons.check_circle : Icons.school,
+                        size: 32,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            completed ? 'Daily 5 Complete!' : 'Daily 5',
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            completed
+                                ? 'Come back tomorrow'
+                                : '5 quick questions to keep your streak',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.white.withOpacity(0.9),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (!completed)
+                      const Icon(
+                        Icons.arrow_forward_ios,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<bool> _checkDailyFiveStatus() async {
+    // Check if today's Daily 5 was completed
+    // For now, this will integrate with LearningEngine once you connect your word data
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final today = DateTime.now().toIso8601String().substring(0, 10);
+      final lastCompleted = prefs.getString('daily_five_completed') ?? '';
+      return lastCompleted == today;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  void _startDailyFive(BuildContext context) {
+    // For now, show a coming soon message
+    // Once you connect your word data, this will navigate to DailyFivePage
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Daily 5 feature coming in next update! Connect your word data to enable.'),
+        backgroundColor: kGreen,
+        duration: const Duration(seconds: 3),
       ),
-    ]);
+    );
+    
+    // TODO: Replace above with this once word data is connected:
+    // Navigator.push(
+    //   context,
+    //   MaterialPageRoute(
+    //     builder: (_) => DailyFivePage(allWords: yourWordDataHere),
+    //   ),
+    // ).then((_) => _load());
   }
 
   Widget _buildContinueCard(BuildContext context) {
@@ -287,6 +528,71 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuizCard(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(context, 'quiz');
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [kGreen, kGreenMid],
+          ),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: const [kShadowSoft],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: const Icon(Icons.quiz_rounded,
+                  color: Colors.white, size: 28),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Test your skills!',
+                      style: GoogleFonts.playfairDisplay(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white)),
+                  const SizedBox(height: 2),
+                  Text('Take the quiz and see how much you\'ve learned',
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white.withValues(alpha: 0.85))),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text('Start',
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: kGreen)),
+            ),
+          ],
         ),
       ),
     );
@@ -646,6 +952,38 @@ class _PressableCardState extends State<_PressableCard> {
         duration: const Duration(milliseconds: 120),
         curve: Curves.easeOut,
         child: widget.child,
+      ),
+    );
+  }
+}
+
+// ── Small stat chip (streak, XP) ─────────────────────────────────────────────
+class _StatChip extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String label;
+  const _StatChip({required this.icon, required this.color, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 5),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: color)),
+        ],
       ),
     );
   }
