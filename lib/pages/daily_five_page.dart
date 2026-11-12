@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../services/learning_engine.dart';
 import '../services/gamification_service.dart';
 import '../services/word_aggregator.dart';
+import '../services/analytics_service.dart';
 import '../theme/app_theme.dart';
 
 /// Daily 5 — the core FSRS-6 learning session.
@@ -101,6 +102,7 @@ class _DailyFivePageState extends State<DailyFivePage>
       });
       _animateProgress(0, 1 / words.length);
       _resetQuestionTimer();
+      AnalyticsService.instance.logDaily5Start();
     }
   }
 
@@ -135,6 +137,13 @@ class _DailyFivePageState extends State<DailyFivePage>
       correct:        correct,
       responseTimeMs: responseMs,
       questionType:   'picture_to_word',
+    );
+
+    // Log to analytics
+    AnalyticsService.instance.logCardReview(
+      correct:    correct,
+      category:   word.category,
+      responseMs: responseMs,
     );
 
     // XP calculation
@@ -187,7 +196,22 @@ class _DailyFivePageState extends State<DailyFivePage>
   void _finishSession() async {
     await _learning.markDailyCompleted();
     // Final quiz bonus from GamificationService
-    await _gamification.onQuizFinish(_results.where((r) => r).length);
+    final gam = await _gamification.onQuizFinish(_results.where((r) => r).length);
+
+    // Analytics
+    final correctCount = _results.where((r) => r).length;
+    AnalyticsService.instance.logDaily5Complete(
+      correct: correctCount,
+      total:   _results.length,
+      xp:      _totalXp,
+    );
+    // Log level-up if it happened
+    if (gam.leveledUp) {
+      AnalyticsService.instance.logLevelUp(
+        gam.level,
+        'Level ${gam.level}',
+      );
+    }
 
     if (!mounted) return;
     Navigator.pushReplacement(

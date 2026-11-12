@@ -2,6 +2,7 @@ import 'package:dha_anywaaa/app_settings.dart';
 import 'package:dha_anywaaa/anywaa_ai_page.dart';
 import 'package:dha_anywaaa/services/ota_service.dart';
 import 'package:dha_anywaaa/services/retention_engine.dart';
+import 'package:dha_anywaaa/services/analytics_service.dart';
 import 'package:dha_anywaaa/services/share_helper.dart';
 import 'package:dha_anywaaa/components/animal.dart';
 import 'package:dha_anywaaa/components/bird.dart';
@@ -44,6 +45,10 @@ void main() async {
     await analytics.setUserProperty(name: 'app_version', value: pkgInfo.version);
     await analytics.setUserProperty(name: 'build_number', value: pkgInfo.buildNumber);
     await analytics.setUserProperty(name: 'distribution', value: 'github');
+
+    // Restore hashed user ID and log app open via unified service
+    await AnalyticsService.instance.initializeFromStorage();
+    await AnalyticsService.instance.logAppOpen();
   } catch (e) {
     debugPrint('Firebase initialization error: $e');
   }

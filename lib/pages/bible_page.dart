@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
+import '../services/analytics_service.dart';
 
 // ── Colour palette used only inside this page ────────────────────────────────
 const _kInk     = Color(0xFF1A1A2E);   // near-black background
@@ -144,10 +144,7 @@ class _BiblePageState extends State<BiblePage> with TickerProviderStateMixin {
     await p.setString('bible_last_book', book);
     await p.setInt('bible_last_chapter', chapter);
     setState(() { _lastBook = book; _lastChapter = chapter; });
-    FirebaseAnalytics.instance.logEvent(
-      name: 'bible_chapter_opened',
-      parameters: {'book': book, 'chapter': chapter},
-    );
+    AnalyticsService.instance.logBibleChapterOpened(book, chapter);
   }
 
   Future<void> _savePref(String key, dynamic value) async {
@@ -173,6 +170,8 @@ class _BiblePageState extends State<BiblePage> with TickerProviderStateMixin {
           .take(100)
           .toList();
     });
+    // Log search after results computed
+    AnalyticsService.instance.logBibleSearch(q, _searchResults.length);
   }
 
   Future<void> _toggleAudio() async {
@@ -188,10 +187,7 @@ class _BiblePageState extends State<BiblePage> with TickerProviderStateMixin {
         await _audio.play(UrlSource(url));
         setState(() => _isPlaying = true);
         _audio.onPlayerComplete.listen((_) => setState(() => _isPlaying = false));
-        FirebaseAnalytics.instance.logEvent(
-          name: 'bible_audio_played',
-          parameters: {'book': _selectedBook ?? '', 'chapter': _selectedChapter ?? 0},
-        );
+        AnalyticsService.instance.logBibleAudioPlayed(_selectedBook!, _selectedChapter!);
       } catch (_) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -525,6 +521,7 @@ class _BiblePageState extends State<BiblePage> with TickerProviderStateMixin {
               onToggleEnglish: () {
                 setState(() => _showEnglish = !_showEnglish);
                 _savePref('bible_show_english', _showEnglish);
+                AnalyticsService.instance.logBibleToggleEnglish(_showEnglish);
               },
               onFontSize: (v) {
                 setState(() => _fontSize = v);
