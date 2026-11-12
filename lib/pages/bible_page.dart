@@ -501,9 +501,9 @@ class _BiblePageState extends State<BiblePage> with TickerProviderStateMixin {
   Widget _buildReadingView() {
     final verses   = _chapterVerses(_selectedBook!, _selectedChapter!);
     final maxCh    = _bookChapterCounts[_selectedBook!] ?? 1;
-    final bg       = _nightMode ? _kInk    : _kParch;
+    final bg       = _nightMode ? const Color(0xFF12191F) : _kParch;
     final textCol  = _nightMode ? const Color(0xFFE8E0D5) : const Color(0xFF1A1A2E);
-    final subCol   = _nightMode ? Colors.white38 : Colors.black38;
+    final subCol   = _nightMode ? const Color(0xFF9BA8A0) : const Color(0xFF5B625D);
 
     return Scaffold(
       backgroundColor: bg,
@@ -539,16 +539,29 @@ class _BiblePageState extends State<BiblePage> with TickerProviderStateMixin {
             // ── Verses ───────────────────────────────────────────────────
             Expanded(
               child: ListView.builder(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-                itemCount: verses.length,
-                itemBuilder: (_, i) => _VerseItem(
-                  verse:      verses[i],
-                  textColor:  textCol,
-                  subColor:   subCol,
-                  fontSize:   _fontSize,
-                  showEnglish: _showEnglish,
-                  night:      _nightMode,
-                ),
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
+                // +1 for the chapter header item at index 0
+                itemCount: verses.length + 1,
+                itemBuilder: (_, i) {
+                  // Index 0: decorative chapter header
+                  if (i == 0) {
+                    return _ChapterHeader(
+                      book:    _selectedBook!,
+                      chapter: _selectedChapter!,
+                      night:   _nightMode,
+                    );
+                  }
+                  final verse = verses[i - 1];
+                  return _VerseItem(
+                    verse:       verse,
+                    textColor:   textCol,
+                    subColor:    subCol,
+                    fontSize:    _fontSize,
+                    showEnglish: _showEnglish,
+                    night:       _nightMode,
+                    isFirst:     i == 1,
+                  );
+                },
               ),
             ),
 
@@ -1160,6 +1173,87 @@ class _SettingsRow extends StatelessWidget {
   }
 }
 
+// ── Chapter decorative header ─────────────────────────────────────────────────
+class _ChapterHeader extends StatelessWidget {
+  final String book;
+  final int    chapter;
+  final bool   night;
+
+  const _ChapterHeader({
+    required this.book,
+    required this.chapter,
+    required this.night,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final text = night ? Colors.white : _kInk;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 20, 0, 28),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Thin gold divider line with cross icon
+          Row(
+            children: [
+              Expanded(child: Divider(color: _kGold.withOpacity(0.3), height: 1)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Icon(Icons.add, color: _kGold.withOpacity(0.5), size: 14),
+              ),
+              Expanded(child: Divider(color: _kGold.withOpacity(0.3), height: 1)),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // Book name
+          Text(
+            book.toUpperCase(),
+            style: TextStyle(
+              color:         _kGold.withOpacity(0.7),
+              fontSize:      11,
+              fontWeight:    FontWeight.bold,
+              letterSpacing: 3,
+            ),
+          ),
+          const SizedBox(height: 6),
+
+          // Chapter number — large and serif
+          Text(
+            'Chapter $chapter',
+            style: GoogleFonts.playfairDisplay(
+              color:      text,
+              fontSize:   28,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Bottom separator
+          Row(
+            children: [
+              Expanded(child: Divider(color: _kGold.withOpacity(0.2), height: 1)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Container(
+                  width: 5,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color:  _kGold.withOpacity(0.4),
+                    shape:  BoxShape.circle,
+                  ),
+                ),
+              ),
+              Expanded(child: Divider(color: _kGold.withOpacity(0.2), height: 1)),
+            ],
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+}
+
 // ── Verse item ───────────────────────────────────────────────────────────────
 class _VerseItem extends StatelessWidget {
   final BibleVerse verse;
@@ -1168,6 +1262,8 @@ class _VerseItem extends StatelessWidget {
   final double     fontSize;
   final bool       showEnglish;
   final bool       night;
+  // verse 1 gets a chapter-opening treatment
+  final bool       isFirst;
 
   const _VerseItem({
     required this.verse,
@@ -1176,73 +1272,177 @@ class _VerseItem extends StatelessWidget {
     required this.fontSize,
     required this.showEnglish,
     required this.night,
+    this.isFirst = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 18),
+    // Verse 1: big drop-cap style opener
+    if (isFirst) return _buildOpeningVerse(context);
+    return _buildNormalVerse(context);
+  }
+
+  // ── Verse 1: chapter opener ───────────────────────────────────────────────
+  Widget _buildOpeningVerse(BuildContext context) {
+    final cardBg = night
+        ? const Color(0xFF1E2D40).withOpacity(0.7)
+        : _kGold.withOpacity(0.06);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color:        cardBg,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+            color: _kGold.withOpacity(0.25), width: 1),
+        boxShadow: night
+            ? [BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 4))]
+            : [BoxShadow(
+                color: _kGold.withOpacity(0.12),
+                blurRadius: 10,
+                offset: const Offset(0, 3))],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Anywaa verse
-          RichText(
-            text: TextSpan(
-              children: [
-                // Verse number
-                WidgetSpan(
-                  alignment: PlaceholderAlignment.middle,
-                  child: Container(
-                    margin: const EdgeInsets.only(right: 8, bottom: 2),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: _kGold.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    child: Text(
-                      '${verse.verse}',
-                      style: const TextStyle(
-                          color: _kGoldSoft,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-                TextSpan(
-                  text: verse.anywaa,
-                  style: TextStyle(
-                    color: textColor,
-                    fontSize: fontSize,
-                    height: 1.75,
-                    fontFamily: 'Nunito',
-                  ),
-                ),
-              ],
+          // Gold "1" badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [_kGold, _kGoldSoft],
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Text('1',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5)),
+          ),
+          const SizedBox(height: 14),
+
+          // Anywaa text — larger for opening verse
+          Text(
+            verse.anywaa,
+            style: GoogleFonts.playfairDisplay(
+              color:      textColor,
+              fontSize:   fontSize + 2,
+              height:     1.8,
+              fontWeight: FontWeight.w500,
             ),
           ),
 
-          // English translation (optional)
+          // English
           if (showEnglish) ...[
-            const SizedBox(height: 6),
+            const SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+              padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
               decoration: BoxDecoration(
+                color: _kGold.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(10),
                 border: Border(
-                  left: BorderSide(color: _kGold.withOpacity(0.5), width: 2),
+                  left: BorderSide(
+                      color: _kGold.withOpacity(0.6), width: 3),
                 ),
               ),
               child: Text(
                 verse.english,
                 style: TextStyle(
-                  color: subColor,
-                  fontSize: fontSize - 2,
-                  height: 1.6,
-                  fontStyle: FontStyle.italic,
+                  color:      subColor,
+                  fontSize:   fontSize - 2,
+                  height:     1.65,
+                  fontStyle:  FontStyle.italic,
                 ),
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  // ── Normal verse ─────────────────────────────────────────────────────────
+  Widget _buildNormalVerse(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Verse number column — fixed width, right-aligned
+          SizedBox(
+            width: 32,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 3),
+              child: Text(
+                '${verse.verse}',
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  color:      _kGold.withOpacity(0.75),
+                  fontSize:   12,
+                  fontWeight: FontWeight.bold,
+                  height:     fontSize / 12 * 1.75,
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 14),
+
+          // Verse text
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Anywaa
+                SelectableText(
+                  verse.anywaa,
+                  style: TextStyle(
+                    color:      textColor,
+                    fontSize:   fontSize,
+                    height:     1.8,
+                    letterSpacing: 0.1,
+                  ),
+                ),
+
+                // English (indented, italic, gold border)
+                if (showEnglish) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+                    decoration: BoxDecoration(
+                      color: night
+                          ? Colors.white.withOpacity(0.04)
+                          : _kGold.withOpacity(0.05),
+                      borderRadius: const BorderRadius.only(
+                        topRight:    Radius.circular(8),
+                        bottomRight: Radius.circular(8),
+                        bottomLeft:  Radius.circular(8),
+                      ),
+                      border: Border(
+                        left: BorderSide(
+                            color: _kGold.withOpacity(0.45), width: 2.5),
+                      ),
+                    ),
+                    child: Text(
+                      verse.english,
+                      style: TextStyle(
+                        color:     subColor,
+                        fontSize:  fontSize - 2.5,
+                        height:    1.65,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
         ],
       ),
     );
