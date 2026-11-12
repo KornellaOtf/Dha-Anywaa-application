@@ -1,1 +1,11 @@
-{"version": "1.4.12", "versionCode": 172, "downloadUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.4.12/dha-anywaa-v1.4.12.apk", "sha256": "bbd0570463eaaec9cc329c9513ce7f209902fe2532248fd84423d63cbfe8db4d", "size": 88300000, "releaseNotes": "v1.4.12 - Fix Bible empty + Remove Privacy Policy from sidebar\n\nFixed: Bible content was empty because pubspec.yaml did not include subdirectories (ANY/OT/ and ANY/NT/). Now all 66 books load properly.\n\nRemoved: Privacy Policy item from sidebar drawer.\n\nBible (Weel Jwok) features:\n- 66 books in Dha Anywaa (39 OT + 27 NT)\n- Browse by OT/NT tabs, book selection, chapter grid\n- Verse reading with verse numbers and section headings\n- Audio playback per chapter (requires internet)\n- Continue reading banner remembers last position\n- Previous/Next chapter navigation\n- Home screen shortcut", "minSdkVersion": 21}
+{
+  "version": "1.6.1",
+  "versionCode": 183,
+  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.6.1/dha-anywaa-v1.6.1-arm64.apk",
+  "sha256": "d2d5ca2d1794c663dd1601f1f89c61839cdc3ab9a7742de938823e621101b9ac",
+  "sizeBytes": 51934002,
+  "minSupportedVersionCode": 1,
+  "mandatory": false,
+  "releaseNotes": "v1.6.1 — Bible UI cleanup, Show English toggle fix, Daily Five completion fix, split APKs (50% smaller)",
+  "developer": "Kornella Otf"
+}
