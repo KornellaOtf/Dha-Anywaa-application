@@ -86,7 +86,7 @@ Future<void> _pickReminderTime() async {
 ### 7. Share Link Issue
 **Problem**: Share helper included netlify website link. User requested GitHub APK only.
 
-**Fix**: Removed `_website` constant and netlify link from all share messages. Updated APK URL to v1.4.8.
+**Fix**: Removed `_website` constant and netlify link from all share messages. Updated APK URL to v1.4.9.
 
 ## Testing Checklist
 

@@ -4,9 +4,17 @@ This directory contains comprehensive documentation for the Dha Anywaa Flutter a
 
 ---
 
-## 📚 Documentation Index
+## Documentation Index
+
+### Architecture
+
+#### [ARCHITECTURE.md](./ARCHITECTURE.md)
+Complete system architecture covering all services, data flow, SharedPreferences keys, named routes, permissions, and release process. Read this to understand how the app works end to end.
 
 ### Release Documentation
+
+#### [RELEASE_NOTES_v1.4.9.md](./RELEASE_NOTES_v1.4.9.md)
+v1.4.9 release: welcome screen redesign, quit quiz dialog redesign, Daily 5 connected to real word data, home screen shortcuts, reminder system fixes (date bug, permissions, toggle state sync), share link updated.
 
 #### [RELEASE_NOTES_v1.2.27.md](./RELEASE_NOTES_v1.2.27.md)
 Analytics fix and Firebase App Distribution setup:
@@ -341,6 +349,6 @@ See LICENSE file in repository root.
 
 ---
 
-**Last Updated:** November 9, 2026  
-**Documentation Version:** 1.0  
-**App Version:** 1.2.26 (build 126)
+**Last Updated:** November 11, 2026  
+**Documentation Version:** 1.4.9  
+**App Version:** 1.4.9 (build 169)

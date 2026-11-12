@@ -1,5 +1,96 @@
 # Changelog
 
+## 1.4.9 (build 169)
+
+Released: 2026-11-11
+
+### Added
+- Home screen shortcuts: long-press app icon for Take a Quiz, Ask Anywaa AI, Share App
+- Static shortcuts XML for instant native menu on all Android launchers
+- WordAggregator service: aggregates 38 vocabulary words from Animals (14), Birds (12), Colors (8), Shapes (4) into a unified WordData model
+- Daily 5 feature now fully functional: connected to real word data with spaced repetition, XP rewards, combo tracking, session summary
+- Wrong answer generation: Daily 5 dynamically picks a random different word as the wrong choice
+- Image error fallback: Daily 5 shows a placeholder icon if an image asset fails to load
+- quick_actions ^1.0.8 package added
+
+### Changed
+- Redesigned welcome screen (NameEntry): gradient hero with brand logo glow, 3 feature pills (Audio/Offline/Quizzes), cleaner single-column form
+- Redesigned quit quiz dialog: side-by-side Quit/Keep going buttons, pause icon instead of running person, calmer "Take a break?" tone
+- Share helper: APK URL updated to v1.4.9, removed netlify website link entirely (GitHub only)
+- main.dart: MyApp converted from StatelessWidget to StatefulWidget with GlobalKey<NavigatorState> for shortcut navigation
+- daily_five_page.dart: removed duplicate WordData class, now imports unified WordData from word_aggregator.dart
+- Settings page toggle: only updates UI state after permission is confirmed, re-requests permission on time change
+- AndroidManifest.xml: added SCHEDULE_EXACT_ALARM and USE_EXACT_ALARM permissions, registered shortcuts meta-data
+
+### Fixed
+- Date calculation bug in retention_engine.dart: _timeUntilTomorrow() used DateTime(now.year, now.month, now.day + 1) which crashes at month boundaries (Jan 31 + 1 = invalid date). Now uses now.add(Duration(days: 1))
+- Notification toggle state desync: switch showed ON even when permission was denied. Now only updates after successful permission grant
+- Missing user feedback on notification toggle: added toast messages ("Daily reminders enabled", "Daily reminders disabled", "Please enable notifications in Settings", "Reminder set for X:00 PM")
+- Time picker permission leak: user could change reminder time without notification permission. Now re-requests permission before scheduling
+- requestPermission() only requested POST_NOTIFICATIONS, not SCHEDULE_EXACT_ALARM. Now requests both
+
+### Technical
+- APK size: 86.2MB
+- SHA256: 05d755f43665fbfb6bee06077f138ee115bf065ba963a5fc105838647c9a747d
+- Branch: ui-cleanup-startup
+- 16 files changed, 804 insertions, 259 deletions
+
+---
+
+## 1.4.8 (build 168)
+
+Released: 2026-11-11
+
+### Added
+- Share button in drawer: "Share Dha Anywaa" ListTile with share icon
+- Share button in Settings: "Invite a Friend" section
+- Share quiz result: appears on quiz results scoring 70% or higher
+- Personal best leaderboard: weekly word count vs personal record with progress bar
+- Streak milestone celebrations added to quiz results
+- comeback_bonus_claimed analytics event
+- streak_milestone analytics event
+
+### Changed
+- Redesigned home page: compact header with time-aware greeting (Good morning/afternoon/evening), stats strip (streak/XP/level), single hero continue card replacing 4 stacked cards, quick action pills (Daily 5/Quiz/Reading), cleaner 2-column category grid
+- Comeback bonus XP fixed: awards 50 XP instead of 5
+- Streak and level-up celebrations added to quiz result page
+- Share helper: removed netlify website link, GitHub APK download only
+- All emoji-free across notifications, celebrations, and share messages
+
+### Fixed
+- Removed dead NotificationService call that was never wired up
+- Comeback bonus XP was awarding 5 instead of 50
+
+### Technical
+- APK size: 82MB
+- SHA256: a76faec548e80176cdd7a707ef01c55bb74809d6a2f4a1542feac9b0a4bd1d10
+
+---
+
+## 1.4.7 (build 167)
+
+Released: 2026-11-11
+
+### Added
+- Spaced repetition system (LearningEngine): Leitner box model with 5 boxes, ease factor adjustment, exponential review intervals
+- Smart notification engine (RetentionEngine): daily reminders with AndroidScheduleMode.exactAllowWhileIdle, reschedules on app open, cancels on disable
+- Celebration system (CelebrationHelper): confetti on quiz completion, correct answer feedback, level-up trophy animation, streak milestone celebrations
+- Gamification service (GamificationService): XP for audio/lessons/quizzes, streak tracking with consecutive day increment, comeback bonus for 3+ day absence, combo bonus for 3+ correct in a row
+- Daily 5 card on home page: shows daily practice status with completion indicator
+- Personal best leaderboard: tracks weekly word count
+- Comeback bonus: +50 XP when user returns after 3+ days away
+- Streak milestones: celebrations at 3, 7, 14, and 30 days
+- Firebase Analytics events: notification_shown, notification_opened, streak_milestone, comeback_bonus_claimed, finish_quiz, play_lesson_audio, complete_lesson
+- Settings page: daily reminder toggle with showTimePicker, preferred notification time stored in SharedPreferences
+
+### Technical
+- Packages added: flutter_local_notifications ^17.0.0, timezone ^0.9.4
+- RetentionEngine.instance.initialize() and requestPermission() called in main.dart
+- RetentionEngine.instance.onAppOpen() called in HomePage.initState()
+- Notifications use tz scheduling with exactAllowWhileIdle for Doze mode compatibility
+
+---
+
 ## 1.3.4 (build 154)
 
 Released: 2026-11-10
