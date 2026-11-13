@@ -115,28 +115,45 @@ class OtaService {
       final prefs = await SharedPreferences.getInstance();
       final lastCheck = prefs.getInt(_cacheKey) ?? 0;
       final now = DateTime.now().millisecondsSinceEpoch;
-      if (now - lastCheck < _cacheTtlMs) return null;
+      if (now - lastCheck < _cacheTtlMs) {
+        debugPrint('OTA: Skipping check (cached)');
+        return null;
+      }
     }
 
     try {
+      debugPrint('OTA: Fetching manifest from: $_manifestUrl');
       // Fetch manifest.json directly — no GitHub API, no rate limits.
       final manifestRes = await http
           .get(Uri.parse(_manifestUrl))
           .timeout(const Duration(seconds: 10));
 
-      if (manifestRes.statusCode != 200) return null;
+      debugPrint('OTA: Manifest response status: ${manifestRes.statusCode}');
+      if (manifestRes.statusCode != 200) {
+        debugPrint('OTA: Non-200 response, returning null');
+        return null;
+      }
 
+      debugPrint('OTA: Manifest body: ${manifestRes.body}');
       final manifest = json.decode(manifestRes.body) as Map<String, dynamic>;
       final remoteCode = (manifest['versionCode'] as num).toInt();
       final info = await PackageInfo.fromPlatform();
       final localCode = int.tryParse(info.buildNumber) ?? 0;
+
+      debugPrint('OTA: Remote version code: $remoteCode');
+      debugPrint('OTA: Local version code: $localCode (from buildNumber: ${info.buildNumber})');
 
       // Save cache timestamp only after a successful valid response
       // so rate-limit/network failures don't block the next check for 6 hours.
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt(_cacheKey, DateTime.now().millisecondsSinceEpoch);
 
-      if (remoteCode <= localCode) return null;
+      if (remoteCode <= localCode) {
+        debugPrint('OTA: No update available (remote $remoteCode <= local $localCode)');
+        return null;
+      }
+
+      debugPrint('OTA: Update available! Remote $remoteCode > local $localCode');
 
       final result = OtaCheckResult(
         updateAvailable: true,
@@ -159,7 +176,9 @@ class OtaService {
       }
 
       return result;
-    } catch (_) {
+    } catch (e, stack) {
+      debugPrint('OTA: Check failed with error: $e');
+      debugPrint('OTA: Stack trace: $stack');
       return null;
     }
   }
