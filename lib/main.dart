@@ -19,6 +19,7 @@ import 'package:dha_anywaaa/pages/page2.dart';
 import 'package:dha_anywaaa/pages/page3.dart';
 import 'package:dha_anywaaa/pages/page4.dart';
 import 'package:dha_anywaaa/pages/bible_page.dart';
+import 'package:dha_anywaaa/pages/practice_learn_page.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:dha_anywaaa/wraper.dart';
 import 'package:flutter/material.dart';
@@ -171,6 +172,10 @@ class _MyAppState extends State<MyApp> {
           'anywaa_ai': () => const AnywaaAiPage(),
           'home_page': () => const HomePage(),
           'name_entry': () => const NameEntry(),
+          'practice': () => PracticeLearnShell(
+                overviewPage: const HomePage(),
+                progressPage: const HomePage(),
+              ),
           'colors': () => const Kit(),
           'body': () => const BodyPart(),
           'fish': () => const Fish(),

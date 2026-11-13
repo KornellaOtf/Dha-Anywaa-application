@@ -935,6 +935,11 @@ class _HomePageState extends State<HomePage> {
                 setState(() => _bottomNavIndex = 0);
               });
             } else if (i == 3) {
+              Navigator.pushNamed(context, 'practice').then((_) {
+                setState(() => _bottomNavIndex = 0);
+                _load();
+              });
+            } else if (i == 4) {
               _scaffoldKey.currentState?.openDrawer();
               setState(() => _bottomNavIndex = 0);
             }
@@ -946,6 +951,8 @@ class _HomePageState extends State<HomePage> {
                 icon: Icon(Icons.check_circle_outline), label: 'Quiz'),
             BottomNavigationBarItem(
                 icon: Icon(Icons.list_alt_outlined), label: 'Read'),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.fitness_center), label: 'Practice'),
             BottomNavigationBarItem(
                 icon: Icon(Icons.more_horiz), label: 'More'),
           ],
