@@ -1,11 +1,9 @@
 {
-  "version": "1.6.2",
-  "versionCode": 2184,
-  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.6.2/dha-anywaa-v1.6.2-arm64.apk",
-  "sha256": "8321818877235dd6f65cd699fb85dd287639ce3556deb54304feaa8563a211b2",
-  "sizeBytes": 51999538,
-  "minSupportedVersionCode": 1,
+  "version": "1.8.0",
+  "versionCode": 186,
   "mandatory": false,
-  "releaseNotes": "v1.6.2 — Bible redesign: hero library, 3-col grid, clean English translation",
-  "developer": "Kornella Otf"
+  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.8.0/app-arm64-v8a-release.apk",
+  "sizeBytes": 51999386,
+  "sha256": "0dc9c3f80535a711b361ea1d10ee00c0c3829db6933a049e4b2392006af3cad1",
+  "releaseNotes": "🧪 OTA Test Release\n• Testing update mechanism\n• Version 1.8.0+186"
 }
