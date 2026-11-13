@@ -1,9 +1,11 @@
 {
-  "version": "1.8.0",
-  "versionCode": 186,
+  "version": "1.8.1",
+  "versionCode": 187,
+  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.8.1/dha-anywaa-v1.8.1.apk",
+  "sha256": "8193b8252922ccbaa41f7d565def7360b65a32fe456d7f8399ad515de0ef040f",
+  "sizeBytes": 97923925,
+  "minSupportedVersionCode": 1,
   "mandatory": false,
-  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.8.0/app-arm64-v8a-release.apk",
-  "sizeBytes": 51999386,
-  "sha256": "0dc9c3f80535a711b361ea1d10ee00c0c3829db6933a049e4b2392006af3cad1",
-  "releaseNotes": "🧪 OTA Test Release\n• Testing update mechanism\n• Version 1.8.0+186"
+  "releaseNotes": "See release notes on GitHub.",
+  "developer": "Kornella Otf"
 }
