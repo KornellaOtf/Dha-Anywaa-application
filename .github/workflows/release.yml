@@ -49,11 +49,26 @@ jobs:
           storeFile=../upload-keystore.jks
           EOF
 
-      # ── 5. Build signed release APK ────────────────────────────────────────
-      - name: Build APK
-        run: flutter build apk --release --build-number=${{ github.run_number }}
+      # ── 5. Choose a version code above the latest published release ────────
+      - name: Determine next Android build number
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          MANIFEST_URL=$(gh api "repos/${GITHUB_REPOSITORY}/releases/latest" \
+            --jq '.assets[] | select(.name == "manifest.json") | .browser_download_url')
+          LATEST_CODE=$(curl -fsSL "${MANIFEST_URL}?build=${GITHUB_RUN_ID}" \
+            | jq -er '.versionCode | select(type == "number")')
+          BUILD_NUMBER=$((LATEST_CODE + 1))
+          if [ "$BUILD_NUMBER" -lt "$GITHUB_RUN_NUMBER" ]; then
+            BUILD_NUMBER=$GITHUB_RUN_NUMBER
+          fi
+          echo "BUILD_NUMBER=${BUILD_NUMBER}" >> "$GITHUB_ENV"
 
-      # ── 6. Rename APK to include version tag ──────────────────────────────
+      # ── 6. Build signed release APK ────────────────────────────────────────
+      - name: Build APK
+        run: flutter build apk --release --build-number="$BUILD_NUMBER"
+
+      # ── 7. Rename APK to include version tag ──────────────────────────────
       - name: Rename APK
         run: |
           TAG=${GITHUB_REF_NAME:-v1.0.0}
@@ -62,7 +77,7 @@ jobs:
           echo "APK_PATH=build/app/outputs/flutter-apk/dha-anywaa-${TAG}.apk" >> $GITHUB_ENV
           echo "TAG=${TAG}" >> $GITHUB_ENV
 
-      # ── 7. Compute SHA-256 of APK ─────────────────────────────────────────
+      # ── 8. Compute SHA-256 of APK ─────────────────────────────────────────
       - name: Compute SHA-256
         run: |
           SHA=$(sha256sum "$APK_PATH" | awk '{print $1}')
@@ -70,7 +85,7 @@ jobs:
           echo "SHA256=${SHA}" >> $GITHUB_ENV
           echo "SIZE=${SIZE}" >> $GITHUB_ENV
 
-      # ── 8. Write manifest.json with real values ───────────────────────────
+      # ── 9. Write manifest.json with real values ───────────────────────────
       - name: Write manifest.json
         run: |
           OWNER=$(echo "${{ github.repository }}" | cut -d/ -f1)
@@ -79,7 +94,7 @@ jobs:
           cat > manifest.json <<EOF
           {
             "version": "${VERSION}",
-            "versionCode": ${{ github.run_number }},
+            "versionCode": ${BUILD_NUMBER},
             "apkUrl": "https://github.com/${OWNER}/${REPO}/releases/download/${TAG}/dha-anywaa-${TAG}.apk",
             "sha256": "${SHA256}",
             "sizeBytes": ${SIZE},
@@ -90,7 +105,7 @@ jobs:
           }
           EOF
 
-      # ── 9. Ensure release exists and attach assets (idempotent) ───────────
+      # ── 10. Ensure release exists and attach assets (idempotent) ──────────
       - name: Publish release assets
         run: |
           # Create the release if it doesn't already exist; ignore if it does.
