@@ -11,6 +11,7 @@ import 'package:dha_anywaaa/services/analytics_service.dart';
 import 'package:dha_anywaaa/services/retention_engine.dart';
 import 'package:dha_anywaaa/services/share_helper.dart';
 import 'package:dha_anywaaa/terms_page.dart';
+import 'package:dha_anywaaa/widgets/route_transitions.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -80,8 +81,7 @@ class _SettingsPageState extends State<SettingsPage> {
       return;
     }
     Navigator.push(
-        context, MaterialPageRoute(builder: (_) => OtaUpdatePage(result: result),
-            settings: const RouteSettings(name: 'ota_update')));
+        context, SlideRoute(page: OtaUpdatePage(result: result), name: 'ota_update'));
   }
 
   void _toast(String msg) => ScaffoldMessenger.of(context).showSnackBar(
@@ -243,8 +243,7 @@ class _SettingsPageState extends State<SettingsPage> {
               trailing: Icon(Icons.chevron_right, color: context.c.border),
               onTap: () {
                 Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const AnywaaAiPage(),
-                        settings: const RouteSettings(name: 'anywaa_ai')));
+                    SlideRoute(page: const AnywaaAiPage(), name: 'anywaa_ai'));
               },
             ),
           ]),

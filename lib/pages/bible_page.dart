@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:audioplayers/audioplayers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -69,12 +68,6 @@ class _BiblePageState extends State<BiblePage>
   bool   _showEng  = false;
   bool   _night    = true;
 
-  final AudioPlayer   _player    = AudioPlayer();
-  bool                _playing   = false;
-  bool                _buffering = false;
-  String?             _loadedUrl;
-  StreamSubscription? _doneSub;
-  StreamSubscription? _stateSub;
 
   bool             _searchOpen = false;
   String           _query      = '';
@@ -98,10 +91,6 @@ class _BiblePageState extends State<BiblePage>
 
   @override
   void dispose() {
-    _doneSub?.cancel();
-    _stateSub?.cancel();
-    _player.stop();
-    _player.dispose();
     _fadeCtrl.dispose();
     _searchCtrl.dispose();
     super.dispose();
@@ -172,74 +161,7 @@ class _BiblePageState extends State<BiblePage>
   String _fmt(int n) => n.toString().replaceAllMapped(
       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},');
 
-  // ─── audio ──────────────────────────────────────────────────────────────────
-
-  String _audioUrl(String book, int chapter) {
-    final slug = book
-        .toLowerCase()
-        .replaceAll(' ', '_')
-        .replaceAll(RegExp(r'[^a-z0-9_]'), '');
-    return 'https://firebasestorage.googleapis.com/v0/b/learn-dha-anywaa.appspot.com'
-        '/o/bible_audio%2F$slug%2Fchapter_$chapter.mp3?alt=media';
-  }
-
-  Future<void> _toggleAudio() async {
-    if (_playing) {
-      await _player.pause();
-      if (mounted) setState(() => _playing = false);
-      return;
-    }
-    final url = _audioUrl(_book!, _chapter!);
-    if (_loadedUrl == url) {
-      await _player.resume();
-      if (mounted) setState(() => _playing = true);
-      return;
-    }
-    if (mounted) setState(() { _buffering = true; _playing = false; });
-    await _doneSub?.cancel();
-    _doneSub = null;
-    try {
-      await _player.stop();
-      await _player.setSource(UrlSource(url));
-      await _player.resume();
-      _loadedUrl = url;
-      _doneSub = _player.onPlayerComplete.listen((_) {
-        if (mounted) setState(() { _playing = false; _buffering = false; });
-      });
-      await _stateSub?.cancel();
-      _stateSub = _player.onPlayerStateChanged.listen((state) {
-        if (!_playing) return;
-        if (state == PlayerState.stopped || state == PlayerState.completed) {
-          if (mounted) setState(() { _playing = false; _buffering = false; });
-        }
-      });
-      AnalyticsService.instance.logBibleAudioPlayed(_book!, _chapter!);
-      if (mounted) setState(() { _playing = true; _buffering = false; });
-    } catch (e) {
-      _loadedUrl = null;
-      if (mounted) {
-        setState(() { _playing = false; _buffering = false; });
-        final msg = e.toString().toLowerCase().contains('404') ||
-                e.toString().toLowerCase().contains('not found')
-            ? 'No audio for this chapter yet'
-            : 'Could not load audio — check connection';
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(msg),
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 3),
-        ));
-      }
-    }
-  }
-
-  Future<void> _stopAudio() async {
-    await _doneSub?.cancel();
-    await _stateSub?.cancel();
-    _doneSub = _stateSub = null;
-    _loadedUrl = null;
-    await _player.stop();
-    if (mounted) setState(() { _playing = false; _buffering = false; });
-  }
+  // ─── audio — disabled, coming soon ────────────────────────────────────────
 
   void _search(String q) {
     q = q.trim().toLowerCase();
@@ -612,7 +534,6 @@ class _BiblePageState extends State<BiblePage>
                             color: _night ? Colors.white : _kInkDay,
                             size: 20),
                         onPressed: () {
-                          _stopAudio();
                           setState(() => _chapter = null);
                         },
                       ),
@@ -646,12 +567,8 @@ class _BiblePageState extends State<BiblePage>
                       ),
                     ],
                   ),
-                  _AudioBar(
-                    playing:   _playing,
-                    buffering: _buffering,
-                    night:     _night,
-                    onTap:     _buffering ? null : _toggleAudio,
-                  ),
+                  // Audio coming soon
+                  _AudioComingSoon(night: _night),
                 ],
               ),
             ),
@@ -689,13 +606,11 @@ class _BiblePageState extends State<BiblePage>
               maxChapter: _maxChapter,
               night:      _night,
               onPrev: () {
-                _stopAudio();
                 final prev = _chapter! - 1;
                 _savePosition(_book!, prev);
                 setState(() => _chapter = prev);
               },
               onNext: () {
-                _stopAudio();
                 final next = _chapter! + 1;
                 _savePosition(_book!, next);
                 setState(() => _chapter = next);
@@ -1078,73 +993,38 @@ class _ChapterCell extends StatelessWidget {
 }
 
 // ── Audio bar — no border ─────────────────────────────────────────────────────
-class _AudioBar extends StatelessWidget {
-  final bool          playing;
-  final bool          buffering;
-  final bool          night;
-  final VoidCallback? onTap;
-  const _AudioBar({
-    required this.playing,
-    required this.buffering,
-    required this.night,
-    required this.onTap,
-  });
+// ── Audio coming soon badge ──────────────────────────────────────────────────
+class _AudioComingSoon extends StatelessWidget {
+  final bool night;
+  const _AudioComingSoon({required this.night});
 
   @override
   Widget build(BuildContext context) {
     final fg = night ? Colors.white : _kInkDay;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
-        decoration: BoxDecoration(
-          color: playing
-              ? _kGreen
-              : (night
-                  ? Colors.white.withValues(alpha: 0.08)
-                  : Colors.black.withValues(alpha: 0.06)),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (buffering)
-              SizedBox(
-                width: 20, height: 20,
-                child: CircularProgressIndicator(
-                    strokeWidth: 2, color: _kGold),
-              )
-            else
-              Icon(
-                playing
-                    ? Icons.pause_circle_filled_rounded
-                    : Icons.play_circle_fill_rounded,
-                color: playing ? Colors.white : _kGold,
-                size: 22,
-              ),
-            const SizedBox(width: 10),
-            Text(
-              buffering
-                  ? 'Loading audio…'
-                  : playing
-                      ? 'Pause'
-                      : 'Listen to this chapter',
-              style: TextStyle(
-                color: playing
-                    ? Colors.white
-                    : fg.withValues(alpha: 0.65),
-                fontSize:   14,
-                fontWeight: FontWeight.w500,
-              ),
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+      decoration: BoxDecoration(
+        color: night
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.black.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.headphones_rounded,
+              color: _kGold.withValues(alpha: 0.6), size: 20),
+          const SizedBox(width: 10),
+          Text(
+            'Audio Coming Soon',
+            style: TextStyle(
+              color:      fg.withValues(alpha: 0.5),
+              fontSize:   14,
+              fontWeight: FontWeight.w500,
             ),
-            if (playing && !buffering) ...[
-              const SizedBox(width: 8),
-              Icon(Icons.graphic_eq_rounded,
-                  color: Colors.white.withValues(alpha: 0.7), size: 18),
-            ],
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

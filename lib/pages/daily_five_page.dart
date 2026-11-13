@@ -146,7 +146,7 @@ class _DailyFivePageState extends State<DailyFivePage>
       responseMs: responseMs,
     );
 
-    // XP calculation
+    // XP preview calculation (shown in UI but not persisted until session end)
     int xp = correct ? GamificationService.xpCorrectAnswer : 1;
     if (correct) {
       _combo++;
@@ -155,10 +155,6 @@ class _DailyFivePageState extends State<DailyFivePage>
     } else {
       _combo = 0;
     }
-
-    // Award XP + update streak via GamificationService
-    final gam = await _gamification.onLessonComplete();
-    xp += gam.streakBonus;
 
     _cardXp = xp;
     _totalXp += xp;
@@ -195,21 +191,25 @@ class _DailyFivePageState extends State<DailyFivePage>
 
   void _finishSession() async {
     await _learning.markDailyCompleted();
-    // Final quiz bonus from GamificationService
-    final gam = await _gamification.onQuizFinish(_results.where((r) => r).length);
+    // Single unified award calculation — all XP flows through one method
+    final award = await _gamification.completeDailyFive(
+      correct: _results.where((r) => r).length,
+      total: _results.length,
+      comboXp: _combo >= 3 ? GamificationService.xpCombo : 0,
+    );
 
     // Analytics
     final correctCount = _results.where((r) => r).length;
     AnalyticsService.instance.logDaily5Complete(
       correct: correctCount,
       total:   _results.length,
-      xp:      _totalXp,
+      xp:      award.awardedXp,
     );
     // Log level-up if it happened
-    if (gam.leveledUp) {
+    if (award.leveledUp) {
       AnalyticsService.instance.logLevelUp(
-        gam.level,
-        'Level ${gam.level}',
+        award.level,
+        'Level ${award.level}',
       );
     }
 
@@ -219,7 +219,7 @@ class _DailyFivePageState extends State<DailyFivePage>
       MaterialPageRoute(
         builder: (_) => SessionSummaryPage(
           wordsReviewed: _sessionWords.length,
-          xpEarned:      _totalXp,
+          xpEarned:      award.awardedXp,
           maxCombo:      _maxCombo,
           results:       List.unmodifiable(_results),
           words:         List.unmodifiable(_sessionWords),

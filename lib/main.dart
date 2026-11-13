@@ -28,6 +28,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:quick_actions/quick_actions.dart';
+import 'package:dha_anywaaa/widgets/route_transitions.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -156,22 +157,41 @@ class _MyAppState extends State<MyApp> {
       ],
       routes: {
         '/': (context) => const Wrapper(),
-        'number': (context) => const Number(),
-        'alphabet': (context) => const Page1(),
-        'word': (context) => const Page2(),
-        'shape': (context) => const Shpae(),
-        'reading': (context) => const Page3(),
-        'quiz': (context) => const Page4(),
-        'bible': (context) => const BiblePage(),
-        'anywaa_ai': (context) => const AnywaaAiPage(),
-        'home_page': (context) => const HomePage(),
-        'name_entry': (context) => const NameEntry(),
-        'colors': (context) => const Kit(),
-        'body': (context) => const BodyPart(),
-        'fish': (context) => const Fish(),
-        'animal': (context) => const Animal(),
-        'bird': (context) => const Bird(),
-        'clothes': (context) => const Cloth(),
+      },
+      onGenerateRoute: (settings) {
+        // Map route names to widgets with custom transitions
+        final routes = <String, Widget Function()>{
+          'number': () => const Number(),
+          'alphabet': () => const Page1(),
+          'word': () => const Page2(),
+          'shape': () => const Shpae(),
+          'reading': () => const Page3(),
+          'quiz': () => const Page4(),
+          'bible': () => const BiblePage(),
+          'anywaa_ai': () => const AnywaaAiPage(),
+          'home_page': () => const HomePage(),
+          'name_entry': () => const NameEntry(),
+          'colors': () => const Kit(),
+          'body': () => const BodyPart(),
+          'fish': () => const Fish(),
+          'animal': () => const Animal(),
+          'bird': () => const Bird(),
+          'clothes': () => const Cloth(),
+        };
+
+        final builder = routes[settings.name];
+        if (builder == null) return null;
+
+        // Quiz gets a slide-up for a more dramatic entrance
+        final transition = settings.name == 'quiz'
+            ? RouteTransition.slideUp
+            : RouteTransition.slide;
+
+        return buildRoute(
+          page: builder(),
+          name: settings.name,
+          transition: transition,
+        );
       },
     );
   }

@@ -1,10 +1,16 @@
-import 'package:flutter/material.dart';
 import 'dart:math';
+import 'package:flutter/material.dart';
 
-/// The celebration system: visual rewards that trigger dopamine.
-///
-/// This makes learning feel AMAZING.
-/// Every correct answer, completed lesson, or milestone gets celebrated.
+/// Clean celebration popup — appears when marking a word as learned.
+/// Smooth spring animation, respects dark mode, lightweight confetti.
+
+// ─── Colors ───────────────────────────────────────────────────────────────────
+const _kGreen     = Color(0xFF1F4D3A);
+const _kGold      = Color(0xFFC9993A);
+const _kAmber     = Color(0xFFFFB300);
+const _kOrange    = Color(0xFFE65100);
+const _kDark       = Color(0xFF0F1923);
+const _kSurface    = Color(0xFF1A2535);
 
 class CelebrationOverlay extends StatefulWidget {
   final CelebrationType type;
@@ -12,127 +18,215 @@ class CelebrationOverlay extends StatefulWidget {
   final VoidCallback? onComplete;
 
   const CelebrationOverlay({
-    Key? key,
+    super.key,
     required this.type,
     this.message,
     this.onComplete,
-  }) : super(key: key);
+  });
 
   @override
   State<CelebrationOverlay> createState() => _CelebrationOverlayState();
 }
 
 class _CelebrationOverlayState extends State<CelebrationOverlay>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _fadeAnimation;
+    with TickerProviderStateMixin {
+  late final AnimationController _scaleCtrl;
+  late final AnimationController _fadeCtrl;
+  late final Animation<double> _scale;
+  late final Animation<double> _fade;
+  late final Animation<Offset> _slide;
+
+  static const _confettiColors = [
+    _kGreen, _kGold, _kAmber, _kOrange,
+    Color(0xFF2D6A4F), Color(0xFFE8C87A),
+  ];
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+
+    // Scale — spring pop
+    _scaleCtrl = AnimationController(
+      duration: const Duration(milliseconds: 600),
       vsync: this,
     );
-
-    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.elasticOut),
+    _scale = Tween<double>(begin: 0.6, end: 1.0).animate(
+      CurvedAnimation(parent: _scaleCtrl, curve: Curves.easeOutBack),
     );
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
+    // Fade + slide — smooth entrance and exit
+    _fadeCtrl = AnimationController(
+      duration: const Duration(milliseconds: 350),
+      vsync: this,
     );
+    _fade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut),
+    );
+    _slide = Tween<Offset>(
+      begin: const Offset(0, 0.15),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut));
 
-    _controller.forward().then((_) {
-      Future.delayed(const Duration(milliseconds: 800), () {
-        if (mounted) {
-          widget.onComplete?.call();
-        }
-      });
+    _scaleCtrl.forward();
+    _fadeCtrl.forward();
+
+    // Auto dismiss after a short beat
+    Future.delayed(const Duration(milliseconds: 1100), () {
+      if (mounted) {
+        _fadeCtrl.reverse().then((_) {
+          if (mounted) widget.onComplete?.call();
+        });
+      }
     });
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _scaleCtrl.dispose();
+    _fadeCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        // Confetti particles
-        if (widget.type == CelebrationType.confetti) ...[
-          ...List.generate(30, (i) => _ConfettiParticle(index: i)),
-        ],
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? _kSurface : Colors.white;
+    final textColor = isDark ? Colors.white : _kDark;
 
-        // Center message
-        Center(
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: ScaleTransition(
-              scale: _scaleAnimation,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _getIcon(),
-                    const SizedBox(height: 16),
-                    Text(
-                      _getMessage(),
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    if (widget.message != null) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        widget.message!,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey[700],
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Stack(
+        children: [
+          // Dimmed backdrop — tap to dismiss
+          GestureDetector(
+            onTap: () {
+              _fadeCtrl.reverse().then((_) {
+                if (mounted) widget.onComplete?.call();
+              });
+            },
+            child: Container(color: Colors.black.withValues(alpha: 0.35)),
+          ),
+
+          // Lightweight confetti (10 particles, single controller)
+          if (widget.type == CelebrationType.confetti ||
+              widget.type == CelebrationType.levelUp ||
+              widget.type == CelebrationType.streakMilestone)
+            ...List.generate(
+              12,
+              (i) => _Confetti(
+                index: i,
+                color: _confettiColors[i % _confettiColors.length],
+              ),
+            ),
+
+          // Center card
+          Center(
+            child: FadeTransition(
+              opacity: _fade,
+              child: SlideTransition(
+                position: _slide,
+                child: ScaleTransition(
+                  scale: _scale,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 48),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 32, vertical: 28),
+                    decoration: BoxDecoration(
+                      color: cardBg,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 24,
+                          offset: const Offset(0, 8),
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ],
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildIcon(),
+                        const SizedBox(height: 14),
+                        Text(
+                          _getMessage(),
+                          style: TextStyle(
+                            fontSize:   22,
+                            fontWeight:  FontWeight.bold,
+                            color:      textColor,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        if (widget.message != null) ...[
+                          const SizedBox(height: 6),
+                          Text(
+                            widget.message!,
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: textColor.withValues(alpha: 0.55),
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _getIcon() {
+  Widget _buildIcon() {
     switch (widget.type) {
       case CelebrationType.correct:
-        return const Icon(Icons.check_circle, size: 64, color: Colors.green);
+        return Container(
+          width: 64, height: 64,
+          decoration: BoxDecoration(
+            color: _kGreen.withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.check_rounded, size: 36, color: _kGreen),
+        );
       case CelebrationType.levelUp:
-        return const Icon(Icons.emoji_events, size: 64, color: Colors.amber);
+        return Container(
+          width: 64, height: 64,
+          decoration: BoxDecoration(
+            color: _kAmber.withValues(alpha: 0.15),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.emoji_events_rounded, size: 36, color: _kAmber),
+        );
       case CelebrationType.streakMilestone:
-        return const Icon(Icons.local_fire_department, size: 64, color: Colors.orange);
+        return Container(
+          width: 64, height: 64,
+          decoration: BoxDecoration(
+            color: _kOrange.withValues(alpha: 0.15),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.local_fire_department_rounded,
+              size: 36, color: _kOrange),
+        );
       case CelebrationType.confetti:
-        return const Icon(Icons.celebration, size: 64, color: Color(0xFF2D5016));
+        return Container(
+          width: 64, height: 64,
+          decoration: BoxDecoration(
+            color: _kGold.withValues(alpha: 0.15),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.celebration_rounded, size: 36, color: _kGold),
+        );
       case CelebrationType.quickWin:
-        return const Icon(Icons.check_circle, size: 64, color: Colors.green);
+        return Container(
+          width: 64, height: 64,
+          decoration: BoxDecoration(
+            color: _kGreen.withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.check_rounded, size: 36, color: _kGreen),
+        );
     }
   }
 
@@ -143,7 +237,7 @@ class _CelebrationOverlayState extends State<CelebrationOverlay>
       case CelebrationType.levelUp:
         return 'Level Up!';
       case CelebrationType.streakMilestone:
-        return 'Streak Master!';
+        return 'Streak!';
       case CelebrationType.confetti:
         return 'Amazing!';
       case CelebrationType.quickWin:
@@ -152,83 +246,71 @@ class _CelebrationOverlayState extends State<CelebrationOverlay>
   }
 }
 
-class _ConfettiParticle extends StatefulWidget {
+// ─── Single-controller confetti particle ─────────────────────────────────────
+class _Confetti extends StatefulWidget {
   final int index;
-
-  const _ConfettiParticle({required this.index});
+  final Color color;
+  const _Confetti({required this.index, required this.color});
 
   @override
-  State<_ConfettiParticle> createState() => _ConfettiParticleState();
+  State<_Confetti> createState() => _ConfettiState();
 }
 
-class _ConfettiParticleState extends State<_ConfettiParticle>
+class _ConfettiState extends State<_Confetti>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<Offset> _positionAnimation;
-  late Animation<double> _rotationAnimation;
-  late Color _color;
-  late double _size;
-  late double _startX;
+  late final AnimationController _ctrl;
+  late final Animation<double> _progress;
+  late final double _startX;
+  late final double _drift;
+  late final double _rotation;
+  late final double _size;
 
   @override
   void initState() {
     super.initState();
-    final random = Random(widget.index);
+    final rng = Random(widget.index * 7 + 13);
+    _startX = rng.nextDouble();
+    _drift = (rng.nextDouble() - 0.5) * 0.15;
+    _rotation = rng.nextDouble() * 3 * pi;
+    _size = 6 + rng.nextDouble() * 8;
 
-    _controller = AnimationController(
-      duration: Duration(milliseconds: 1500 + random.nextInt(1000)),
+    _ctrl = AnimationController(
+      duration: Duration(milliseconds: 1200 + rng.nextInt(600)),
       vsync: this,
     );
-
-    _startX = random.nextDouble() * 2 - 1; // -1 to 1
-    _positionAnimation = Tween<Offset>(
-      begin: Offset(_startX, -0.1),
-      end: Offset(_startX + (random.nextDouble() - 0.5) * 0.3, 1.5),
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
-
-    _rotationAnimation = Tween<double>(
-      begin: 0,
-      end: random.nextDouble() * 4 * pi,
-    ).animate(_controller);
-
-    _color = [
-      Colors.red,
-      Colors.blue,
-      Colors.green,
-      Colors.yellow,
-      Colors.purple,
-      Colors.orange,
-      const Color(0xFF2D5016),
-    ][random.nextInt(7)];
-
-    _size = 8 + random.nextDouble() * 12;
-
-    _controller.forward();
+    _progress = CurvedAnimation(parent: _ctrl, curve: Curves.easeIn);
+    _ctrl.forward();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _ctrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenW = MediaQuery.sizeOf(context).width;
+    final screenH = MediaQuery.sizeOf(context).height;
+
     return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
+      animation: _progress,
+      builder: (_, __) {
+        final t = _progress.value;
         return Positioned(
-          left: MediaQuery.of(context).size.width * (_positionAnimation.value.dx + 1) / 2,
-          top: MediaQuery.of(context).size.height * _positionAnimation.value.dy,
+          left: screenW * (_startX + _drift * t),
+          top:  screenH * 0.3 * t,
           child: Transform.rotate(
-            angle: _rotationAnimation.value,
-            child: Container(
-              width: _size,
-              height: _size,
-              decoration: BoxDecoration(
-                color: _color,
-                shape: BoxShape.rectangle,
-                borderRadius: BorderRadius.circular(2),
+            angle: _rotation * t,
+            child: Opacity(
+              opacity: (1 - t).clamp(0.0, 1.0),
+              child: Container(
+                width:  _size,
+                height: _size * 0.6,
+                decoration: BoxDecoration(
+                  color: widget.color,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
           ),
@@ -238,6 +320,7 @@ class _ConfettiParticleState extends State<_ConfettiParticle>
   }
 }
 
+// ─── Types & helper ───────────────────────────────────────────────────────────
 enum CelebrationType {
   correct,
   levelUp,
@@ -246,7 +329,6 @@ enum CelebrationType {
   quickWin,
 }
 
-/// Helper to show celebrations easily
 class CelebrationHelper {
   static void show(
     BuildContext context, {
@@ -255,12 +337,14 @@ class CelebrationHelper {
   }) {
     showDialog(
       context: context,
-      barrierDismissible: false,
-      barrierColor: Colors.black.withOpacity(0.3),
-      builder: (context) => CelebrationOverlay(
+      barrierDismissible: true,
+      barrierColor: Colors.transparent,
+      builder: (_) => CelebrationOverlay(
         type: type,
         message: message,
-        onComplete: () => Navigator.of(context).pop(),
+        onComplete: () {
+          if (Navigator.of(context).canPop()) Navigator.of(context).pop();
+        },
       ),
     );
   }
@@ -270,26 +354,14 @@ class CelebrationHelper {
   }
 
   static void showLevelUp(BuildContext context, int newLevel) {
-    show(
-      context,
-      type: CelebrationType.levelUp,
-      message: 'You reached level $newLevel!',
-    );
+    show(context, type: CelebrationType.levelUp, message: 'You reached level $newLevel!');
   }
 
   static void showStreakMilestone(BuildContext context, int days) {
-    show(
-      context,
-      type: CelebrationType.streakMilestone,
-      message: '$days days in a row!',
-    );
+    show(context, type: CelebrationType.streakMilestone, message: '$days days in a row!');
   }
 
   static void showQuizComplete(BuildContext context, int score, int total) {
-    show(
-      context,
-      type: CelebrationType.confetti,
-      message: 'You got $score out of $total!',
-    );
+    show(context, type: CelebrationType.confetti, message: 'You got $score out of $total!');
   }
 }

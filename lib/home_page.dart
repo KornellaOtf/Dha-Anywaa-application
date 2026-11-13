@@ -20,6 +20,7 @@ import 'package:dha_anywaaa/terms_page.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:dha_anywaaa/vowelLetter.dart';
 import 'package:dha_anywaaa/widgets/body.dart';
+import 'package:dha_anywaaa/widgets/route_transitions.dart';
 import 'package:dha_anywaaa/widgets/brand_leaf.dart';
 import 'package:dha_anywaaa/widgets/celebration_widget.dart';
 import 'package:flutter/material.dart';
@@ -94,37 +95,43 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _load();
-    // Track app open for retention engine
-    RetentionEngine.instance.onAppOpen();
-    // Check for comeback bonus
-    _checkComebackBonus();
+    // Record app open and atomically check/claim comeback bonus
+    _onAppOpen();
     // Initialize notification service
     _initNotifications();
     // Run update check after the first frame so it never blocks the UI.
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkForUpdate());
   }
 
-  Future<void> _checkComebackBonus() async {
+  Future<void> _onAppOpen() async {
     try {
-      final eligible = await RetentionEngine.instance.isComebackEligible();
-      if (eligible) {
-        final bonusXp = await RetentionEngine.instance.claimComebackBonus();
-        if (bonusXp > 0 && mounted) {
-          // Award the actual bonus XP amount
-          await GamificationService.instance.awardBonus(bonusXp);
-          AnalyticsService.instance.logComebackBonus(bonusXp);
-          // Show celebration
-          CelebrationHelper.show(
-            context,
-            type: CelebrationType.confetti,
-            message: 'Welcome back! +$bonusXp XP bonus!',
-          );
-          // Reload stats to reflect new XP
-          _load();
-        }
+      // Single atomic call: records open time and checks/claims comeback bonus
+      final bonusXp = await RetentionEngine.instance.recordOpenAndClaimComebackBonus();
+      
+      if (bonusXp > 0 && mounted) {
+        // Award the bonus XP
+        await GamificationService.instance.awardBonus(bonusXp);
+        AnalyticsService.instance.logComebackBonus(bonusXp);
+        
+        // Show celebration
+        CelebrationHelper.show(
+          context,
+          type: CelebrationType.confetti,
+          message: 'Welcome back! +$bonusXp XP bonus!',
+        );
+        
+        // Reload stats to reflect new XP
+        _load();
+      }
+      
+      // Re-schedule notifications if enabled
+      final p = await SharedPreferences.getInstance();
+      final notificationsEnabled = p.getBool('retention_notifications_enabled') ?? false;
+      if (notificationsEnabled) {
+        await RetentionEngine.instance.onAppOpen();
       }
     } catch (e) {
-      debugPrint('Comeback bonus check failed: $e');
+      debugPrint('App open handler failed: $e');
     }
   }
 
@@ -636,11 +643,9 @@ class _HomePageState extends State<HomePage> {
     // Navigate to Daily Five with actual word data
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => DailyFivePage(
-          allWords: WordAggregator.instance.getAllWords(),
-        ),
-        settings: const RouteSettings(name: 'daily_five'),
+      SlideUpRoute(
+        page: DailyFivePage(allWords: WordAggregator.instance.getAllWords()),
+        name: 'daily_five',
       ),
     ).then((_) => _load());
   }
@@ -1013,37 +1018,29 @@ class _HomePageState extends State<HomePage> {
                 () {
               Navigator.pop(context);
               Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const VowelLetter(),
-                      settings: const RouteSettings(name: 'vowel_letters')));
+                  SlideRoute(page: const VowelLetter(), name: 'vowel_letters'));
             }),
             _drawerTile(context, Icons.face_retouching_natural_rounded,
                 'Jap dëël', () {
               Navigator.pop(context);
               Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const Body(),
-                      settings: const RouteSettings(name: 'body_parts')));
+                  SlideRoute(page: const Body(), name: 'body_parts'));
             }),
             _drawerTile(context, Icons.eco_rounded, 'Anywaa AI', () {
               Navigator.pop(context);
               Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const AnywaaAiPage(),
-                      settings: const RouteSettings(name: 'anywaa_ai')));
+                  SlideRoute(page: const AnywaaAiPage(), name: 'anywaa_ai'));
             }, color: kGreen),
             _drawerTile(context, Icons.menu_book_rounded, 'Wëël Jwøk', () {
               Navigator.pop(context);
               Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const BiblePage(),
-                      settings: const RouteSettings(name: 'bible')));
+                  SlideRoute(page: const BiblePage(), name: 'bible'));
             }, color: kGreen),
             _drawerTile(context, Icons.menu_book_rounded, 'Dictionary', () {
               Navigator.pop(context);
-              // Dictionary coming soon page
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const DictionaryComingSoonPage(),
-                  settings: const RouteSettings(name: 'dictionary_coming_soon'),
-                ),
+                SlideRoute(page: const DictionaryComingSoonPage(), name: 'dictionary_coming_soon'),
               );
             }),
             _drawerTile(context, Icons.share_outlined, 'Share Dha Anywaa', () async {
@@ -1058,29 +1055,25 @@ class _HomePageState extends State<HomePage> {
                 () {
               Navigator.pop(context);
               Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const SettingsPage(),
-                      settings: const RouteSettings(name: 'settings')));
+                  SlideRoute(page: const SettingsPage(), name: 'settings'));
             }),
             _drawerTile(context, Icons.gavel_outlined, 'Terms of Use',
                 () {
               Navigator.pop(context);
               Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const TermsPage(),
-                      settings: const RouteSettings(name: 'terms_of_use')));
+                  SlideRoute(page: const TermsPage(), name: 'terms_of_use'));
             }),
             _drawerTile(context, Icons.info_outline_rounded, 'About',
                 () {
               Navigator.pop(context);
               Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const About(),
-                      settings: const RouteSettings(name: 'about')));
+                  SlideRoute(page: const About(), name: 'about'));
             }),
             _drawerTile(context, Icons.help_outline_rounded, 'Help',
                 () {
               Navigator.pop(context);
               Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const Help(),
-                      settings: const RouteSettings(name: 'help')));
+                  SlideRoute(page: const Help(), name: 'help'));
             }),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),

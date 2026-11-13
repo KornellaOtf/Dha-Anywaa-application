@@ -89,6 +89,30 @@ class RetentionEngine {
   // Smart Notification Scheduling
   // ══════════════════════════════════════════════════════════════════════════
 
+  /// Record app open time and atomically check/claim comeback bonus.
+  /// This is the only method that should be called on app open.
+  /// Returns the XP awarded (0 if not eligible, 50 if eligible and claimed).
+  Future<int> recordOpenAndClaimComebackBonus() async {
+    final p = await SharedPreferences.getInstance();
+    final now = DateTime.now();
+    final lastMs = p.getInt(_kLastOpenTime);
+    
+    // Check if eligible: 3+ days since last open
+    final eligible = lastMs != null &&
+        now.difference(DateTime.fromMillisecondsSinceEpoch(lastMs)).inDays >= 3;
+    
+    // Record this open time (same call, no race)
+    await p.setInt(_kLastOpenTime, now.millisecondsSinceEpoch);
+    
+    // If eligible, mark claim and return the award
+    if (eligible) {
+      await p.setInt(_kComebackBonusEligible, now.millisecondsSinceEpoch);
+      return 50; // Award amount
+    }
+    
+    return 0;
+  }
+
   /// Call this every time the app opens
   Future<void> onAppOpen() async {
     final p = await SharedPreferences.getInstance();

@@ -52,6 +52,25 @@ class GamificationService {
     );
   }
 
+  /// Complete the Daily 5 session with final award calculation.
+  /// [correct] = number of correct answers, [total] = total answers, [comboXp] = bonus from combos
+  /// Returns the final state. This is the single source of truth for Daily 5 rewards.
+  Future<GamState> completeDailyFive({
+    required int correct,
+    required int total,
+    required int comboXp,
+  }) {
+    // Recall XP: 2 per correct, 1 per wrong, plus any combo bonus already earned
+    final recallXp = correct * 2 + (total - correct) * 1 + comboXp;
+    // Completion bonus: fixed 5 XP for finishing the session
+    const completionBonus = 5;
+    // Accuracy bonus: 5 XP if >= 80% correct
+    final accuracyBonus = total > 0 && correct / total >= 0.8 ? 5 : 0;
+    // Total award this session
+    final totalAward = recallXp + completionBonus + accuracyBonus;
+    return _award(totalAward);
+  }
+
   /// Call when a lesson is completed.
   Future<GamState> onLessonComplete() => _award(xpCompleteLesson);
 
