@@ -781,21 +781,27 @@ class _BiblePageState extends State<BiblePage>
   }
 
   void _showSettings() {
-    final bg = _night ? _kSurface : Colors.white;
-    final fg = _night ? Colors.white : _kInkDay;
-
     showModalBottomSheet(
       context: context,
-      backgroundColor: bg,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      backgroundColor: Colors.transparent,
       builder: (_) {
         var localShowEng  = _showEng;
         var localNight    = _night;
         var localFontSize = _fontSize;
 
         return StatefulBuilder(
-          builder: (ctx, local) => Padding(
+          builder: (ctx, local) {
+            // Recompute colors from localNight so the sheet repaints
+            // immediately when the night-mode toggle flips.
+            final bg = localNight ? _kSurface : Colors.white;
+            final fg = localNight ? Colors.white : _kInkDay;
+            return Container(
+              decoration: BoxDecoration(
+                color: bg,
+                borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24)),
+              ),
+            child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -873,9 +879,11 @@ class _BiblePageState extends State<BiblePage>
               ],
             ),
           ),
-        );
-      },
-    );
+          );
+        }
+      );
+    }
+  );
   }
 
   // ════════════════════════════════════════════════════════════════════════════

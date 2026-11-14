@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.9.8 (build 2194)
+
+Released: 2026-11-14
+
+### Added
+- Practice modes now work: Random Words, Long Session, Mistakes Review, and Saved Words — all playable sessions that feed the FSRS scheduler and award XP without using the daily slot
+
+### Changed
+- Update screen redesigned: phase icons, softer cards, clearer buttons; placeholder release notes hidden
+- "Up to date" message renamed to "You're on the latest version"
+- Daily 5 exit prompt redesigned as a branded dialog
+- Bible reading-settings sheet now repaints instantly when toggling night mode
+
 ## 1.9.7 (build 2193)
 
 Released: 2026-11-14

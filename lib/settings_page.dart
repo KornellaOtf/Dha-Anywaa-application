@@ -77,7 +77,7 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() => _checking = false);
 
     if (result == null) {
-      _toast('Up to date ✓');
+      _toast('You\'re on the latest version');
       return;
     }
     Navigator.push(
@@ -154,7 +154,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   : 'Off',
               trailing: Switch(
                 value: _notificationsEnabled,
-                activeColor: kGreen,
+                activeThumbColor: kGreen,
                 onChanged: (enabled) async {
                   if (enabled) {
                     // Request permission first

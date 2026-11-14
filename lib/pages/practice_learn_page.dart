@@ -2,7 +2,9 @@
 // Practice + Learn screens for Dha Anywaa vocabulary learning.
 // Inspired by driving theory reference but adapted for language learning.
 
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:dha_anywaaa/pages/daily_five_page.dart';
 import 'package:dha_anywaaa/services/word_aggregator.dart';
 import 'package:dha_anywaaa/services/learning_engine.dart';
 import 'package:dha_anywaaa/services/gamification_service.dart';
@@ -77,6 +79,8 @@ class _PracticeLearnShellState extends State<PracticeLearnShell> {
   GamState? _gamState;
   int _dueCount = 0;
   bool _dailyDone = false;
+  late final List<WordData> _allWords =
+      WordAggregator.instance.getAllWords();
 
   @override
   void initState() {
@@ -249,10 +253,10 @@ class _PracticeLearnShellState extends State<PracticeLearnShell> {
         learnerName: _learnerName,
         stats: _stats,
         onDailyFive: () => Navigator.pushNamed(context, 'daily_five'),
-        onRandom: () => _showComingSoon('Random Words'),
-        onMistakes: () => _showComingSoon('Mistakes Review'),
-        onSaved: () => _showComingSoon('Saved Words'),
-        onLongSession: () => _showComingSoon('Long Session'),
+        onRandom: _openRandomWords,
+        onMistakes: _openMistakes,
+        onSaved: _openSavedWords,
+        onLongSession: _openLongSession,
         onOpenWords: () => setState(() => _index = 1),
         onNotifications: _showNotificationsSheet,
       ),
@@ -288,10 +292,62 @@ class _PracticeLearnShellState extends State<PracticeLearnShell> {
     );
   }
 
-  void _showComingSoon(String feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$feature coming soon!')),
+  // ── Practice session launchers ────────────────────────────────────────────
+
+  void _openPractice(List<WordData> words, String title) {
+    if (words.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No words to practice yet — try Daily 5 first!')),
+      );
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DailyFivePage(
+          allWords:     _allWords,
+          sessionWords: words,
+          sessionTitle: title,
+        ),
+      ),
     );
+  }
+
+  void _openRandomWords() {
+    final pool = List<WordData>.from(_allWords)..shuffle(math.Random());
+    _openPractice(pool.take(10).toList(), 'Random Words');
+  }
+
+  void _openLongSession() {
+    final pool = List<WordData>.from(_allWords)..shuffle(math.Random());
+    _openPractice(pool.take(20).toList(), 'Long Session');
+  }
+
+  Future<void> _openMistakes() async {
+    final states = await LearningEngine.instance.loadStates();
+    // Words that need work: lapses, low accuracy, or high difficulty
+    final struggling = states.values
+        .where((s) => s.lapses > 0 || s.accuracy < 0.7 || s.difficulty >= 7)
+        .toList()
+      ..sort((a, b) {
+        // Worst accuracy first, then most lapses
+        final acc = a.accuracy.compareTo(b.accuracy);
+        return acc != 0 ? acc : b.lapses.compareTo(a.lapses);
+      });
+    final ids = struggling.map((s) => s.wordId).toSet();
+    final words = _allWords.where((w) => ids.contains(w.id)).toList();
+    _openPractice(words.take(10).toList(), 'Mistakes Review');
+  }
+
+  Future<void> _openSavedWords() async {
+    final states = await LearningEngine.instance.loadStates();
+    // "Saved" = every word the learner has started (has FSRS state),
+    // most overdue first.
+    final started = states.values.toList()
+      ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
+    final ids = started.map((s) => s.wordId).toSet();
+    final words = _allWords.where((w) => ids.contains(w.id)).toList();
+    _openPractice(words.take(15).toList(), 'Saved Words');
   }
 
   void _showNotificationsSheet() {
@@ -428,7 +484,7 @@ class PracticePage extends StatelessWidget {
         ExploreRow(
           icon: Icons.bookmark,
           title: 'Saved Words',
-          subtitle: 'Revisit your saved words',
+          subtitle: 'Words you\'ve started learning',
           onTap: onSaved,
         ),
         ExploreRow(

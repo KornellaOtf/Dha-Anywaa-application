@@ -100,7 +100,12 @@ class _OtaUpdatePageState extends State<OtaUpdatePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _phaseBadge(Icons.system_update_alt_rounded, kGreen),
+        const SizedBox(height: 14),
         _display('Version ${r.latestVersion} is available'),
+        const SizedBox(height: 6),
+        Text('A new version of Dha Anywaa is ready to install.',
+            style: TextStyle(fontSize: 14, height: 1.5, color: c.textSub)),
         const SizedBox(height: 18),
         _card([
           _valueRow('Installed', _installedLabel),
@@ -170,6 +175,8 @@ class _OtaUpdatePageState extends State<OtaUpdatePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _phaseBadge(Icons.downloading_rounded, kGreenMid),
+        const SizedBox(height: 14),
         _display('Downloading ${widget.result.latestVersion}'),
         const SizedBox(height: 6),
         Text('$recvMb of $_sizeMb',
@@ -216,6 +223,8 @@ class _OtaUpdatePageState extends State<OtaUpdatePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _phaseBadge(Icons.check_circle_outline_rounded, kGreen),
+        const SizedBox(height: 14),
         _display('Ready to install'),
         const SizedBox(height: 6),
         Text('Version $v', style: TextStyle(fontSize: 14, color: c.textSub)),
@@ -265,6 +274,8 @@ class _OtaUpdatePageState extends State<OtaUpdatePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _phaseBadge(Icons.error_outline_rounded, kRust),
+        const SizedBox(height: 14),
         _display('Update failed'),
         const SizedBox(height: 14),
         Text(
@@ -316,6 +327,17 @@ class _OtaUpdatePageState extends State<OtaUpdatePage> {
   }
 
   // ── Building blocks ──────────────────────────────────────────────────────────
+  /// Tinted icon chip shown above each phase title.
+  Widget _phaseBadge(IconData icon, Color color) => Container(
+        width: 52,
+        height: 52,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.13),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Icon(icon, color: color, size: 26),
+      );
+
   Widget _display(String text) => Text(
         text,
         style: GoogleFonts.playfairDisplay(
@@ -327,8 +349,8 @@ class _OtaUpdatePageState extends State<OtaUpdatePage> {
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: context.c.card,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: context.c.border),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: const [kShadowSoft],
         ),
         child: Column(children: rows),
       );
@@ -406,7 +428,7 @@ class _OtaUpdatePageState extends State<OtaUpdatePage> {
             foregroundColor: Colors.white,
             elevation: 0,
             shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           ),
           onPressed: onTap,
           child: Text(label,
@@ -423,7 +445,7 @@ class _OtaUpdatePageState extends State<OtaUpdatePage> {
             foregroundColor: kGreen,
             side: const BorderSide(color: kGreen),
             shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           ),
           onPressed: onTap,
           child: Text(label,
@@ -450,5 +472,9 @@ List<String> _parseNotes(String notes) => notes
     .split(RegExp(r'[\r\n]+'))
     .map((s) => s.trim())
     .map((s) => s.replaceFirst(RegExp(r'^[-*•\u2022.\d\)]+\s*'), '').trim())
-    .where((s) => s.isNotEmpty)
+    // Drop placeholder release notes that just point at GitHub.
+    .where((s) =>
+        s.isNotEmpty &&
+        !s.toLowerCase().contains('see release notes') &&
+        !s.toLowerCase().contains('github.com'))
     .toList();

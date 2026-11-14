@@ -15,7 +15,20 @@ import '../theme/app_theme.dart';
 class DailyFivePage extends StatefulWidget {
   final List<WordData> allWords;
 
-  const DailyFivePage({Key? key, required this.allWords}) : super(key: key);
+  /// Optional pre-built session (Random Words, Mistakes, Saved, Long Session).
+  /// When provided, the once-per-day Daily 5 lock is bypassed and the words
+  /// are used as-is. Reviews are still recorded in the FSRS engine.
+  final List<WordData>? sessionWords;
+
+  /// Display title for custom sessions (e.g. 'Random Words').
+  final String? sessionTitle;
+
+  const DailyFivePage({
+    Key? key,
+    required this.allWords,
+    this.sessionWords,
+    this.sessionTitle,
+  }) : super(key: key);
 
   @override
   State<DailyFivePage> createState() => _DailyFivePageState();
@@ -86,6 +99,21 @@ class _DailyFivePageState extends State<DailyFivePage>
   // ── Session setup ─────────────────────────────────────────────────────────
 
   Future<void> _buildSession() async {
+    // Custom practice sessions (Random/Mistakes/Saved/Long) skip the
+    // once-per-day lock and use the caller-provided word list.
+    if (widget.sessionWords != null) {
+      final words = widget.sessionWords!;
+      if (mounted) {
+        setState(() {
+          _sessionWords = words;
+          _loading      = false;
+        });
+        _animateProgress(0, 1 / words.length);
+        _resetQuestionTimer();
+      }
+      return;
+    }
+
     // Daily 5 can only be played once per day — no replays, no extra XP.
     if (await _learning.isDailyCompleted()) {
       if (mounted) {
@@ -202,7 +230,9 @@ class _DailyFivePageState extends State<DailyFivePage>
   }
 
   void _finishSession() async {
-    await _learning.markDailyCompleted();
+    // Custom practice sessions don't consume the daily Daily 5 slot.
+    final isDailyFive = widget.sessionWords == null;
+    if (isDailyFive) await _learning.markDailyCompleted();
     // Single unified award calculation — all XP flows through one method
     final award = await _gamification.completeDailyFive(
       correct: _results.where((r) => r).length,
@@ -212,17 +242,19 @@ class _DailyFivePageState extends State<DailyFivePage>
 
     // Analytics
     final correctCount = _results.where((r) => r).length;
-    AnalyticsService.instance.logDaily5Complete(
-      correct: correctCount,
-      total:   _results.length,
-      xp:      award.awardedXp,
-    );
-    // Log level-up if it happened
-    if (award.leveledUp) {
-      AnalyticsService.instance.logLevelUp(
-        award.level,
-        'Level ${award.level}',
+    if (isDailyFive) {
+      AnalyticsService.instance.logDaily5Complete(
+        correct: correctCount,
+        total:   _results.length,
+        xp:      award.awardedXp,
       );
+      // Log level-up if it happened
+      if (award.leveledUp) {
+        AnalyticsService.instance.logLevelUp(
+          award.level,
+          'Level ${award.level}',
+        );
+      }
     }
 
     if (!mounted) return;
@@ -235,6 +267,7 @@ class _DailyFivePageState extends State<DailyFivePage>
           maxCombo:      _maxCombo,
           results:       List.unmodifiable(_results),
           words:         List.unmodifiable(_sessionWords),
+          sessionLabel:  widget.sessionTitle,
         ),
       ),
     );
@@ -267,7 +300,7 @@ class _DailyFivePageState extends State<DailyFivePage>
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           foregroundColor: Colors.white,
-          title: const Text('Daily 5'),
+          title: Text(widget.sessionTitle ?? 'Daily 5'),
         ),
         body: const Center(
           child: Text(
@@ -648,24 +681,91 @@ class _DailyFivePageState extends State<DailyFivePage>
   // ── Exit confirmation ─────────────────────────────────────────────────────
 
   void _confirmExit() {
+    final c = context.c;
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title:   const Text('Exit session?'),
-        content: const Text('Your progress this session won\'t be saved.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Keep going'),
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        insetPadding:
+            const EdgeInsets.symmetric(horizontal: 36, vertical: 24),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+          decoration: BoxDecoration(
+            color: c.card,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: const [kShadowCard],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
-            },
-            child: const Text('Exit', style: TextStyle(color: kRust)),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: kGold.withValues(alpha: 0.12),
+                  ),
+                  child: const Icon(Icons.pause_circle_rounded,
+                      color: kGold, size: 32),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text('Leave this session?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: c.text)),
+              const SizedBox(height: 8),
+              Text(
+                'Your progress in this Daily 5 won\'t be saved.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, height: 1.5, color: c.textSub),
+              ),
+              const SizedBox(height: 22),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: c.text,
+                        side: BorderSide(color: c.border),
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
+                      ),
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('Keep going',
+                          style: TextStyle(fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kRust,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        Navigator.pop(context);
+                      },
+                      child: const Text('Leave',
+                          style: TextStyle(fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -726,6 +826,7 @@ class SessionSummaryPage extends StatelessWidget {
   final int              maxCombo;
   final List<bool>       results;
   final List<WordData>   words;
+  final String?          sessionLabel;
 
   const SessionSummaryPage({
     Key? key,
@@ -734,6 +835,7 @@ class SessionSummaryPage extends StatelessWidget {
     required this.maxCombo,
     required this.results,
     required this.words,
+    this.sessionLabel,
   }) : super(key: key);
 
   @override
@@ -752,6 +854,20 @@ class SessionSummaryPage extends StatelessWidget {
           child: Column(
             children: [
               const SizedBox(height: 20),
+
+              // ── Session label (custom practice modes) ────────────────────
+              if (sessionLabel != null) ...[
+                Text(
+                  sessionLabel!.toUpperCase(),
+                  style: const TextStyle(
+                    fontSize:   12,
+                    letterSpacing: 1.6,
+                    fontWeight: FontWeight.w700,
+                    color:      kGold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
 
               // ── Headline ─────────────────────────────────────────────────
               Text(
