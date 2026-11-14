@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.9.4 (build 2190)
+
+Released: 2026-11-14
+
+### Added
+- Sidebar/drawer redesign: rounded card tiles, section labels (Learn / Discover / App), press-scale animation matching the floating nav
+
+### Fixed
+- Desktop (Linux/Windows) startup crashes: quick-actions plugin and Firebase analytics now guarded when unavailable
+- Analytics no longer crashes if Firebase fails to initialize
+
 ## 1.9.3 (build 2189)
 
 Released: 2026-11-14

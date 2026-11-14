@@ -55,8 +55,8 @@ The app checks for updates automatically (about every 6 hours when online).
 
 ## Developer
 
-Developed by **Kornella Otf** (Oriemi Obang Oriemi)
-Contact: oriemiobango@gmail.com
+Developed by **Kornella Otf** 
+Contact: kornellaotft@gmail.com
 
 ## License
 

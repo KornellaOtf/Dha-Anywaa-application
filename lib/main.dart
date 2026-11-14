@@ -24,6 +24,7 @@ import 'package:dha_anywaaa/pages/practice_learn_page.dart';
 import 'package:dha_anywaaa/services/word_aggregator.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:dha_anywaaa/wraper.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
@@ -32,6 +33,10 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:quick_actions/quick_actions.dart';
 import 'package:dha_anywaaa/widgets/route_transitions.dart';
+
+/// True when Firebase initialized successfully. Firebase has no desktop
+/// implementation, so analytics observers must be skipped off-mobile.
+bool firebaseReady = false;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,6 +58,7 @@ void main() async {
     // Restore hashed user ID and log app open via unified service
     await AnalyticsService.instance.initializeFromStorage();
     await AnalyticsService.instance.logAppOpen();
+    firebaseReady = true;
   } catch (e) {
     debugPrint('Firebase initialization error: $e');
   }
@@ -67,11 +73,14 @@ void main() async {
     debugPrint('Retention engine initialization error: $e');
   }
   
-  // Initialize home screen shortcuts (long-press app icon menu)
-  // Wrapped in try-catch: if this fails on certain devices, app must still start
+  // Home screen shortcuts are Android/iOS-only — the plugin has no desktop
+  // implementation, so skip entirely off-mobile.
+  final isMobile = defaultTargetPlatform == TargetPlatform.android ||
+      defaultTargetPlatform == TargetPlatform.iOS;
   final quickActions = const QuickActions();
-  try {
-    await quickActions.setShortcutItems(<ShortcutItem>[
+  if (isMobile) {
+    try {
+      await quickActions.setShortcutItems(<ShortcutItem>[
       const ShortcutItem(
         type: 'action_quiz',
         localizedTitle: 'Take a Quiz',
@@ -92,12 +101,12 @@ void main() async {
         localizedTitle: 'Share App',
         icon: 'ic_launcher',
       ),
-    ]);
-  } catch (e) {
-    debugPrint('Quick actions initialization error: $e');
+      ]);
+    } catch (e) {
+      debugPrint('Quick actions initialization error: $e');
+    }
   }
 
-  
   // Load the saved preference first so the correct theme is applied from the
   // very first frame instead of flashing the system theme on relaunch.
   final prefs = await SharedPreferences.getInstance();
@@ -129,18 +138,24 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     
-    // Handle home screen shortcut taps
-    widget.quickActions.initialize((String type) {
+    // Handle home screen shortcut taps (mobile only — no desktop plugin)
+    final isMobile = defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS;
+    if (isMobile) {
+      try {
+        widget.quickActions.initialize((String type) {
       if (type == 'action_quiz') {
         _navigatorKey.currentState?.pushNamed('quiz');
       } else if (type == 'action_ai') {
         _navigatorKey.currentState?.pushNamed('anywaa_ai');
       } else if (type == 'action_bible') {
         _navigatorKey.currentState?.pushNamed('bible');
-      } else if (type == 'action_share') {
-        ShareHelper.instance.shareApp();
-      }
-    });
+          } else if (type == 'action_share') {
+            ShareHelper.instance.shareApp();
+          }
+        });
+      } catch (_) {}
+    }
   }
 
   @override
@@ -156,7 +171,8 @@ class _MyAppState extends State<MyApp> {
       darkTheme: AppTheme.dark,
       themeMode: settings.themeMode,
       navigatorObservers: [
-        FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
+        if (firebaseReady)
+          FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
       ],
       routes: {
         '/': (context) => const Wrapper(),

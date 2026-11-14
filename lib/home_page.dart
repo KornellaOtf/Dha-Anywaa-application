@@ -1004,6 +1004,7 @@ class _HomePageState extends State<HomePage> {
         Expanded(
           child: ListView(padding: EdgeInsets.zero, children: [
             const SizedBox(height: 8),
+            _drawerSection('Learn'),
             _drawerTile(context, Icons.abc_rounded, 'Göörë moo cïp dwøl',
                 () {
               Navigator.pop(context);
@@ -1016,6 +1017,7 @@ class _HomePageState extends State<HomePage> {
               Navigator.push(context,
                   SlideRoute(page: const Body(), name: 'body_parts'));
             }),
+            _drawerSection('Discover'),
             _drawerTile(context, Icons.eco_rounded, 'Anywaa AI', () {
               Navigator.pop(context);
               Navigator.push(context,
@@ -1037,10 +1039,7 @@ class _HomePageState extends State<HomePage> {
               Navigator.pop(context);
               await ShareHelper.instance.shareApp();
             }, subtitle: 'Invite friends to learn'),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Divider(),
-            ),
+            _drawerSection('App'),
             _drawerTile(context, Icons.settings_outlined, 'Settings',
                 () {
               Navigator.pop(context);
@@ -1065,10 +1064,7 @@ class _HomePageState extends State<HomePage> {
               Navigator.push(context,
                   SlideRoute(page: const Help(), name: 'help'));
             }),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Divider(),
-            ),
+            const SizedBox(height: 8),
             _drawerTile(context, Icons.logout_rounded, 'Log out', () async {
               Navigator.pop(context);
               await _savedData.setName('guess');
@@ -1095,30 +1091,71 @@ class _HomePageState extends State<HomePage> {
     Widget? trailing,
     String? subtitle,
   }) {
-    final iconColor = color == kGreen ? context.c.accent : color;
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
-      leading: leading ??
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: iconColor, size: 19),
+    final c = context.c;
+    final iconColor = color == kGreen ? c.accent : color;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
+      child: _PressableCard(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+          decoration: BoxDecoration(
+            color: c.text.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(16),
           ),
-      title: Text(label,
-          style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 15,
-              color: color == kRust ? color : context.c.text)),
-      subtitle: subtitle != null 
-          ? Text(subtitle,
-              style: TextStyle(fontSize: 13, color: context.c.textSub))
-          : null,
-      trailing: trailing,
-      onTap: onTap,
+          child: Row(
+            children: [
+              leading ??
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: iconColor.withValues(alpha: 0.13),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(icon, color: iconColor, size: 20),
+                  ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(label,
+                        style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14.5,
+                            color: color == kRust ? color : c.text)),
+                    if (subtitle != null)
+                      Text(subtitle,
+                          style: TextStyle(
+                              fontSize: 11.5, color: c.textSub)),
+                  ],
+                ),
+              ),
+              trailing ??
+                  Icon(Icons.chevron_right_rounded,
+                      color: c.textSub.withValues(alpha: 0.45), size: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Small caps section label used to group drawer items.
+  Widget _drawerSection(String label) {
+    final c = context.c;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 14, 24, 2),
+      child: Text(
+        label.toUpperCase(),
+        style: TextStyle(
+          fontSize: 10.5,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.1,
+          color: c.textSub.withValues(alpha: 0.7),
+        ),
+      ),
     );
   }
 
