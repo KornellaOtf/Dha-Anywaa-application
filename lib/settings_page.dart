@@ -216,7 +216,8 @@ class _SettingsPageState extends State<SettingsPage> {
                       height: 18,
                       child: CircularProgressIndicator(
                           strokeWidth: 2, color: kGreen))
-                  : Icon(Icons.chevron_right, color: context.c.border),
+                  : Icon(Icons.chevron_right,
+                              color: context.c.textSub.withValues(alpha: 0.4)),
               onTap: _checking ? null : _checkForUpdates,
             ),
           ]),
@@ -228,7 +229,8 @@ class _SettingsPageState extends State<SettingsPage> {
               iconColor: kGreen,
               title: 'Invite a Friend',
               subtitle: 'Share the app on WhatsApp, Telegram, or SMS',
-              trailing: Icon(Icons.chevron_right, color: context.c.border),
+              trailing: Icon(Icons.chevron_right,
+                              color: context.c.textSub.withValues(alpha: 0.4)),
               onTap: () => ShareHelper.instance.shareApp(),
             ),
           ]),
@@ -240,7 +242,8 @@ class _SettingsPageState extends State<SettingsPage> {
               iconColor: kGreen,
               title: 'Anywaa AI',
               subtitle: 'Offline word helper. Ask a word, a meaning, or a number.',
-              trailing: Icon(Icons.chevron_right, color: context.c.border),
+              trailing: Icon(Icons.chevron_right,
+                              color: context.c.textSub.withValues(alpha: 0.4)),
               onTap: () {
                 Navigator.push(context,
                     SlideRoute(page: const AnywaaAiPage(), name: 'anywaa_ai'));
@@ -254,31 +257,36 @@ class _SettingsPageState extends State<SettingsPage> {
                 icon: Icons.privacy_tip_outlined,
                 iconColor: kGreenMid,
                 title: 'Privacy Policy',
-                trailing: Icon(Icons.chevron_right, color: context.c.border),
+                trailing: Icon(Icons.chevron_right,
+                              color: context.c.textSub.withValues(alpha: 0.4)),
                 onTap: () => _push(const PrivacyPolicyPage(), 'privacy_policy')),
             _row(
                 icon: Icons.description_outlined,
                 iconColor: kGold,
                 title: 'Terms of Use',
-                trailing: Icon(Icons.chevron_right, color: context.c.border),
+                trailing: Icon(Icons.chevron_right,
+                              color: context.c.textSub.withValues(alpha: 0.4)),
                 onTap: () => _push(const TermsPage(), 'terms_of_use')),
             _row(
                 icon: Icons.help_outline_rounded,
                 iconColor: kRust,
                 title: 'Help',
-                trailing: Icon(Icons.chevron_right, color: context.c.border),
+                trailing: Icon(Icons.chevron_right,
+                              color: context.c.textSub.withValues(alpha: 0.4)),
                 onTap: () => _push(const Help(), 'help')),
             _row(
                 icon: Icons.info_outline_rounded,
                 iconColor: kGreen,
                 title: 'About',
-                trailing: Icon(Icons.chevron_right, color: context.c.border),
+                trailing: Icon(Icons.chevron_right,
+                              color: context.c.textSub.withValues(alpha: 0.4)),
                 onTap: () => _push(const About(), 'about')),
             _row(
               icon: Icons.code_rounded,
               iconColor: kTextMuted,
               title: 'Open-source licences',
-              trailing: Icon(Icons.chevron_right, color: context.c.border),
+              trailing: Icon(Icons.chevron_right,
+                              color: context.c.textSub.withValues(alpha: 0.4)),
               onTap: () => showLicensePage(
                 context: context,
                 applicationName: 'Learn Dha Anywaa',
@@ -403,17 +411,17 @@ class _SettingsPageState extends State<SettingsPage> {
           padding: const EdgeInsets.only(left: 4, bottom: 8),
           child: Text(title.toUpperCase(),
               style: TextStyle(
-                  fontSize: 11,
-                  letterSpacing: 1.4,
+                  fontSize: 10.5,
+                  letterSpacing: 1.1,
                   fontWeight: FontWeight.w700,
-                  color: context.c.textSub)),
+                  color: context.c.textSub.withValues(alpha: 0.7))),
         ),
         Container(
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             color: context.c.card,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: context.c.border),
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: const [kShadowSoft],
           ),
           child: Column(children: withDividers),
         ),
@@ -447,23 +455,23 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  // iOS-style coloured icon chip: solid tinted square with a white glyph.
+  // Tinted icon chip — same style as the sidebar/drawer tiles.
   Widget _leadingIcon(IconData icon, Color color) => Container(
         width: 38,
         height: 38,
         decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [BoxShadow(color: color.withValues(alpha: 0.30), blurRadius: 6, offset: const Offset(0, 2))],
+          color: color.withValues(alpha: 0.13),
+          borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(icon, color: Colors.white, size: 21),
+        child: Icon(icon, color: color, size: 20),
       );
 
   Widget _valueChevron(String value) => Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(value, style: TextStyle(fontSize: 14, color: context.c.textSub)),
-          Icon(Icons.chevron_right, color: context.c.border),
+          Icon(Icons.chevron_right,
+                              color: context.c.textSub.withValues(alpha: 0.4)),
         ],
       );
 

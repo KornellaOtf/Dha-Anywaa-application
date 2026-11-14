@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.6 (build 2192)
+
+Released: 2026-11-14
+
+### Changed
+- Sidebar: removed Terms of Use entry (still available in Settings → About)
+- Settings restyled to match app design: tinted icon chips, softer rounded cards with shadows, clearer section labels and chevrons
+
 ## 1.9.5 (build 2191)
 
 Released: 2026-11-14

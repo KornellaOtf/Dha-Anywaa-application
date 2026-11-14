@@ -16,7 +16,6 @@ import 'package:dha_anywaaa/services/retention_engine.dart';
 import 'package:dha_anywaaa/services/share_helper.dart';
 import 'package:dha_anywaaa/services/word_aggregator.dart';
 import 'package:dha_anywaaa/settings_page.dart';
-import 'package:dha_anywaaa/terms_page.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:dha_anywaaa/vowelLetter.dart';
 import 'package:dha_anywaaa/widgets/body.dart';
@@ -1045,12 +1044,6 @@ class _HomePageState extends State<HomePage> {
               Navigator.pop(context);
               Navigator.push(context,
                   SlideRoute(page: const SettingsPage(), name: 'settings'));
-            }),
-            _drawerTile(context, Icons.gavel_outlined, 'Terms of Use',
-                () {
-              Navigator.pop(context);
-              Navigator.push(context,
-                  SlideRoute(page: const TermsPage(), name: 'terms_of_use'));
             }),
             _drawerTile(context, Icons.info_outline_rounded, 'About',
                 () {
