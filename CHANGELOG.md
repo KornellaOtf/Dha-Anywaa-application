@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.9.2 (build 2188)
+
+Released: 2026-11-13
+
+### Added
+- Anywaa AI: pronunciation guides, example sentences, part-of-speech answers, synonyms/opposites
+- Anywaa AI: time/date, greetings, thanks, goodbye, help, and identity intents
+- Anywaa AI: field questions work without prior context ("example for X", "pronounce Y")
+- Pronunciation guide shown under answer cards
+- Dictionary expanded to 3,472 words with pronunciation and example data merged from curated source
+- Bible: book-name matching in search, cross-book prev/next navigation, load error state with retry
+
+### Fixed
+- Practice/Learn compile errors (WordAggregator API, GamState.streakDays, CelebrationOverlay)
+- Practice/Learn: real Overview/Progress tabs replacing duplicated HomePage
+- Practice/Learn: learner name key, working notification bell, real Daily 5 streak
+- Reading progress tracking in page3
+- AI reply ranking: typo queries prefer the closest term ("waterr" → water, not hot water)
+- Removed em-dashes from user-facing text
+
+## 1.9.1 (build 2187)
+
+Released: 2026-11-13
+
+First build of the Practice+Learn, Bible, and Anywaa AI improvements listed above; superseded by 1.9.2 (punctuation cleanup only).
+
 ## 1.4.9 (build 169)
 
 Released: 2026-11-11
