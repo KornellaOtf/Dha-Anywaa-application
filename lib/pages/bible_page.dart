@@ -85,8 +85,6 @@ class _BiblePageState extends State<BiblePage>
 
   List<String> get _allBooks => [..._otBooks, ..._ntBooks];
 
-  int get _totalChapters =>
-      _allBooks.fold(0, (sum, b) => sum + (_chapterCounts[b] ?? 0));
 
   late final AnimationController _fadeCtrl;
   late final Animation<double>   _fadeAnim;
@@ -179,8 +177,6 @@ class _BiblePageState extends State<BiblePage>
 
   int get _maxChapter => _chapterCounts[_book ?? ''] ?? 1;
 
-  String _fmt(int n) => n.toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},');
 
   // ─── audio — disabled, coming soon ────────────────────────────────────────
 
@@ -267,7 +263,7 @@ class _BiblePageState extends State<BiblePage>
   }
 
   // ════════════════════════════════════════════════════════════════════════════
-  // LIBRARY — hero + 3-col grid, no splash screen
+  // LIBRARY — clean app bar + testament switcher + book list
   // ════════════════════════════════════════════════════════════════════════════
 
   Widget _library() {
@@ -276,69 +272,62 @@ class _BiblePageState extends State<BiblePage>
 
     return Scaffold(
       backgroundColor: bg,
-      body: NestedScrollView(
-        headerSliverBuilder: (_, __) => [
-          SliverAppBar(
-            expandedHeight: 190,
-            pinned: true,
-            backgroundColor: _night ? _kSurface : Colors.white,
-            foregroundColor: fg,
-            elevation: 0,
-            flexibleSpace: FlexibleSpaceBar(
-              collapseMode: CollapseMode.parallax,
-              background: _libraryHero(),
+      appBar: AppBar(
+        backgroundColor: _night ? _kSurface : Colors.white,
+        foregroundColor: fg,
+        elevation: 0,
+        centerTitle: false,
+        titleSpacing: 4,
+        title: Text('Wëël Jwök',
+            style: GoogleFonts.playfairDisplay(
+                color: fg, fontSize: 20, fontWeight: FontWeight.bold)),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.search, color: fg),
+            onPressed: () => setState(() => _searchOpen = true),
+          ),
+          IconButton(
+            icon: Icon(
+              _night ? Icons.wb_sunny_outlined : Icons.nights_stay_outlined,
+              color: fg,
             ),
-            actions: [
-              IconButton(
-                icon: Icon(Icons.search, color: fg),
-                onPressed: () => setState(() => _searchOpen = true),
-              ),
-              IconButton(
-                icon: Icon(
-                  _night
-                      ? Icons.wb_sunny_outlined
-                      : Icons.nights_stay_outlined,
-                  color: fg,
-                ),
-                onPressed: () {
-                  setState(() => _night = !_night);
-                  _savePref('bible_night', _night);
-                },
-              ),
-            ],
+            onPressed: () {
+              setState(() => _night = !_night);
+              _savePref('bible_night', _night);
+            },
           ),
         ],
-        body: Column(
-          children: [
-            _testamentSwitch(fg),
-            if (_lastBook != null && _lastChapter != null)
-              _ContinueBanner(
-                book:    _lastBook!,
-                chapter: _lastChapter!,
-                night:   _night,
-                onTap: () => setState(() {
-                  _book    = _lastBook;
-                  _chapter = _lastChapter;
-                }),
-              ),
-            Expanded(
-              child: _loading
-                  ? _skeletonGrid()
-                  : _loadError
-                      ? _errorView()
-                      : FadeTransition(
-                          opacity: _fadeAnim,
-                          child: IndexedStack(
-                            index: _testament,
-                            children: [
-                              _bookGrid(_otBooks),
-                              _bookGrid(_ntBooks),
-                            ],
-                          ),
-                        ),
+      ),
+      body: Column(
+        children: [
+          _testamentSwitch(fg),
+          if (_lastBook != null && _lastChapter != null)
+            _ContinueBanner(
+              book:    _lastBook!,
+              chapter: _lastChapter!,
+              night:   _night,
+              onTap: () => setState(() {
+                _book    = _lastBook;
+                _chapter = _lastChapter;
+              }),
             ),
-          ],
-        ),
+          Expanded(
+            child: _loading
+                ? _skeletonList()
+                : _loadError
+                    ? _errorView()
+                    : FadeTransition(
+                        opacity: _fadeAnim,
+                        child: IndexedStack(
+                          index: _testament,
+                          children: [
+                            _bookList(_otBooks),
+                            _bookList(_ntBooks),
+                          ],
+                        ),
+                      ),
+          ),
+        ],
       ),
     );
   }
@@ -398,81 +387,16 @@ class _BiblePageState extends State<BiblePage>
     );
   }
 
-  Widget _libraryHero() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: _night
-              ? [const Color(0xFF0D1B2A), const Color(0xFF1A2535)]
-              : [_kGreen, const Color(0xFF2D6A4F)],
-        ),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 12, 24, 52),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              // badge — no border, just soft bg
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _kGold.withValues(alpha: 0.22),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  'Dha Anywaa · English',
-                  style: TextStyle(
-                      color: _kGoldSoft,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                'Wëël Jwøk',
-                style: GoogleFonts.playfairDisplay(
-                    color: Colors.white,
-                    fontSize: 34,
-                    fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                _loading
-                    ? 'Loading…'
-                    : '${_fmt(_all.length)} verses · '
-                        '${_fmt(_totalChapters)} chapters · '
-                        '${_otBooks.length + _ntBooks.length} books',
-                style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.6),
-                    fontSize: 13),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // 2-col book "cover" cards — letter avatar, serif title, chapter count
-  Widget _bookGrid(List<String> books) {
+  // Book list rows — same rounded-card language as the sidebar tiles
+  Widget _bookList(List<String> books) {
     final card = _night ? const Color(0xFF1E2A3A) : Colors.white;
     final fg   = _night ? Colors.white : _kInkDay;
     final sub  = _night ? Colors.white38 : _kSubDay;
 
-    return GridView.builder(
+    return ListView.separated(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 32),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount:   2,
-        childAspectRatio: 1.55,
-        crossAxisSpacing: 12,
-        mainAxisSpacing:  12,
-      ),
       itemCount: books.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 10),
       itemBuilder: (_, i) {
         final book     = books[i];
         final chapters = _chapterCounts[book] ?? 0;
@@ -483,11 +407,13 @@ class _BiblePageState extends State<BiblePage>
           onTap: () => setState(() => _book = book),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               color: isLast
                   ? _kGold.withValues(alpha: _night ? 0.16 : 0.12)
                   : card,
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: isLast
                     ? _kGold.withValues(alpha: 0.5)
@@ -504,68 +430,67 @@ class _BiblePageState extends State<BiblePage>
                 ),
               ],
             ),
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    // Letter avatar — accent-tinted tile
-                    Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: _kGreen.withValues(
-                            alpha: isLast ? 0.35 : (_night ? 0.3 : 0.12)),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        initial,
-                        style: GoogleFonts.playfairDisplay(
-                          color: isLast
-                              ? _kGoldSoft
-                              : (_night ? _kGoldSoft : _kGreen),
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: _kGreen.withValues(
+                        alpha: isLast ? 0.35 : (_night ? 0.3 : 0.12)),
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    initial,
+                    style: GoogleFonts.playfairDisplay(
+                      color: isLast
+                          ? _kGoldSoft
+                          : (_night ? _kGoldSoft : _kGreen),
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                     ),
-                    const Spacer(),
-                    if (isLast)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 7, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: _kGold.withValues(alpha: 0.25),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Text('Reading',
-                            style: TextStyle(
-                                color: _kGoldSoft,
-                                fontSize: 9,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.4)),
-                      )
-                    else
-                      Icon(Icons.chevron_right_rounded,
-                          size: 18, color: sub),
-                  ],
+                  ),
                 ),
-                const Spacer(),
-                Text(
-                  book,
-                  style: GoogleFonts.playfairDisplay(
-                      color: isLast ? _kGold : fg,
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w700,
-                      height: 1.15),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                const SizedBox(width: 13),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        book,
+                        style: GoogleFonts.playfairDisplay(
+                            color: isLast ? _kGold : fg,
+                            fontSize: 15.5,
+                            fontWeight: FontWeight.w700,
+                            height: 1.15),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text('$chapters chapters',
+                          style: TextStyle(color: sub, fontSize: 11.5)),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 3),
-                Text('$chapters chapters',
-                    style: TextStyle(color: sub, fontSize: 10.5)),
+                if (isLast)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 9, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _kGold.withValues(alpha: 0.25),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text('Reading',
+                        style: TextStyle(
+                            color: _kGoldSoft,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.4)),
+                  )
+                else
+                  Icon(Icons.chevron_right_rounded,
+                      size: 20, color: sub),
               ],
             ),
           ),
@@ -574,21 +499,16 @@ class _BiblePageState extends State<BiblePage>
     );
   }
 
-  // Skeleton while loading — shown inline, no separate splash screen
-  Widget _skeletonGrid() {
+  // Skeleton rows while loading
+  Widget _skeletonList() {
     final card =
         _night ? const Color(0xFF1E2A3A) : Colors.black.withValues(alpha: 0.06);
-    return GridView.builder(
+    return ListView.separated(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 32),
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount:   2,
-        childAspectRatio: 1.55,
-        crossAxisSpacing: 12,
-        mainAxisSpacing:  12,
-      ),
-      itemCount: 12,
-      itemBuilder: (_, __) => _ShimmerCard(color: card),
+      itemCount: 10,
+      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      itemBuilder: (_, __) => _ShimmerCard(color: card, height: 66),
     );
   }
 
@@ -1158,7 +1078,8 @@ class _BiblePageState extends State<BiblePage>
 // ── Shimmer skeleton card — no border ────────────────────────────────────────
 class _ShimmerCard extends StatefulWidget {
   final Color color;
-  const _ShimmerCard({required this.color});
+  final double? height;
+  const _ShimmerCard({required this.color, this.height});
   @override
   State<_ShimmerCard> createState() => _ShimmerCardState();
 }
@@ -1181,6 +1102,7 @@ class _ShimmerCardState extends State<_ShimmerCard>
     return AnimatedBuilder(
       animation: _ctrl,
       builder: (_, __) => Container(
+        height: widget.height,
         decoration: BoxDecoration(
           color: widget.color.withValues(alpha: 0.4 + 0.3 * _ctrl.value),
           borderRadius: BorderRadius.circular(14),

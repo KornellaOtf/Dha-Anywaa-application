@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.7 (build 2193)
+
+Released: 2026-11-14
+
+### Changed
+- Bible library redesigned: splash hero removed, books shown as clean list rows matching the app's card style
+- Sidebar is now a fixed panel — no scrolling
+
 ## 1.9.6 (build 2192)
 
 Released: 2026-11-14

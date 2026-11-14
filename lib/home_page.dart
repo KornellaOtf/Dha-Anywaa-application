@@ -1001,7 +1001,10 @@ class _HomePageState extends State<HomePage> {
         ),
         // ── Items ───────────────────────────────────────────────────────────
         Expanded(
-          child: ListView(padding: EdgeInsets.zero, children: [
+          child: ListView(
+            padding: EdgeInsets.zero,
+            physics: const NeverScrollableScrollPhysics(),
+            children: [
             const SizedBox(height: 8),
             _drawerSection('Learn'),
             _drawerTile(context, Icons.abc_rounded, 'Göörë moo cïp dwøl',
@@ -1091,7 +1094,7 @@ class _HomePageState extends State<HomePage> {
       child: _PressableCard(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
           decoration: BoxDecoration(
             color: c.text.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(16),
@@ -1139,7 +1142,7 @@ class _HomePageState extends State<HomePage> {
   Widget _drawerSection(String label) {
     final c = context.c;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 14, 24, 2),
+      padding: const EdgeInsets.fromLTRB(24, 10, 24, 2),
       child: Text(
         label.toUpperCase(),
         style: TextStyle(
