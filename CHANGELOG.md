@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.9.3 (build 2189)
+
+Released: 2026-11-14
+
+### Added
+- Floating pill bottom navigation on Home, shared with Practice/Learn (`FloatingNav`)
+- Nav animations: press bounce, selection pop, smooth highlight transitions
+- Bible home redesign: 2-column book cover cards, letter avatars, "Reading" badge
+- Bible: segmented Old/New Testament pill switcher, chapter-count hero stats
+- Bible: redesigned chapter cells, reader top bar avatar, floating prev/next pill bar
+- Bible: card-style search results, pill "audio coming soon" badge
+
+### Changed
+- Daily 5 can only be played once per day (completion screen on replay)
+- Practice/Learn and Quick Challenge now follow the app light/dark theme
+- Bible night mode defaults to the app theme until the user picks a mode
+
 ## 1.9.2 (build 2188)
 
 Released: 2026-11-13

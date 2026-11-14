@@ -8,15 +8,17 @@ import 'package:dha_anywaaa/services/learning_engine.dart';
 import 'package:dha_anywaaa/services/gamification_service.dart';
 import 'package:dha_anywaaa/services/retention_engine.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
+import 'package:dha_anywaaa/widgets/floating_nav.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // ─── Design tokens ─────────────────────────────────────────────────────────
-const kScaffold = Color(0xFFF6F5F2);
-const kCard = Colors.white;
-const kTile = Color(0xFFECEAE6);
-const kInk = Color(0xFF1B1B1B);
-const kMuted = Color(0xFF6E6E6E);
-const kTrack = Color(0xFFE3E1DC);
+// Surfaces/text now resolve from the app theme (context.c) so this page
+// follows the user's light/dark setting. Semantic accents (kGreen, orange,
+// gold) stay fixed — they read correctly on both themes.
+
+/// Neutral tile surface — adapts to light/dark via text alpha.
+Color _tileOf(BuildContext context) =>
+    context.c.text.withValues(alpha: 0.06);
 
 List<BoxShadow> get kSoftShadow => const [
       BoxShadow(
@@ -263,7 +265,7 @@ class _PracticeLearnShellState extends State<PracticeLearnShell> {
     ];
 
     return Scaffold(
-      backgroundColor: kScaffold,
+      backgroundColor: context.c.bg,
       body: SafeArea(
         bottom: false,
         child: IndexedStack(index: _index, children: pages),
@@ -301,71 +303,6 @@ class _PracticeLearnShellState extends State<PracticeLearnShell> {
   }
 }
 
-// ─── Floating navigation bar ───────────────────────────────────────────────
-class NavItem {
-  final IconData icon;
-  final String label;
-  const NavItem(this.icon, this.label);
-}
-
-class FloatingNav extends StatelessWidget {
-  final int index;
-  final ValueChanged<int> onTap;
-  final List<NavItem> items;
-
-  const FloatingNav({
-    super.key,
-    required this.index,
-    required this.onTap,
-    required this.items,
-  });
-
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          color: kTile,
-          borderRadius: BorderRadius.circular(32),
-        ),
-        child: Row(
-          children: [
-            for (var n = 0; n < items.length; n++)
-              Expanded(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => onTap(n),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    decoration: BoxDecoration(
-                      color: n == index
-                          ? const Color(0xFFD9D5CD)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(26),
-                    ),
-                    child: Column(mainAxisSize: MainAxisSize.min, children: [
-                      Icon(items[n].icon,
-                          size: 22, color: n == index ? kInk : kMuted),
-                      const SizedBox(height: 3),
-                      Text(
-                        items[n].label,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: n == index
-                              ? FontWeight.w600
-                              : FontWeight.w400,
-                          color: n == index ? kInk : kMuted,
-                        ),
-                      ),
-                    ]),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      );
-}
-
 // ─── Practice Page ─────────────────────────────────────────────────────────
 class PracticePage extends StatelessWidget {
   final String learnerName;
@@ -401,11 +338,11 @@ class PracticePage extends StatelessWidget {
       children: [
         // Header
         Row(children: [
-          const Expanded(
+          Expanded(
             child: Text(
               'Practice',
               style: TextStyle(
-                  fontSize: 32, fontWeight: FontWeight.w700, color: kInk),
+                  fontSize: 32, fontWeight: FontWeight.w700, color: context.c.text),
             ),
           ),
           InkWell(
@@ -415,9 +352,9 @@ class PracticePage extends StatelessWidget {
               width: 44,
               height: 44,
               decoration:
-                  const BoxDecoration(color: kCard, shape: BoxShape.circle),
-              child: const Icon(Icons.notifications_outlined,
-                  size: 20, color: kInk),
+                  BoxDecoration(color: context.c.card, shape: BoxShape.circle),
+              child: Icon(Icons.notifications_outlined,
+                  size: 20, color: context.c.text),
             ),
           ),
           const SizedBox(width: 10),
@@ -471,9 +408,9 @@ class PracticePage extends StatelessWidget {
         const SizedBox(height: 22),
 
         // More to explore
-        const Text(
+        Text(
           'More to explore',
-          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: kInk),
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: context.c.text),
         ),
         const SizedBox(height: 8),
         ExploreRow(
@@ -531,7 +468,7 @@ class StatCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
           decoration: BoxDecoration(
-            color: kCard,
+            color: context.c.card,
             borderRadius: BorderRadius.circular(22),
             boxShadow: kSoftShadow,
           ),
@@ -540,7 +477,7 @@ class StatCard extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: const Color(0xFFE6F0EB),
+                color: kGreen.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(18),
               ),
               child: Icon(leading, size: 32, color: kGreen),
@@ -548,16 +485,16 @@ class StatCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               title,
-              style: const TextStyle(
-                  fontSize: 17, fontWeight: FontWeight.w600, color: kInk),
+              style: TextStyle(
+                  fontSize: 17, fontWeight: FontWeight.w600, color: context.c.text),
             ),
             const SizedBox(height: 8),
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text(label, style: const TextStyle(fontSize: 12, color: kMuted)),
+              Text(label, style: TextStyle(fontSize: 12, color: context.c.textSub)),
               Text(
                 value,
-                style: const TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.w600, color: kInk),
+                style: TextStyle(
+                    fontSize: 12, fontWeight: FontWeight.w600, color: context.c.text),
               ),
             ]),
             const SizedBox(height: 6),
@@ -567,7 +504,7 @@ class StatCard extends StatelessWidget {
                 value: progress,
                 minHeight: 6,
                 color: kGreen,
-                backgroundColor: kTrack,
+                backgroundColor: context.c.border,
               ),
             ),
           ]),
@@ -596,7 +533,7 @@ class HeroCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: kCard,
+            color: context.c.card,
             borderRadius: BorderRadius.circular(22),
             boxShadow: kSoftShadow,
           ),
@@ -605,7 +542,7 @@ class HeroCard extends StatelessWidget {
               width: 72,
               height: 72,
               decoration: BoxDecoration(
-                color: const Color(0xFFFBE9D0),
+                color: const Color(0xFFD9730D).withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Icon(icon, size: 38, color: const Color(0xFFD9730D)),
@@ -615,17 +552,17 @@ class HeroCard extends StatelessWidget {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                      fontSize: 19, fontWeight: FontWeight.w600, color: kInk),
+                  style: TextStyle(
+                      fontSize: 19, fontWeight: FontWeight.w600, color: context.c.text),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: const TextStyle(fontSize: 13, height: 1.3, color: kMuted),
+                  style: TextStyle(fontSize: 13, height: 1.3, color: context.c.textSub),
                 ),
               ]),
             ),
-            const Icon(Icons.chevron_right, color: kMuted),
+            Icon(Icons.chevron_right, color: context.c.textSub),
           ]),
         ),
       );
@@ -650,31 +587,31 @@ class ExploreRow extends StatelessWidget {
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 14),
-          decoration: const BoxDecoration(
-            border: Border(bottom: BorderSide(color: kTrack, width: 1)),
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: context.c.border, width: 1)),
           ),
           child: Row(children: [
             Container(
               width: 46,
               height: 46,
               decoration: BoxDecoration(
-                  color: kTile, borderRadius: BorderRadius.circular(14)),
-              child: Icon(icon, size: 22, color: kInk),
+                  color: _tileOf(context), borderRadius: BorderRadius.circular(14)),
+              child: Icon(icon, size: 22, color: context.c.text),
             ),
             const SizedBox(width: 14),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w600, color: kInk),
+                  style: TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.w600, color: context.c.text),
                 ),
                 const SizedBox(height: 2),
                 Text(subtitle,
-                    style: const TextStyle(fontSize: 13, color: kMuted)),
+                    style: TextStyle(fontSize: 13, color: context.c.textSub)),
               ]),
             ),
-            const Icon(Icons.chevron_right, color: kMuted),
+            Icon(Icons.chevron_right, color: context.c.textSub),
           ]),
         ),
       );
@@ -713,18 +650,18 @@ class LearnPage extends StatelessWidget {
                   child: Container(
                     width: 46,
                     height: 46,
-                    decoration: const BoxDecoration(
-                        color: kTile, shape: BoxShape.circle),
-                    child: const Icon(Icons.chevron_left, color: kInk),
+                    decoration: BoxDecoration(
+                        color: _tileOf(context), shape: BoxShape.circle),
+                    child: Icon(Icons.chevron_left, color: context.c.text),
                   ),
                 )
               : const SizedBox(width: 46),
-          const Expanded(
+          Expanded(
             child: Text(
               'Learn',
               textAlign: TextAlign.center,
               style: TextStyle(
-                  fontSize: 18, fontWeight: FontWeight.w600, color: kInk),
+                  fontSize: 18, fontWeight: FontWeight.w600, color: context.c.text),
             ),
           ),
           ProgressRing(ratio),
@@ -761,23 +698,23 @@ class MiniStat extends StatelessWidget {
           margin: const EdgeInsets.symmetric(horizontal: 4),
           padding: const EdgeInsets.fromLTRB(6, 8, 6, 6),
           decoration: BoxDecoration(
-              color: kTile, borderRadius: BorderRadius.circular(16)),
+              color: _tileOf(context), borderRadius: BorderRadius.circular(16)),
           child: Column(children: [
-            Text(label, style: const TextStyle(fontSize: 12, color: kMuted)),
+            Text(label, style: TextStyle(fontSize: 12, color: context.c.textSub)),
             const SizedBox(height: 6),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
-                color: kCard,
+                color: context.c.card,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Text(
                   '$value',
-                  style: const TextStyle(
-                      fontSize: 26, fontWeight: FontWeight.w600, color: kInk),
+                  style: TextStyle(
+                      fontSize: 26, fontWeight: FontWeight.w600, color: context.c.text),
                 ),
               ),
             ),
@@ -804,13 +741,13 @@ class ProgressRing extends StatelessWidget {
               value: value,
               strokeWidth: 3.5,
               color: kGreen,
-              backgroundColor: kTrack,
+              backgroundColor: context.c.border,
             ),
           ),
           Text(
             '${(value * 100).round()}%',
-            style: const TextStyle(
-                fontSize: 11, fontWeight: FontWeight.w600, color: kInk),
+            style: TextStyle(
+                fontSize: 11, fontWeight: FontWeight.w600, color: context.c.text),
           ),
         ]),
       );
@@ -833,7 +770,7 @@ class TopicCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: kCard,
+          color: context.c.card,
           borderRadius: BorderRadius.circular(22),
           boxShadow: kSoftShadow,
         ),
@@ -847,8 +784,8 @@ class TopicCard extends StatelessWidget {
                 c.imageAsset,
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => Container(
-                  color: kTile,
-                  child: const Icon(Icons.image_outlined, color: kMuted),
+                  color: _tileOf(context),
+                  child: Icon(Icons.image_outlined, color: context.c.textSub),
                 ),
               ),
             ),
@@ -858,18 +795,18 @@ class TopicCard extends StatelessWidget {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(
                 c.title,
-                style: const TextStyle(
-                    fontSize: 17, fontWeight: FontWeight.w600, color: kInk),
+                style: TextStyle(
+                    fontSize: 17, fontWeight: FontWeight.w600, color: context.c.text),
               ),
               const SizedBox(height: 2),
               Text(c.subtitle,
-                  style: const TextStyle(fontSize: 13, color: kMuted)),
+                  style: TextStyle(fontSize: 13, color: context.c.textSub)),
               const SizedBox(height: 8),
               Row(children: [
                 Icon(
                   c.completed ? Icons.check_circle : Icons.help,
                   size: 16,
-                  color: c.completed ? kGreen : kMuted,
+                  color: c.completed ? kGreen : context.c.textSub,
                 ),
                 const SizedBox(width: 6),
                 Text(
@@ -878,13 +815,13 @@ class TopicCard extends StatelessWidget {
                     fontSize: 13,
                     fontWeight:
                         c.completed ? FontWeight.w600 : FontWeight.w400,
-                    color: c.completed ? kGreen : kMuted,
+                    color: c.completed ? kGreen : context.c.textSub,
                   ),
                 ),
               ]),
             ]),
           ),
-          const Icon(Icons.chevron_right, color: kMuted),
+          Icon(Icons.chevron_right, color: context.c.textSub),
         ]),
       ),
     );
@@ -942,15 +879,15 @@ class PracticeOverviewPage extends StatelessWidget {
               children: [
                 Text(
                   _greeting,
-                  style: const TextStyle(fontSize: 15, color: kMuted),
+                  style: TextStyle(fontSize: 15, color: context.c.textSub),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   learnerName.isEmpty ? 'Learner' : learnerName,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w700,
-                      color: kInk),
+                      color: context.c.text),
                 ),
               ],
             ),
@@ -962,9 +899,9 @@ class PracticeOverviewPage extends StatelessWidget {
               width: 44,
               height: 44,
               decoration:
-                  const BoxDecoration(color: kCard, shape: BoxShape.circle),
-              child: const Icon(Icons.notifications_outlined,
-                  size: 20, color: kInk),
+                  BoxDecoration(color: context.c.card, shape: BoxShape.circle),
+              child: Icon(Icons.notifications_outlined,
+                  size: 20, color: context.c.text),
             ),
           ),
           const SizedBox(width: 10),
@@ -995,7 +932,7 @@ class PracticeOverviewPage extends StatelessWidget {
             child: _MiniProgressCard(
               icon: Icons.translate,
               iconColor: kGreen,
-              iconBg: const Color(0xFFE6F0EB),
+              iconBg: kGreen.withValues(alpha: 0.15),
               label: 'Words learned',
               value: '${stats.wordsLearned}/${stats.wordsTotal}',
               progress: wordsRatio,
@@ -1006,7 +943,7 @@ class PracticeOverviewPage extends StatelessWidget {
             child: _MiniProgressCard(
               icon: Icons.replay_outlined,
               iconColor: const Color(0xFFD9730D),
-              iconBg: const Color(0xFFFBE9D0),
+              iconBg: const Color(0xFFD9730D).withValues(alpha: 0.15),
               label: 'Due for review',
               value: '$dueCount',
               progress: stats.wordsTotal <= 0
@@ -1022,8 +959,8 @@ class PracticeOverviewPage extends StatelessWidget {
           firstIncomplete == null
               ? 'All caught up'
               : 'Jump back in',
-          style: const TextStyle(
-              fontSize: 17, fontWeight: FontWeight.w600, color: kInk),
+          style: TextStyle(
+              fontSize: 17, fontWeight: FontWeight.w600, color: context.c.text),
         ),
         const SizedBox(height: 10),
         if (firstIncomplete != null)
@@ -1035,17 +972,17 @@ class PracticeOverviewPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: kCard,
+              color: context.c.card,
               borderRadius: BorderRadius.circular(22),
               boxShadow: kSoftShadow,
             ),
-            child: const Row(children: [
+            child: Row(children: [
               Icon(Icons.emoji_events_outlined, color: kGreen),
               SizedBox(width: 12),
               Expanded(
                 child: Text(
                   'You have explored every topic. Keep practicing to master them!',
-                  style: TextStyle(fontSize: 14, color: kMuted, height: 1.4),
+                  style: TextStyle(fontSize: 14, color: context.c.textSub, height: 1.4),
                 ),
               ),
             ]),
@@ -1143,12 +1080,12 @@ class _DailyFiveStatusCard extends StatelessWidget {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Text(
+                child: Text(
                   'Start',
                   style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: kInk),
+                      color: context.c.text),
                 ),
               ),
           ]),
@@ -1178,7 +1115,7 @@ class _MiniProgressCard extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: kCard,
+          color: context.c.card,
           borderRadius: BorderRadius.circular(22),
           boxShadow: kSoftShadow,
         ),
@@ -1194,13 +1131,13 @@ class _MiniProgressCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(label,
-                style: const TextStyle(fontSize: 12, color: kMuted)),
+                style: TextStyle(fontSize: 12, color: context.c.textSub)),
             const SizedBox(height: 2),
             Text(value,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    color: kInk)),
+                    color: context.c.text)),
             const SizedBox(height: 8),
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
@@ -1208,7 +1145,7 @@ class _MiniProgressCard extends StatelessWidget {
                 value: progress,
                 minHeight: 5,
                 color: iconColor,
-                backgroundColor: kTrack,
+                backgroundColor: context.c.border,
               ),
             ),
           ],
@@ -1243,12 +1180,12 @@ class PracticeProgressPage extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       children: [
         // Header
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(bottom: 18),
           child: Text(
             'Progress',
             style: TextStyle(
-                fontSize: 32, fontWeight: FontWeight.w700, color: kInk),
+                fontSize: 32, fontWeight: FontWeight.w700, color: context.c.text),
           ),
         ),
 
@@ -1256,7 +1193,7 @@ class PracticeProgressPage extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: kCard,
+            color: context.c.card,
             borderRadius: BorderRadius.circular(24),
             boxShadow: kSoftShadow,
           ),
@@ -1272,15 +1209,15 @@ class PracticeProgressPage extends StatelessWidget {
                     value: wordsRatio,
                     strokeWidth: 7,
                     color: kGreen,
-                    backgroundColor: kTrack,
+                    backgroundColor: context.c.border,
                   ),
                 ),
                 Text(
                   '${(wordsRatio * 100).round()}%',
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: kInk),
+                      color: context.c.text),
                 ),
               ]),
             ),
@@ -1289,17 +1226,17 @@ class PracticeProgressPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Vocabulary mastery',
+                  Text('Vocabulary mastery',
                       style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: kInk)),
+                          color: context.c.text)),
                   const SizedBox(height: 4),
                   Text(
                     '${stats.wordsLearned} of ${stats.wordsTotal} words learned · '
                     '$completedTopics/${categories.length} topics completed',
                     style:
-                        const TextStyle(fontSize: 13, color: kMuted, height: 1.4),
+                        TextStyle(fontSize: 13, color: context.c.textSub, height: 1.4),
                   ),
                 ],
               ),
@@ -1315,7 +1252,7 @@ class PracticeProgressPage extends StatelessWidget {
               child: _GamStat(
                 icon: Icons.bolt,
                 color: const Color(0xFFE8A200),
-                bg: const Color(0xFFFBF3DC),
+                bg: const Color(0xFFE8A200).withValues(alpha: 0.15),
                 label: 'Level ${gam.level}',
                 value: '${gam.xp} XP',
               ),
@@ -1325,7 +1262,7 @@ class PracticeProgressPage extends StatelessWidget {
               child: _GamStat(
                 icon: Icons.local_fire_department,
                 color: const Color(0xFFD9730D),
-                bg: const Color(0xFFFBE9D0),
+                bg: const Color(0xFFD9730D).withValues(alpha: 0.15),
                 label: 'Streak',
                 value: '${gam.streakDays} days',
               ),
@@ -1335,7 +1272,7 @@ class PracticeProgressPage extends StatelessWidget {
               child: _GamStat(
                 icon: Icons.track_changes,
                 color: kGreen,
-                bg: const Color(0xFFE6F0EB),
+                bg: kGreen.withValues(alpha: 0.15),
                 label: 'Daily goal',
                 value: gam.dailyGoalMet
                     ? 'Done'
@@ -1347,10 +1284,10 @@ class PracticeProgressPage extends StatelessWidget {
         ],
 
         // Per-category breakdown
-        const Text(
+        Text(
           'By topic',
           style: TextStyle(
-              fontSize: 17, fontWeight: FontWeight.w600, color: kInk),
+              fontSize: 17, fontWeight: FontWeight.w600, color: context.c.text),
         ),
         const SizedBox(height: 10),
         for (final c in categories)
@@ -1380,7 +1317,7 @@ class _GamStat extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: kCard,
+          color: context.c.card,
           borderRadius: BorderRadius.circular(18),
           boxShadow: kSoftShadow,
         ),
@@ -1396,12 +1333,12 @@ class _GamStat extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(value,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: kInk)),
+                    color: context.c.text)),
             Text(label,
-                style: const TextStyle(fontSize: 12, color: kMuted)),
+                style: TextStyle(fontSize: 12, color: context.c.textSub)),
           ],
         ),
       );
@@ -1426,7 +1363,7 @@ class _CategoryProgressRow extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: kCard,
+          color: context.c.card,
           borderRadius: BorderRadius.circular(16),
           boxShadow: kSoftShadow,
         ),
@@ -1440,9 +1377,9 @@ class _CategoryProgressRow extends StatelessWidget {
                 c.imageAsset,
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => Container(
-                  color: kTile,
-                  child: const Icon(Icons.image_outlined,
-                      size: 18, color: kMuted),
+                  color: _tileOf(context),
+                  child: Icon(Icons.image_outlined,
+                      size: 18, color: context.c.textSub),
                 ),
               ),
             ),
@@ -1456,10 +1393,10 @@ class _CategoryProgressRow extends StatelessWidget {
                   Expanded(
                     child: Text(
                       c.title,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: kInk),
+                          color: context.c.text),
                     ),
                   ),
                   Text(
@@ -1467,7 +1404,7 @@ class _CategoryProgressRow extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: c.completed ? kGreen : kMuted,
+                      color: c.completed ? kGreen : context.c.textSub,
                     ),
                   ),
                 ]),
@@ -1478,7 +1415,7 @@ class _CategoryProgressRow extends StatelessWidget {
                     value: ratio,
                     minHeight: 5,
                     color: c.completed ? kGreen : kGreen.withValues(alpha: 0.6),
-                    backgroundColor: kTrack,
+                    backgroundColor: context.c.border,
                   ),
                 ),
               ],
@@ -1490,9 +1427,9 @@ class _CategoryProgressRow extends StatelessWidget {
               child: Icon(Icons.check_circle, size: 18, color: kGreen),
             )
           else
-            const Padding(
+            Padding(
               padding: EdgeInsets.only(left: 8),
-              child: Icon(Icons.chevron_right, size: 18, color: kMuted),
+              child: Icon(Icons.chevron_right, size: 18, color: context.c.textSub),
             ),
         ]),
       ),
@@ -1551,8 +1488,8 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: kCard,
+      decoration: BoxDecoration(
+        color: context.c.card,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
@@ -1565,27 +1502,27 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: kTrack,
+                color: context.c.border,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
           ),
           const SizedBox(height: 18),
-          const Text(
+          Text(
             'Notifications',
             style: TextStyle(
-                fontSize: 20, fontWeight: FontWeight.w700, color: kInk),
+                fontSize: 20, fontWeight: FontWeight.w700, color: context.c.text),
           ),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             'Get gentle reminders to practice and keep your streak alive.',
-            style: TextStyle(fontSize: 13, color: kMuted, height: 1.4),
+            style: TextStyle(fontSize: 13, color: context.c.textSub, height: 1.4),
           ),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             decoration: BoxDecoration(
-              color: kScaffold,
+              color: context.c.bg,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Row(children: [
@@ -1593,14 +1530,14 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFBE9D0),
+                  color: const Color(0xFFD9730D).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(Icons.notifications_active_outlined,
                     size: 20, color: Color(0xFFD9730D)),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1608,10 +1545,10 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
                         style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
-                            color: kInk)),
+                            color: context.c.text)),
                     SizedBox(height: 2),
                     Text('Streak alerts & review reminders',
-                        style: TextStyle(fontSize: 12, color: kMuted)),
+                        style: TextStyle(fontSize: 12, color: context.c.textSub)),
                   ],
                 ),
               ),
@@ -1624,11 +1561,11 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
           ),
           if (_enabled) ...[
             const SizedBox(height: 12),
-            const Row(children: [
-              Icon(Icons.schedule, size: 16, color: kMuted),
+            Row(children: [
+              Icon(Icons.schedule, size: 16, color: context.c.textSub),
               SizedBox(width: 6),
               Text('Reminders are scheduled automatically',
-                  style: TextStyle(fontSize: 12, color: kMuted)),
+                  style: TextStyle(fontSize: 12, color: context.c.textSub)),
             ]),
           ],
         ],

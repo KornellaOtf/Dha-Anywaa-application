@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../services/leaderboard_service.dart';
+import '../theme/app_theme.dart';
 import '../widgets/celebration_widget.dart';
 
 class QuickChallengePage extends StatefulWidget {
@@ -89,7 +90,7 @@ class _QuickChallengePageState extends State<QuickChallengePage> {
     }
     
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.c.bg,
       appBar: AppBar(
         backgroundColor: const Color(0xFF1F4D3A),
         title: Text(
@@ -116,7 +117,7 @@ class _QuickChallengePageState extends State<QuickChallengePage> {
                   // Progress indicator
                   LinearProgressIndicator(
                     value: (_currentRound + 1) / _maxRounds,
-                    backgroundColor: Colors.grey[200],
+                    backgroundColor: context.c.border,
                     valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF1F4D3A)),
                     minHeight: 8.h,
                   ),
@@ -154,7 +155,7 @@ class _QuickChallengePageState extends State<QuickChallengePage> {
                     style: TextStyle(
                       fontSize: 36.sp,
                       fontWeight: FontWeight.bold,
-                      color: const Color(0xFF1F4D3A),
+                      color: context.c.accent,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -166,7 +167,7 @@ class _QuickChallengePageState extends State<QuickChallengePage> {
                     word['english'] ?? '',
                     style: TextStyle(
                       fontSize: 24.sp,
-                      color: Colors.grey[700],
+                      color: context.c.textSub,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -179,7 +180,7 @@ class _QuickChallengePageState extends State<QuickChallengePage> {
                     icon: Icon(
                       Icons.volume_up,
                       size: 48.sp,
-                      color: const Color(0xFF1F4D3A),
+                      color: context.c.accent,
                     ),
                   ),
                   
@@ -216,7 +217,7 @@ class _QuickChallengePageState extends State<QuickChallengePage> {
                     child: Text(
                       'Take a break',
                       style: TextStyle(
-                        color: Colors.grey[600],
+                        color: context.c.textSub,
                         fontSize: 16.sp,
                       ),
                     ),
@@ -238,7 +239,7 @@ class _QuickChallengePageState extends State<QuickChallengePage> {
   
   Widget _buildCompletionScreen() {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.c.bg,
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(24.w),
@@ -248,7 +249,7 @@ class _QuickChallengePageState extends State<QuickChallengePage> {
               Icon(
                 Icons.check_circle,
                 size: 100.sp,
-                color: const Color(0xFF1F4D3A),
+                color: context.c.accent,
               ),
               
               SizedBox(height: 24.h),
@@ -258,7 +259,7 @@ class _QuickChallengePageState extends State<QuickChallengePage> {
                 style: TextStyle(
                   fontSize: 28.sp,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF1F4D3A),
+                  color: context.c.accent,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -269,7 +270,7 @@ class _QuickChallengePageState extends State<QuickChallengePage> {
                 'You learned $_wordsLearned words in 30 seconds',
                 style: TextStyle(
                   fontSize: 18.sp,
-                  color: Colors.grey[700],
+                  color: context.c.textSub,
                 ),
                 textAlign: TextAlign.center,
               ),

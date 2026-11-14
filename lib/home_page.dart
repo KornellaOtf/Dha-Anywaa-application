@@ -23,6 +23,7 @@ import 'package:dha_anywaaa/widgets/body.dart';
 import 'package:dha_anywaaa/widgets/route_transitions.dart';
 import 'package:dha_anywaaa/widgets/brand_leaf.dart';
 import 'package:dha_anywaaa/widgets/celebration_widget.dart';
+import 'package:dha_anywaaa/widgets/floating_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -899,30 +900,17 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildBottomNav() {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.c.card,
-        border: Border(top: BorderSide(color: context.c.border)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 10,
-            offset: Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: BottomNavigationBar(
-          currentIndex: _bottomNavIndex,
-          backgroundColor: context.c.card,
-          selectedItemColor: context.c.accent,
-          unselectedItemColor: context.c.textSub,
-          selectedLabelStyle:
-              const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
-          unselectedLabelStyle: const TextStyle(fontSize: 11),
-          type: BottomNavigationBarType.fixed,
-          elevation: 0,
+    final c = context.c;
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+        child: FloatingNav(
+          index: _bottomNavIndex,
+          backgroundColor: c.card,
+          selectedColor: c.text.withValues(alpha: 0.08),
+          activeColor: c.text,
+          inactiveColor: c.textSub,
           onTap: (i) {
             setState(() => _bottomNavIndex = i);
             if (i == 1) {
@@ -945,16 +933,11 @@ class _HomePageState extends State<HomePage> {
             }
           },
           items: const [
-            BottomNavigationBarItem(
-                icon: Icon(Icons.menu_book_outlined), label: 'Learn'),
-            BottomNavigationBarItem(
-                icon: Icon(Icons.check_circle_outline), label: 'Quiz'),
-            BottomNavigationBarItem(
-                icon: Icon(Icons.list_alt_outlined), label: 'Read'),
-            BottomNavigationBarItem(
-                icon: Icon(Icons.fitness_center), label: 'Practice'),
-            BottomNavigationBarItem(
-                icon: Icon(Icons.more_horiz), label: 'More'),
+            NavItem(Icons.menu_book_outlined, 'Learn'),
+            NavItem(Icons.check_circle_outline, 'Quiz'),
+            NavItem(Icons.list_alt_outlined, 'Read'),
+            NavItem(Icons.fitness_center, 'Practice'),
+            NavItem(Icons.more_horiz, 'More'),
           ],
         ),
       ),
@@ -1131,7 +1114,8 @@ class _HomePageState extends State<HomePage> {
               fontSize: 15,
               color: color == kRust ? color : context.c.text)),
       subtitle: subtitle != null 
-          ? Text(subtitle, style: TextStyle(fontSize: 13, color: Colors.grey[600]))
+          ? Text(subtitle,
+              style: TextStyle(fontSize: 13, color: context.c.textSub))
           : null,
       trailing: trailing,
       onTap: onTap,

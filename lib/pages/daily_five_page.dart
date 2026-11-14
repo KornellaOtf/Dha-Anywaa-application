@@ -30,6 +30,7 @@ class _DailyFivePageState extends State<DailyFivePage>
   List<WordData>  _sessionWords   = [];
   int             _currentIndex   = 0;
   bool            _loading        = true;
+  bool            _alreadyDone    = false; // Daily 5 is once per day
 
   // Per-question state
   bool   _answered          = false;
@@ -85,6 +86,17 @@ class _DailyFivePageState extends State<DailyFivePage>
   // ── Session setup ─────────────────────────────────────────────────────────
 
   Future<void> _buildSession() async {
+    // Daily 5 can only be played once per day — no replays, no extra XP.
+    if (await _learning.isDailyCompleted()) {
+      if (mounted) {
+        setState(() {
+          _loading     = false;
+          _alreadyDone = true;
+        });
+      }
+      return;
+    }
+
     final allIds    = widget.allWords.map((w) => w.id).toList();
     final sessionIds = await _learning.buildDailyFive(allIds);
 
@@ -246,6 +258,8 @@ class _DailyFivePageState extends State<DailyFivePage>
         ),
       );
     }
+
+    if (_alreadyDone) return _doneTodayView();
 
     if (_sessionWords.isEmpty) {
       return Scaffold(
@@ -557,6 +571,76 @@ class _DailyFivePageState extends State<DailyFivePage>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ── Already-completed view (once per day) ─────────────────────────────────
+
+  Widget _doneTodayView() {
+    return Scaffold(
+      backgroundColor: const Color(0xFF1B2E1A),
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width:  88,
+                  height: 88,
+                  decoration: BoxDecoration(
+                    color:        kGreen.withOpacity(0.15),
+                    shape:        BoxShape.circle,
+                    border:       Border.all(color: kGreen, width: 2),
+                  ),
+                  child: const Icon(Icons.check_rounded,
+                      color: kGreen, size: 48),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'Daily 5 complete!',
+                  style: TextStyle(
+                    fontSize:   24,
+                    fontWeight: FontWeight.bold,
+                    color:      Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'You\'ve already finished today\'s session.\n'
+                  'Come back tomorrow for 5 new words!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 15,
+                    height:   1.5,
+                    color:    Colors.white.withOpacity(0.65),
+                  ),
+                ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kGreen,
+                      foregroundColor: const Color(0xFF1B2E1A),
+                      padding:         const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: const Text(
+                      'Back to learning',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
