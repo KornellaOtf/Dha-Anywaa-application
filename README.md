@@ -1,5 +1,9 @@
 # Dha Anywaa
 
+<p align="center">
+  <img src="android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="Dha Anywaa app icon" width="120">
+</p>
+
 A Flutter app for learning the Dha Anywaa (Anuak) language — alphabet,
 vocabulary, reading, quizzes, spaced repetition, the Bible, and an offline
 AI assistant. Works fully offline.
