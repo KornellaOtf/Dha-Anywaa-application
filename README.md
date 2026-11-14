@@ -1,42 +1,94 @@
-
 # Dha Anywaa
 
-This is an app that help people who are interested in learning reading in anywaa language.
+<p align="center">
+  <img src="android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="Dha Anywaa app icon" width="120">
+</p>
 
-For more details check out this didicated website.
-https://dha-anywaa-app.netlify.app/
+<p align="center">
+  <strong>Learn to read, understand, and pronounce Dha Anywaa — offline, at your own pace.</strong>
+</p>
 
-## The anywaa language app
+<p align="center">
+  <img src="https://img.shields.io/badge/version-1.9.2-blue" alt="Version 1.9.2">
+  <img src="https://img.shields.io/badge/platform-Android-green" alt="Platform Android">
+  <img src="https://img.shields.io/badge/offline-first-success" alt="Offline-first">
+  <img src="https://img.shields.io/badge/price-free-brightgreen" alt="Free">
+</p>
 
-This is a Dha Anywaa app designed by a university student to assist individuals in learning to read the Anywaa language.
-It is user-friendly, featuring both pictures and audio elements to enhance the learning experience. 
-Geared towards absolute beginners, the app guides users through each step, facilitating the process of reading in Dha Anywaa.
+Dha Anywaa is a free mobile app for anyone who wants to learn to read, understand, and pronounce the Anywaa language, from absolute beginners to fluent speakers who want to strengthen their reading skills.
 
-The application was developed by a university student named Oriemi Obang Oriemi, aiming to support those interested in acquiring reading skills in Dha Anywaa.
-Dha Anywaa is a language belonging to the larger Luo family group, primarily spoken in East Africa (Ethiopia, South Sudan...).
-It possesses its own set of alphabets and unique rules. This mobile application focuses on reading alphabets, words, and sentences in the Anywaa language.
+Dha Anywaa (also written Anuak) is a Nilo-Saharan language of the Eastern Sudanic branch, closely related to Dinka and Nuer. It is spoken primarily in the Gambella region of Ethiopia and along the rivers of South Sudan, and it has its own alphabet and unique rules.
 
-The initial page of the app emphasizes both uppercase and lowercase alphabets.
-The second page focuses on words and their corresponding images, utilizing individual letters to form words. 
-The third page centers around constructing sentences based on the words introduced in page 2. Lastly, the fourth page involves testing the knowledge acquired from pages 1, 2, and 3.
-                
-The app ensures a guided learning experience, eliminating the need for external guidance or someone to read aloud.
-If a user forgets how to read a word or letter, a simple click of a button prompts the app to pronounce it.
-The app is entirely free, allowing anyone interested in learning or improving reading skills in Dha Anywaa to access and utilize it without any cost.
-   
-Best Wishes!
+The app combines pictures, audio, guided lessons, quizzes, an offline AI assistant, a full Bible, and a large dictionary, all designed to make learning practical, engaging, and accessible.
 
+---
 
+## Table of Contents
 
-## Some dha anywaa app screen shots
+- [Why Dha Anywaa](#why-dha-anywaa)
+- [Features](#features)
+- [Download](#download)
+- [Privacy & Offline Use](#privacy--offline-use)
+- [Developer](#developer)
+- [License](#license)
 
-![Screenshot_20231225_151908](https://github.com/oriemiobang/Dha-Anywaa-application/assets/148628989/43f7a37e-6f95-4051-bbe2-bbaea30302c0)
-![Screenshot_20231225_151929](https://github.com/oriemiobang/Dha-Anywaa-application/assets/148628989/e5bdb55c-b5ff-407a-ae37-8bc49ed830b2)
-![Screenshot_20231225_151940](https://github.com/oriemiobang/Dha-Anywaa-application/assets/148628989/ca79a20f-d917-45fc-a106-47f10f9ae62d)
-![Screenshot_20231225_151957](https://github.com/oriemiobang/Dha-Anywaa-application/assets/148628989/cc76e134-3a8a-479d-a73a-a1dbc9a21d57)
-![Screenshot_20231225_152007](https://github.com/oriemiobang/Dha-Anywaa-application/assets/148628989/8a4aa9ba-d30e-406f-9a19-e14fcd7f1460)
-![Screenshot_20231225_152002](https://github.com/oriemiobang/Dha-Anywaa-application/assets/148628989/ae18dbd1-e279-42e8-b32b-654937b4228d)
-![Screenshot_20231225_090614](https://github.com/oriemiobang/Dha-Anywaa-application/assets/148628989/78c3350e-57ba-4723-9b34-2023f593a53a)
-![Screenshot_20231225_152017](https://github.com/oriemiobang/Dha-Anywaa-application/assets/148628989/39b9aa20-a3ce-4a22-b34f-9764f50f7c03)
-![Screenshot_20231225_152013](https://github.com/oriemiobang/Dha-Anywaa-application/assets/148628989/e2ae7d04-3f8d-4830-b4b2-96df4608173f)
-# Dha-Anywaa-application
+---
+
+## Why Dha Anywaa
+
+- **Free and accessible:** no cost, no paywalls.
+- **Offline-first:** core learning works without an internet connection.
+- **Guided for beginners:** no external teacher needed; the app reads aloud when you tap.
+- **Built for real progress:** streaks, XP, levels, daily reminders, and spaced review.
+- **More than vocabulary:** alphabet, words, sentences, quizzes, AI help, Bible, and dictionary.
+
+---
+
+## Features
+
+| Area | What you get |
+|------|--------------|
+| **Alphabet** | All 29 letters with audio. Mark each letter as learned as you progress. |
+| **Vocabulary** | Illustrated words across animals, birds, fish, body parts, clothes, colors, numbers, and more. |
+| **Reading practice** | Sentences built from the words you have learned, with audio playback. |
+| **Quizzes** | Test your knowledge with live scores and celebrations. |
+| **Daily 5** | A short spaced-repetition session that brings back words you are about to forget. |
+| **Ask Anywaa AI** | An offline assistant that translates between English and Dha Anywaa, gives pronunciations and example sentences, explains numbers, and shares cultural facts. Everything runs on your device, no internet needed. |
+| **Bible** | The full Bible (66 books) in Anywaa, with English, search, night mode, and adjustable text size. |
+| **Dictionary** | Over 3,400 words with pronunciation guides and examples. |
+| **Progress tracking** | Streaks, XP, and levels keep you motivated. |
+| **Daily reminders** | Optional reminders so you never miss a lesson. |
+
+---
+
+## Download
+
+Get the latest version from the [Releases](../../releases) page.
+
+The app checks for updates automatically, about every 6 hours when online.
+
+**Current version:** 1.9.2
+
+---
+
+## Privacy & Offline Use
+
+Dha Anywaa is designed to work offline. The Ask Anywaa AI assistant runs on your device, so you can translate, hear pronunciations, and explore examples without an internet connection. Daily reminders are optional.
+
+---
+
+## Developer
+
+Developed by **Kornella Otf**
+
+Contact: [kornellaotf@gmail.com](mailto:kornellaotf@gmail.com)
+
+---
+
+## License
+
+All rights reserved. The Dha Anywaa language content, audio recordings, and illustrations are the property of their respective creators and are provided for educational use only.
+
+---
+
+<p align="center"><strong>Best wishes on your Dha Anywaa learning journey!</strong></p>
