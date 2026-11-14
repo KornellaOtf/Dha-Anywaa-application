@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -62,7 +63,13 @@ class RetentionEngine {
     tz.initializeTimeZones();
     
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const initSettings = InitializationSettings(android: androidSettings);
+    const linuxSettings = LinuxInitializationSettings(
+      defaultActionName: 'Open Dha Anywaa',
+    );
+    const initSettings = InitializationSettings(
+      android: androidSettings,
+      linux: linuxSettings,
+    );
     
     await _notifications.initialize(initSettings);
   }
@@ -72,7 +79,11 @@ class RetentionEngine {
     final androidImpl = _notifications
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
     
-    if (androidImpl == null) return false;
+    if (androidImpl == null) {
+      // Desktop platforms (Linux/Windows) have no runtime notification
+      // permission — libnotify handles delivery. Treat as granted.
+      return true;
+    }
     
     // Request POST_NOTIFICATIONS permission (Android 13+)
     final notificationPermission = await androidImpl.requestNotificationsPermission();
@@ -176,6 +187,10 @@ class RetentionEngine {
   }
 
   Future<void> _scheduleNotification(NotificationType type, Duration delay) async {
+    // Scheduled local notifications are only implemented for Android —
+    // the Linux plugin supports show()/cancel() but not zonedSchedule().
+    if (defaultTargetPlatform != TargetPlatform.android) return;
+
     final (title, body) = _getNotificationContent(type);
     final scheduledTime = tz.TZDateTime.now(tz.local).add(delay);
 

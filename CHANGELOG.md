@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.9.5 (build 2191)
+
+Released: 2026-11-14
+
+### Fixed
+- Notification engine initialization on desktop platforms (Linux/Windows settings added)
+- Notification permission check no longer fails off-Android
+- Scheduled notifications safely skipped on platforms that don't support them
+
 ## 1.9.4 (build 2190)
 
 Released: 2026-11-14
