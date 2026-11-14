@@ -1,6 +1,9 @@
 # Dha Anywaa App Architecture
 
-Last updated: v1.4.9 (build 169)
+> Canonical documentation now lives in `APP_DOCUMENTATION.md` (repo root).
+> This file is kept for historical reference.
+
+Last updated: v1.9.8 (build 2194)
 
 ## Overview
 

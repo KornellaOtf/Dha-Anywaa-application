@@ -1,32 +1,30 @@
-# Dha Anywaa, Complete App Documentation
+# Dha Anywaa — Complete App Documentation
 
-> Everything about the app in one place: purpose, tech stack, architecture,
-> screens, content, data model, theming, OTA update system, release pipeline,
-> build steps, permissions, privacy, and known issues.
+> Everything about the app in one place: purpose, features, screens,
+> architecture, services, data model, theme system, OTA updates, release
+> pipeline, platform support, and known limitations.
 
-- **App name:** Dha Anywaa (MaterialApp title)
+- **App name:** Dha Anywaa
 - **Dart package:** `dha_anywaaa`
 - **Android application id:** `com.kornellaotf.learn_dha_anywaa`
-- **Current version:** `1.2.22+122` (versionName `1.2.22`, versionCode `122`)
-- **Developer:** Kornella Otf (Kornellaotf@gmail.com)
+- **Current version:** `1.9.8+2194` (see `pubspec.yaml` and `manifest.json`)
+- **Developer:** Kornella Otf — kornellaotf@gmail.com
 - **Repository:** https://github.com/KornellaOtf/Dha-Anywaa-application
-- **Platform focus:** Android (also scaffolds for iOS, web, Linux, macOS, Windows)
+- **Primary platform:** Android · also builds/runs on Linux desktop
 
 ---
 
 ## 1. What the app is
 
-Dha Anywaa (also written Anuak) is a Nilo-Saharan language spoken in Ethiopia
-and South Sudan. This is an offline-first mobile learning app for absolute
-beginners. It teaches the alphabet with audio, illustrated vocabulary with
-audio, reading sentences, themed word categories (animals, birds, fish, body
-parts, clothes, colors, shapes, numbers), and tests knowledge with a
-multiple-choice quiz.
+Dha Anywaa (also written Anuak) is a Nilo-Saharan language of the Eastern
+Sudanic branch, closely related to Dinka and Nuer, spoken primarily in the
+Gambella region of Ethiopia and along the rivers of South Sudan.
 
-No account is required. The core features work with no internet at all. The
-only network use is an optional update check (GitHub Releases) and Firebase
-Analytics for anonymous usage tracking. FCM push notifications inform users
-of new updates.
+This is an **offline-first** learning app: alphabet, illustrated vocabulary,
+reading sentences, quizzes, spaced-repetition practice, an offline Anywaa AI
+assistant, and the full Bible in Anywaa with English translation. No account
+required. The only network use is the optional OTA update check against
+GitHub Releases and anonymous Firebase Analytics.
 
 Target audience: children and beginner learners of the language.
 
@@ -36,451 +34,275 @@ Target audience: children and beginner learners of the language.
 
 | Area | Choice |
 |---|---|
-| Framework | Flutter / Dart (SDK `>=3.2.1 <4.0.0`) |
-| CI Flutter version | `3.47.7` (stable) |
-| State management | `provider` package is present; the app itself uses an `InheritedNotifier` (`AppSettings`) plus `StatefulWidget` screens |
-| Local storage | `shared_preferences` (via the `SavedData` helper) |
-| Audio | `audioplayers` (wrapped by `audio_helper.dart`) |
-| Networking | `http` (update check + APK download) |
-| Integrity | `crypto` (SHA-256 of downloaded APK) |
-| App info | `package_info_plus` (installed version/build number) |
-| File paths | `path_provider` |
-| Install APK | `open_file` |
-| External links | `url_launcher` |
-| Scaling | `flutter_screenutil` |
-| Fonts | `google_fonts`: Nunito (body), Playfair Display (titles / big Anywaa words) |
-| Vector graphics | `flutter_svg` (for SVG illustrations) |
-| Firebase | `firebase_core`, `firebase_analytics` (anonymous usage tracking) |
-| Notifications | `flutter_local_notifications` (OTA update alerts, FCM) |
-| Icons/launcher | `flutter_launcher_icons` |
-| Lints | `flutter_lints` (`analysis_options.yaml`) |
-
-Key dependency versions (from `pubspec.yaml`):
-`cupertino_icons ^1.0.2`, `flutter_screenutil ^5.9.0`, `audioplayers ^5.2.1`,
-`url_launcher ^6.2.2`, `provider ^6.1.1`, `shared_preferences ^2.2.3`,
-`http ^1.2.0`, `package_info_plus ^8.0.0`, `path_provider ^2.1.2`,
-`open_file ^3.3.2`, `google_fonts ^6.2.1`, `crypto ^3.0.3`.
+| Framework | Flutter / Dart (`>=3.2.1 <4.0.0`) |
+| State | `provider` (AppSettings), `setState`, singletons for services |
+| Storage | `shared_preferences` (all progress, prefs, FSRS state) |
+| Spaced repetition | Custom FSRS-6 implementation (`LearningEngine`) |
+| Analytics | Firebase Analytics (guarded — no-ops when unavailable) |
+| Audio | `audioplayers` |
+| Updates | Custom OTA via GitHub Releases (`OtaService`) |
+| Fonts | `google_fonts` (Playfair Display for display text) |
 
 ---
 
-## 3. Architecture and startup flow
+## 3. Feature map
 
-Entry point is `lib/main.dart`.
+### Home (`lib/home_page.dart`)
+- Greeting header with learner name, streak/XP stat chips
+- Quick-action cards: Daily 5, Quick Challenge, Continue reading
+- Bottom navigation: **Learn · Quiz · Read · Practice · More**
+- Drawer (sidebar): fixed panel (no scrolling), grouped sections —
+  **Learn** (Göörë moo cïp dwöl / vowels, Jap dëël / body parts, Dictionary),
+  **Discover** (Anywaa AI, Wëël Jwök / Bible, Share), **App** (Settings,
+  About, Help), plus Log out. Rounded card tiles with press-scale animation.
 
-1. `main()` is `async`. It calls `WidgetsFlutterBinding.ensureInitialized()`,
-   then preloads `SharedPreferences` before `runApp`.
-2. It reads the saved `theme_mode` and `sound_enabled` and passes them into
-   `AppSettingsNotifier(initialThemeMode: ..., initialSoundEnabled: ...)`.
-   Preloading synchronously means the correct theme is applied on the very
-   first frame (no flash of the system theme on relaunch).
-3. `MaterialApp` is wrapped in the `AppSettings` `InheritedNotifier`, so any
-   screen can read/write settings via `AppSettings.of(context)`.
-4. `MyApp` sets `theme`, `darkTheme`, and `themeMode` from the notifier, and
-   declares the named routes.
+### Practice / Learn shell (`lib/pages/practice_learn_page.dart`)
+Four tabs sharing `FloatingNav` (`lib/widgets/floating_nav.dart`):
+**Overview · Learn · Practice · Progress**
 
-Routing / navigation:
+- **Overview** — stats cards (words learned, phrases done), Daily 5 hero,
+  "More to explore" rows
+- **Learn** — vocabulary categories grid (numbers, alphabet, words, animals,
+  birds, fish, body parts, clothes, colors, shapes)
+- **Practice** — working session launchers:
+  - **Daily 5** — FSRS session, once per day
+  - **Random Words** — 10 random words
+  - **Long Session** — 20 words
+  - **Mistakes Review** — words flagged by FSRS (lapses / low accuracy /
+    high difficulty), worst first, up to 10
+  - **Saved Words** — all words with FSRS history, most overdue first, up to 15
+  - Notifications sheet (daily reminder toggle)
+- **Progress** — stats, categories progress, gamification state
 
-- Route `/` -> `Wrapper` (`lib/wraper.dart`).
-- `Wrapper` loads the saved name. While loading it shows a branded splash
-  (logo, "Dha Anywaa", a small spinner with a fade-in animation).
-- After load: if no name is set (`name == 'guess'`) it shows `NameEntry`
-  (first-run name capture); otherwise it shows `HomePage`.
-- `HomePage` (`lib/home_page.dart`) provides the drawer, bottom nav, category
-  grid, progress, and links to Settings, Help, About, Privacy, Terms.
+Custom practice sessions reuse the Daily Five session UI and **record every
+answer into FSRS** and award XP, but do **not** consume the daily slot.
 
-Named routes (from `main.dart`):
+### Daily Five (`lib/pages/daily_five_page.dart`)
+- FSRS-6 driven session: picture → pick the Anywaa word → instant feedback
+- Combo tracking, per-card XP, progress dots, haptic feedback
+- Once per day (`LearningEngine.isDailyCompleted` / `markDailyCompleted`)
+- Branded exit-confirmation dialog (progress is not saved on exit)
+- Summary screen: accuracy, XP earned, best combo, per-word results;
+  shows a session label for custom modes (e.g. "RANDOM WORDS")
+- Empty states for already-done-today and no-words-available
 
-| Route | Screen |
-|---|---|
-| `/` | `Wrapper` (splash + gate) |
-| `home_page` | `HomePage` |
-| `name_entry` | `NameEntry` |
-| `alphabet` | `Page1` (Alphabet) |
-| `word` | `Page2` (Words) |
-| `reading` | `Page3` (Reading sentences) |
-| `quiz` | `Page4` (Quiz) |
-| `number` | `Number` |
-| `colors` | `Kit` |
-| `shape` | `Shpae` (note: class name is misspelled in code) |
-| `body` | `BodyPart` |
-| `fish` | `Fish` |
-| `animal` | `Animal` |
-| `bird` | `Bird` |
-| `clothes` | `Cloth` |
+### Quiz / Quick Challenge (`lib/pages/page4.dart`, `quick_challenge_page.dart`)
+- Multiple-choice quiz with live score, celebration overlays, take-a-break
+  exit dialog
 
-After finishing the quiz, `Page4` navigates (pushReplacement) to `Result`
-(`lib/result_page.dart`) with the final score and total.
+### Reading (`lib/pages/page1.dart`, `page2.dart`, `page3.dart`)
+- Alphabet, words, and sentence reading with audio; learned-state tracked
+  via `SavedData` (`learned_<category>_<index>` keys)
 
----
+### Bible (`lib/pages/bible_page.dart`)
+- Full Bible (66 books) in Anywaa with optional English translation
+- Library: clean app bar, Old/New Testament segmented switcher, continue-
+  reading banner, book list rows (letter avatar, chapter count, "Reading"
+  badge on current book)
+- Chapter grid with book header, highlighted current chapter
+- Reader: Anywaa text + optional English, adjustable font size, night mode,
+  cross-book previous/next chapter navigation, search with debounce
+- Reading-settings bottom sheet (font size slider, English toggle, night
+  toggle) — repaints instantly on night-mode change
+- All preferences persisted (`bible_night`, `bible_show_eng`,
+  `bible_font_size`, last position)
 
-## 4. Screens and features
+### Anywaa AI (`lib/anywaa_ai_page.dart`, `lib/services/anywaa_ai_service.dart`)
+- Fully offline assistant: word lookup, English↔Anywaa, pronunciation,
+  examples, numbers, cultural facts
+- Backed by `assets/data/dictionary_full.json` (3,400+ entries, includes
+  merged entries from external News scrape)
 
-| Screen | File | What it does |
-|---|---|---|
-| Alphabet | `pages/page1.dart` | 29 letters, large card view, per-letter audio, mark as learned |
-| Words | `pages/page2.dart` | 29 illustrated words with audio |
-| Reading | `pages/page3.dart` | 29 sentences with audio |
-| Quiz | `pages/page4.dart` | 31 multiple-choice questions, shuffled, live score, confirm before quitting, result screen |
-| Colors | `components/colors.dart` | 8 color cards with pictures |
-| Shapes | `components/shape.dart` | 4 shape cards |
-| Body | `components/body_part.dart` | 18 body parts with pictures |
-| Clothes | `components/cloth.dart` | 10 clothing items |
-| Birds | `components/bird.dart` | 12 birds |
-| Animals | `components/animal.dart` | 14 animals |
-| Fish | `components/fish.dart` | 10 fish (Dha Anywaa names, English labels pending) |
-| Numbers | `components/number.dart` | 1 to 10 |
-| Settings | `settings_page.dart` | Sound toggle, name change, theme (System/Light/Dark), Check for update, Privacy, Terms |
-| Help | `help.dart` | Usage help per feature |
-| About | `about.dart` | App info |
-| Privacy Policy | `privacy_policy_page.dart` | In-app privacy disclosure |
-| Terms | `terms_page.dart` | Terms of use |
+### Dictionary
+- Currently a "Coming Soon" placeholder page (real dictionary data lives in
+  the Anywaa AI and `dictionary_full.json`)
 
-Extra content/data modules: `Questions.dart` (quiz model), `Sentence.dart`,
-`words.dart`, `vowel.dart`, `vowelLetter.dart`, `letters_and_sound.dart`,
-`body_part.dart` (top level), `widgets/body.dart`, and
-`components/detail_screen.dart` (a reusable grid + detail screen used by the
-category screens).
+### Settings (`lib/settings_page.dart`)
+- Theme picker (System / Light / Dark) — branded choice dialog
+- Sound effects toggle
+- Name editor — branded dialog, updates analytics user id
+- Reminders — daily reminder toggle + reminder-time picker (Android
+  notifications via `RetentionEngine`)
+- Updates — version display + "Check for updates" (force-checks OTA)
+- Invite Friends — share sheet
+- Assistant — shortcut to Anywaa AI
+- About — Privacy Policy, Terms of Use, Help, About, open-source licences
 
-Progress tracking: each learned item is stored per category, and the home
-screen shows progress as learned/total per category. Totals are defined in
-`_categoryTotals` in `home_page.dart`:
-
-```
-alphabet 29, number 10, word 29, reading 29, colors 8, shape 4,
-body 18, clothes 10, bird 12, animal 14, fish 10, quiz 31
-```
-
-### Quiz details (`pages/page4.dart`)
-
-- A `PageView.builder` with `NeverScrollableScrollPhysics` (advance only via
-  the Next button), a top bar with a close (X) button, "Question n of total",
-  and a live score badge.
-- Picture questions show the image (text-only questions using
-  `blank_image.png` are handled without an empty placeholder).
-- Answer state is tracked per page (`_pageSelectedIndex`, `_selectedIndex`,
-  `_answeredIds`) so a question is only scored once and cannot be re-tapped.
-- Feedback colors: green for correct, red for the wrong selection, and the
-  correct answer is revealed. Uses `AnimatedScale` for press/pop micro-motion.
-- A `PopScope(canPop: false)` intercepts the system back gesture and shows the
-  "Quit the quiz?" confirmation dialog. Confirmed only by "Quit anyway".
+### Other pages
+- `nameEntry.dart` — first-run name entry (wrapper routes here when no name)
+- `about.dart`, `help.dart`, `terms_page.dart`, `privacy_policy_page.dart`
+- `dictionary_coming_soon_page.dart`
 
 ---
 
-## 5. Content and assets
-
-Assets live under `assets/`:
-
-| Folder | Purpose | Notes |
-|---|---|---|
-| `sound/` | Alphabet letter audio | ~29 files (A, B, ... including Dh, Ng, Nh, Ny, Th, and dotted vowels) |
-| `word_sound/` | Word audio | ~30 files |
-| `sentence_sound/` | Reading audio | ~29 files (`Voice6.mp3` is missing) |
-| `word_images/` | Word + logo + blank placeholder | includes `app_logo.png`, `awal_icon.jpeg`, `blank_image.png` |
-| `category_image/` | Home grid tiles | alphabets, numbers, colors, shapes, body, quiz, reading, book |
-| `animals/` `birds/` `fish/` `body_part/` `cloth/` | Themed pictures | one PNG per item |
-
-The launcher icon is generated from `assets/word_images/app_logo.png` via
-`flutter_launcher_icons`.
-
----
-
-## 6. Data model and persistence
-
-All persistence goes through `lib/components/savedData.dart`, a thin wrapper
-over `SharedPreferences`. Every getter fetches the cached instance, so the
-data is local only.
-
-| Key | Type | Meaning / default |
-|---|---|---|
-| `name` | String | Learner name, default `guess` (sentinel = no name yet) |
-| `last_route` | String | Last visited category, used by the Continue card |
-| `learned_<category>_<index>` | bool | Marks a single item as learned (e.g. `learned_alphabet_3`) |
-| `sound_enabled` | bool | Sound effects on/off, default true |
-| `theme_mode` | int | 0 system, 1 light, 2 dark (stored as `ThemeMode.index`) |
-| `ota_last_check_ms` | int | Timestamp of last OTA check, powers the 6-hour cache |
-
-Methods: `getName/setName`, `getLastRoute/setLastRoute`, `isLearned`,
-`setLearned`, `learnedCount(category, total)`, `getSoundEnabled/setSoundEnabled`,
-`getThemeMode/setThemeMode`, and `clearProgress()` which removes every
-`learned_*` key and `last_route` (used to reset progress on logout).
-
-### Settings store (`lib/app_settings.dart`)
-
-- `AppSettings` is an `InheritedNotifier<AppSettingsNotifier>`; read anywhere
-  with `AppSettings.of(context)`.
-- `AppSettingsNotifier` is a `ChangeNotifier` holding `_themeMode` and
-  `_soundEnabled`. It accepts `initialThemeMode` / `initialSoundEnabled` so
-  values can be applied synchronously at startup, and still refreshes via
-  `_load()`.
-- `setThemeMode(ThemeMode)` and `setSoundEnabled(bool)` update state, call
-  `notifyListeners()` (rebuilding `MaterialApp`), then persist.
-
----
-
-## 7. Theming (`lib/theme/app_theme.dart`)
-
-A single centralized theme with Material 3 and a semantic, theme-aware palette
-exposed as a `ThemeExtension<AppColors>`.
-
-Brand tokens: `kGreen #1F4D3A` (forest green, solid surfaces/buttons),
-`kGreenMid #2D6A4F`, `kGold #C9993A`, `kRust #A8472A` (terracotta).
-
-Semantic colors (`context.c.<name>`):
-
-| Token | Light | Dark |
-|---|---|---|
-| `bg` | `#F6EFE3` (sand) | `#101512` |
-| `card` | `#FFFFFF` | `#1B221D` |
-| `text` | `#1B1F1C` | `#ECEAE4` |
-| `textSub` | `#5B625D` | `#A7B0A8` |
-| `border` | `#E4DACB` | `#2C352E` |
-| `accent` | `#1F4D3A` | `#7FB896` |
-
-Usage convention: new code should read `context.c.*` (via the `AppColorsX`
-extension `context.c`) rather than hard-coded colors, so light/dark stay
-correct. Shared shadows: `kShadowSoft` (blur 8), `kShadowCard` (blur 12),
-`kShadowBtn`. Shared decoration helpers: `cardDeco`, `gridCellDeco`,
-`detailCardDeco`. Text theme uses Nunito with Playfair Display for
-display/headline sizes. `AppTheme.data` is the light theme and `AppTheme.dark`
-the dark theme.
-
-Visual polish conventions used across the app: rounded corners (radius 14-20
-for cards/buttons), soft shadows (blur 8-12), and micro-animations
-(`AnimatedScale` press feedback, `AnimatedSwitcher` / scale-in transitions).
-Circular badges fit their text with `FittedBox` (scaleDown, maxLines 1) so
-long words never overflow.
-
----
-
-## 8. OTA update system (`lib/services/ota_service.dart`)
-
-The app self-updates from GitHub Releases. No app store is involved.
-
-Config: owner `KornellaOtf`, repo `Dha-Anywaa-application`, endpoint
-`.../releases/latest`, cache TTL 6 hours (`ota_last_check_ms`).
-
-### Check
-
-`checkForUpdate({forceCheck})`:
-1. If not forced, returns early when the last check was under 6 hours ago.
-2. Fetches `releases/latest`, finds the `manifest.json` asset, downloads it.
-3. Compares `manifest.versionCode` against the installed
-   `PackageInfo.buildNumber`. If remote is greater, it returns an
-   `OtaCheckResult` (version, versionCode, apkUrl, sha256, sizeBytes,
-   mandatory, releaseNotes); otherwise null.
-
-Triggers: `HomePage` auto-checks after the first frame (cached, non-forced);
-`Settings -> Check for update` forces a fresh check (bypasses the cache). If
-`mandatory` is true, the update dialog is not dismissible.
-
-### Download (in-app, resumable, singleton)
-
-`OtaService` is a **singleton** (`factory OtaService() => instance`) exposing a
-`ValueNotifier<OtaDownloadState>` (`idle / running / success / error`,
-`progress`, `message`, `filePath`). Because the download lives in the service
-and not in a widget, it keeps running when you leave the Settings screen; the
-UI just listens.
-
-`startDownload(result)`:
-- Idempotent: a second call while one is running is ignored (no duplicate).
-- Uses `background_downloader` package for resumable downloads with
-  foreground service notification.
-- After download it verifies the byte size against the manifest, computes
-  SHA-256 over the finished file, and compares it; on any mismatch it deletes
-  the partial file and reports failure. On success it sets the state to success.
-
-On success the update page shows "Install" and calls `OpenFile.open(...)` so
-Android shows the installer. (Grant "install unknown apps" when prompted.)
-
-`downloadInBrowser(result)`:
-- Alternative download method that opens the APK URL in the system browser
-  via `url_launcher`. Used as a fallback when in-app download fails.
-- Browser handles download in background on all Android versions.
-
-### OTA manifest.json — CRITICAL RULES
-
-The `manifest.json` file is the single source of truth for OTA. It must
-contain the **exact** SHA256 and file size of the APK uploaded to the GitHub
-release. If these don't match, the OTA download will fail with a verification
-error ("Update failed").
-
-**CRITICAL:** The SHA256 in manifest.json must be computed from the actual
-built APK file AFTER the build completes. Never copy a hash from a previous
-release. Always use `scripts/release.sh` which automates this correctly.
-
-### OTA version history
-
-| Version | Build | APK Size | Key OTA changes |
-|---|---|---|---|
-| 1.2.35 | 135 | 101 MB | Bypassed GitHub API rate limit (direct manifest URL) |
-| 1.2.36 | 136 | 101 MB | Added browser download fallback |
-| 1.3.0 | 150 | 101 MB | Anywaa AI 2x smarter (3,346 words) |
-| 1.3.3 | 153 | 78 MB | Removed x86_64, compressed images |
-| 1.3.4 | 154 | 78 MB | Browser download as default |
-| 1.3.6 | 156 | 78 MB | Back to in-app download (user preference) |
-| 1.3.9 | 159 | 63 MB | Compressed 7 huge images (78MB to 63MB) |
-| 1.4.0 | 160 | 63 MB | Reading page correct images (SHA was wrong, OTA failed) |
-| 1.4.1 | 161 | 63 MB | Fixed SHA256 mismatch in manifest.json |
-
----
-
-## 9. Release pipeline
-
-### Local release (current method)
-
-Releases are built locally using `scripts/release.sh`. This script:
-
-1. Bumps `version:` in `pubspec.yaml` to the new version + build number.
-2. Builds the APK with `--target-platform android-arm,android-arm64` (no x86_64,
-   saves ~19MB).
-3. **Computes SHA256 and file size from the ACTUAL built APK file.**
-4. Writes `manifest.json` with the correct hash, size, version, and URL.
-5. **Verifies the SHA256 in manifest.json matches the APK before committing.**
-6. Commits, tags, and pushes to GitHub.
-7. Creates a GitHub release with the APK + manifest.json attached.
-8. Verifies the GitHub release has the APK with the correct size.
-
-### Usage
-
-```bash
-./scripts/release.sh 1.4.2 162
-```
-
-Arguments: version number and versionCode (build number).
-
-### Why the release script exists
-
-In v1.4.0, the SHA256 in manifest.json was manually copied from v1.3.9 instead
-of being computed from the actual v1.4.0 APK. This caused every OTA update to
-fail with a verification error — the downloaded file didn't match the expected
-hash. The release script prevents this by always computing the hash from the
-real file and verifying it before publishing.
-
-### Versioning and tagging
-
-- Tags follow `vX.Y.Z`.
-- `pubspec.yaml` holds `version: X.Y.Z+NN`. **`NN` is the versionCode used for
-  OTA detection** and must increase on every release.
-- **Always use `scripts/release.sh`** to ensure the SHA256 is correct.
-
-### Build configuration
-
-The APK is built with `--target-platform android-arm,android-arm64`:
-- `arm64-v8a`: all modern Android phones (2015+)
-- `armeabi-v7a`: older 32-bit phones
-- `x86_64` is excluded (emulator only, saves ~19MB)
-
-Firebase App Distribution is also used to distribute to testers:
-```bash
-firebase appdistribution:distribute build/app/outputs/flutter-apk/app-release.apk \
-  --project learn-dha-anywaa \
-  --app 1:741893789084:android:c37941cbe756ed3f92a459 \
-  --release-notes "vX.Y.Z - description"
-```
-
-## 10. Building and running locally
-
-Requirements: Flutter 3.47+, Android SDK, a device or emulator.
-
-```bash
-flutter pub get          # install dependencies
-flutter run              # debug on connected device
-flutter build apk --release   # signed release APK (needs android/key.properties)
-# output: build/app/outputs/flutter-apk/app-release.apk
-
-dart analyze lib test    # static analysis
-flutter test             # run the test suite
-```
-
-The release keystore is configured in `android/key.properties` (not committed);
-in CI it comes from GitHub Actions secrets.
-
-Tests: `test/widget_test.dart` currently contains deterministic regression tests
-for theme persistence (index-to-`ThemeMode` mapping, SharedPreferences
-round-trip, synchronous startup application, and `setThemeMode` persisting the
-chosen mode). The old stock "counter" smoke test was replaced because it never
-applied to this app and crashed without its `AppSettings` ancestor.
-
----
-
-## 11. Permissions (Android)
-
-| Permission | Reason |
-|---|---|
-| `INTERNET` | Update check via the GitHub Releases API and APK download |
-| `ACCESS_NETWORK_STATE` | Skip the update check when offline |
-| `REQUEST_INSTALL_PACKAGES` | Install the downloaded update APK |
-
-A `network_security_config.xml` lives under `android/app/src/main/res/xml/`.
-
----
-
-## 12. Privacy summary
-
-All user data (name, learned progress, sound and theme preferences, last update
-check time) is stored only on the device via SharedPreferences and never leaves
-it. The only outbound network traffic is the update check to `api.github.com`
-(which includes the device IP as part of normal HTTPS) and the optional APK
-download from GitHub release assets. There is no analytics, no advertising, and
-no account. The full text is shown in-app under Settings, Privacy Policy, and
-Terms.
-
----
-
-## 13. Known content gaps (tracked for the developer)
-
-- `sentence_sound/Voice6.mp3` is missing; the "Dh / Dhieng" reading item plays
-  silently.
-- All 10 fish entries have no English label.
-- "Öök" in Words has no English label.
-- Suspected typos to review: "Crocdile", "Hayna", "Quitar", "Three Angle".
-- Orphan file: `word_sound/Ec.mp3` (not referenced by any word).
-- Stray file: `assets/body_part/lion.png` (not a body part image).
-- Class name `Shpae` (Shapes) is misspelled in code.
-
----
-
-## 14. Project structure (lib/)
+## 4. Architecture
 
 ```
 lib/
-  main.dart                 Entry point: preload prefs, AppSettings, MaterialApp, routes
-  wraper.dart               Startup gate: splash, then NameEntry or HomePage
-  home_page.dart            Home: drawer, bottom nav, category grid, progress, OTA auto-check
-  nameEntry.dart            First-run name capture
-  app_settings.dart         InheritedNotifier settings store (theme + sound)
-  settings_page.dart        Sound, name, theme selector, Check for update (OTA UI)
-  help.dart  about.dart     Help and about screens
-  privacy_policy_page.dart  In-app privacy policy
-  terms_page.dart           Terms of use
-  result_page.dart          Quiz result screen
-  letters_and_sound.dart    Alphabet/sound helper screen
-  vowel.dart  vowelLetter.dart  Words.dart body_part.dart  Sentence.dart  Questions.dart
-  pages/
-    page1.dart  Alphabet
-    page2.dart  Words
-    page3.dart  Reading
-    page4.dart  Quiz
-  components/
-    detail_screen.dart      Reusable grid + detail screen
-    number.dart  colors.dart  shape.dart  body_part.dart
-    cloth.dart  bird.dart  animal.dart  fish.dart
-    savedData.dart          SharedPreferences helpers
-    audio_helper.dart       Safe audio playback
+  main.dart                     # init: Firebase(guarded), RetentionEngine,
+                                #   quick actions (mobile only), theme load,
+                                #   routes, OTA auto-check
+  wraper.dart                   # name-gate → NameEntry or HomePage (+ splash)
+  home_page.dart                # home screen + drawer
+  app_settings.dart             # ThemeMode + sound notifier (provider)
+  theme/app_theme.dart          # brand tokens + light/dark ThemeData +
+                                #   context.c semantic colors + shadows
+  widgets/floating_nav.dart     # shared animated bottom nav (Home + Practice)
+  widgets/celebration_widget.dart
+  pages/                        # screens listed above
   services/
-    ota_service.dart        GitHub Releases update check + resumable singleton downloader
-  theme/
-    app_theme.dart          Color tokens, ThemeExtension, light/dark ThemeData
-  widgets/
-    body.dart               Shared widget(s)
+    learning_engine.dart        # FSRS-6 scheduler + word states
+    gamification_service.dart   # XP, levels, streaks, daily goal
+    retention_engine.dart       # local notifications + comeback bonus
+    ota_service.dart            # GitHub Releases manifest + APK download
+    analytics_service.dart      # Firebase Analytics wrapper (null-safe)
+    word_aggregator.dart        # WordData model + full vocabulary (~129 words)
+    anywaa_ai_service.dart      # offline dictionary/AI replies
+    share_helper.dart
+    audio_helper.dart (components/)
+  components/savedData.dart     # name, last route, learned flags, sound, theme
 ```
+
+### Key services
+
+- **LearningEngine (FSRS-6)** — per-word stability `S`, difficulty `D`,
+  due date, lapses, accuracy. APIs: `loadStates`, `buildDailyFive`,
+  `recordReview`, `getDueCount`, `isDailyCompleted`, `markDailyCompleted`,
+  `getDailyStreak`. Storage key `fsrs_word_states_v1`.
+- **GamificationService** — XP, level thresholds, streaks, streak freezes,
+  daily goal. `completeDailyFive(correct,total,comboXp)` is the single XP
+  award path.
+- **RetentionEngine** — schedules daily/streak-danger/comeback local
+  notifications (Android `zonedSchedule`; Linux init works but scheduled
+  delivery is Android-only). Keys: notifications enabled/preferred hour/
+  last open/sent count.
+- **OtaService** — fetches
+  `releases/latest/download/manifest.json`, compares `versionCode` to
+  `package_info.buildNumber`, 6-hour cache, SHA-256 + size verification,
+  background download, `open_file` install.
+- **AnalyticsService** — every analytics call null-guards on
+  `Firebase.apps.isEmpty`; all methods no-op when Firebase is unavailable.
+- **WordAggregator** — `WordData{id, english, anywaa, imageUrl, category}`
+  for the full vocabulary used by Daily 5 and all practice modes.
+- **SavedData** — SharedPreferences helpers: `name`, `last_route`,
+  `learned_<category>_<index>`, `sound_enabled`, `theme_mode`.
+
+### Theme system
+- `AppTheme.data` / `AppTheme.dark` + `AppSettings` (system/light/dark)
+- `context.c` exposes `bg`, `card`, `text`, `textSub`, `border`, `accent`
+- Brand tokens: `kGreen #1F4D3A`, `kGreenMid #2D6A4F`, `kGold #C9993A`,
+  `kRust #A8472A`; shadows `kShadowSoft`, `kShadowCard`
+- Loaded before `runApp` to avoid theme flash
+- Bible has its own independent night-mode palette (`_night` pref)
+
+### Shared UI
+- `FloatingNav` — floating pill bottom nav shared by Home and Practice
+  shell: press bounce (scale 0.88), selection pop (easeOutBack), animated
+  highlight, soft shadow.
+- `_PressableCard` (home_page) — press-scale wrapper used by drawer tiles.
+- `_BrandedDialog` / `_ChoiceTile` / `_NameDialog` (settings_page) —
+  rounded icon-chip dialogs used by theme and name pickers.
 
 ---
 
-## 15. Credits and license
+## 5. Data & storage keys (SharedPreferences)
 
-Developed by **Kornella Otf**. Contact: Kornellaotf@gmail.com.
+| Key | Purpose |
+|---|---|
+| `name` | learner name |
+| `last_route` | continue-reading route |
+| `learned_<cat>_<i>` | per-item learned flags |
+| `sound_enabled`, `theme_mode` | app prefs |
+| `fsrs_word_states_v1` | FSRS card states (JSON map) |
+| `learn_daily_completed_date`, `learn_daily_streak` | Daily 5 lock + streak |
+| `learn_review_log` | review history (legacy) |
+| `gam_*` | XP, streak, freezes, daily goal, today XP |
+| `analytics_user_id` | hashed analytics id |
+| `ota_last_check_ms` | OTA cache timestamp |
+| notification keys | enabled, preferred hour, last open, sent count, comeback |
+| `bible_*` | night mode, English toggle, font size, last book/chapter |
 
-All rights reserved. The Dha Anywaa language content, audio recordings and
-illustrations are the property of their respective creators and are provided
-for educational use only.
+---
+
+## 6. OTA update system
+
+- Manifest: `manifest.json` in repo root, uploaded as a release asset.
+  Fields: `version`, `versionCode`, `apkUrl`, `sha256`, `sizeBytes`,
+  `minSupportedVersionCode`, `mandatory`, `releaseNotes`, `developer`.
+- App fetches `releases/latest/download/manifest.json`; skips if
+  `remote versionCode <= local buildNumber`; caches result 6 h
+  (`ota_last_check_ms`); Settings → Check for updates forces a fresh check.
+- Download verifies SHA-256 + size before install; `OpenFile.open` hands
+  the APK to the Android installer.
+- **Rule:** `pubspec.yaml` version (`x.y.z+build`) and `manifest.json`
+  `versionCode` must always match — bump both together.
+
+---
+
+## 7. Release pipeline
+
+1. Bump `pubspec.yaml` → `version: X.Y.Z+BUILD`
+2. `flutter build apk --release` → `build/app/outputs/flutter-apk/app-release.apk`
+3. Copy to `.tmp_apk/dha-anywaa-vX.Y.Z.apk`
+4. Update `manifest.json` (version, versionCode, apkUrl, sha256, sizeBytes)
+5. Add `CHANGELOG.md` entry
+6. `git commit` (as Kornella Otf) → `git tag vX.Y.Z` → push branch + tag
+7. `gh release create vX.Y.Z <apk> manifest.json --title "vX.Y.Z" --notes …`
+8. Verify: assets list, manifest on tag, `releases/latest` (CDN may lag
+   a few minutes)
+
+Docs: see `RELEASE.md` and `docs/RELEASE_WORKFLOW.md`.
+
+---
+
+## 8. Platform support
+
+| Platform | Status |
+|---|---|
+| Android | Primary target; release APKs via GitHub Releases + OTA |
+| Linux | Builds and runs (debug verified); Firebase/analytics and scheduled notifications gracefully disabled |
+| Windows | Code-compatible; must be built on Windows + Visual Studio |
+| Web / macOS / iOS | Scaffolded; untested |
+| Android TV | Not supported — touch-first UI, no D-pad/leanback mode |
+
+Mobile-only plugins (quick actions) are gated to Android/iOS;
+Firebase init and analytics observer are guarded; notification init
+includes Linux settings; `zonedSchedule` is Android-only.
+
+---
+
+## 9. Permissions
+
+- `POST_NOTIFICATIONS` (Android 13+) — requested via reminder toggle
+- `SCHEDULE_EXACT_ALARM` / exact alarms (Android 12+) — reminder scheduling
+- `REQUEST_INSTALL_PACKAGES` — OTA APK install
+- Internet — only for OTA manifest/APK and Firebase Analytics
+
+---
+
+## 10. Privacy
+
+- No accounts; learner name stored locally only
+- Analytics uses a SHA-256 hash of the name as user id (no raw PII)
+- All learning progress is on-device (SharedPreferences)
+- See `PRIVACY.md` and the in-app Privacy Policy page
+
+---
+
+## 11. Known limitations / tech debt
+
+- Dictionary is a "Coming Soon" placeholder (data exists in Anywaa AI)
+- Bible audio is a placeholder pill
+- Scheduled local notifications are Android-only (Linux plugin lacks
+  `zonedSchedule`)
+- Windows builds require a Windows machine/CI
+- Gradle 8.14.2 / AGP 8.11.1 / Kotlin 2.2.20 approaching Flutter support
+  floors — upgrade before they are dropped
+- Repo contains large historical APK/ZIP assets (>50 MB GitHub warnings)
+- `.tmp_apk/` holds local APK copies (~900 MB) — clean periodically
+- Analyzer: pre-existing warnings remain (deprecated `withOpacity`,
+  unused elements in `home_page.dart`)
+
+---
+
+*Last updated for v1.9.8 (build 2194).*
