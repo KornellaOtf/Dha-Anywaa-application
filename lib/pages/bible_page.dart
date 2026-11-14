@@ -58,6 +58,7 @@ class _BiblePageState extends State<BiblePage>
   List<String>           _otBooks       = [];
   List<String>           _ntBooks       = [];
   bool                   _loading       = true;
+  bool                   _loadError     = false;
 
   String? _book;
   int?    _chapter;
@@ -69,10 +70,19 @@ class _BiblePageState extends State<BiblePage>
   bool   _night    = true;
 
 
-  bool             _searchOpen = false;
-  String           _query      = '';
-  List<BibleVerse> _results    = [];
-  final _searchCtrl            = TextEditingController();
+  bool             _searchOpen  = false;
+  String           _query       = '';
+  List<BibleVerse> _results     = [];
+  List<String>     _bookMatches = [];
+  bool             _truncated   = false;
+  final _searchCtrl             = TextEditingController();
+  Timer?           _searchDebounce;
+
+  // Pre-lowercased search index, built once at load time
+  List<String> _lcAnywaa  = [];
+  List<String> _lcEnglish = [];
+
+  List<String> get _allBooks => [..._otBooks, ..._ntBooks];
 
   late final AnimationController _fadeCtrl;
   late final Animation<double>   _fadeAnim;
@@ -93,6 +103,7 @@ class _BiblePageState extends State<BiblePage>
   void dispose() {
     _fadeCtrl.dispose();
     _searchCtrl.dispose();
+    _searchDebounce?.cancel();
     super.dispose();
   }
 
@@ -106,12 +117,16 @@ class _BiblePageState extends State<BiblePage>
           .map((v) => BibleVerse.fromJson(v as Map<String, dynamic>))
           .toList();
       _buildMeta(verses);
+      _lcAnywaa  = verses.map((v) => v.anywaa.toLowerCase()).toList();
+      _lcEnglish = verses.map((v) => v.english.toLowerCase()).toList();
       if (mounted) {
-        setState(() { _all = verses; _loading = false; });
+        setState(() { _all = verses; _loading = false; _loadError = false; });
         _fadeCtrl.forward();
       }
     } catch (_) {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() { _loading = false; _loadError = true; });
+      }
     }
   }
 
@@ -165,16 +180,74 @@ class _BiblePageState extends State<BiblePage>
 
   void _search(String q) {
     q = q.trim().toLowerCase();
-    if (q.isEmpty) { setState(() => _results = []); return; }
+    if (q.isEmpty) {
+      setState(() {
+        _results     = [];
+        _bookMatches = [];
+        _truncated   = false;
+      });
+      return;
+    }
+    // Verse search over the pre-lowercased index (no per-keystroke allocs)
+    final res = <BibleVerse>[];
+    var capped = false;
+    for (var i = 0; i < _all.length; i++) {
+      if (_lcAnywaa[i].contains(q) || _lcEnglish[i].contains(q)) {
+        if (res.length >= 100) { capped = true; break; }
+        res.add(_all[i]);
+      }
+    }
+    // Book-name matches for quick navigation
+    final books = _allBooks
+        .where((b) => b.toLowerCase().contains(q))
+        .toList();
     setState(() {
-      _results = _all
-          .where((v) =>
-              v.anywaa.toLowerCase().contains(q) ||
-              v.english.toLowerCase().contains(q))
-          .take(100)
-          .toList();
+      _results     = res;
+      _bookMatches = books;
+      _truncated   = capped;
     });
-    AnalyticsService.instance.logBibleSearch(q, _results.length);
+    AnalyticsService.instance.logBibleSearch(q, res.length);
+  }
+
+  void _onSearchChanged(String v) {
+    _query = v;
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () => _search(v));
+  }
+
+  // ─── chapter navigation (crosses book boundaries) ─────────────────────────
+
+  int _bookIndex(String book) => _allBooks.indexOf(book);
+
+  void _goToChapter(String book, int chapter) {
+    _savePosition(book, chapter);
+    setState(() {
+      _book    = book;
+      _chapter = chapter;
+    });
+  }
+
+  void _goPrev() {
+    if (_chapter! > 1) {
+      _goToChapter(_book!, _chapter! - 1);
+      return;
+    }
+    final idx = _bookIndex(_book!);
+    if (idx > 0) {
+      final prev = _allBooks[idx - 1];
+      _goToChapter(prev, _chapterCounts[prev] ?? 1);
+    }
+  }
+
+  void _goNext() {
+    if (_chapter! < _maxChapter) {
+      _goToChapter(_book!, _chapter! + 1);
+      return;
+    }
+    final idx = _bookIndex(_book!);
+    if (idx >= 0 && idx < _allBooks.length - 1) {
+      _goToChapter(_allBooks[idx + 1], 1);
+    }
   }
 
   // ─── routing ────────────────────────────────────────────────────────────────
@@ -258,7 +331,9 @@ class _BiblePageState extends State<BiblePage>
               Expanded(
                 child: _loading
                     ? _skeletonGrid()
-                    : FadeTransition(
+                    : _loadError
+                        ? _errorView()
+                        : FadeTransition(
                         opacity: _fadeAnim,
                         child: TabBarView(children: [
                           _bookGrid(_otBooks),
@@ -319,7 +394,8 @@ class _BiblePageState extends State<BiblePage>
               Text(
                 _loading
                     ? 'Loading…'
-                    : '${_fmt(_all.length)} verses · 66 books',
+                    : '${_fmt(_all.length)} verses · '
+                        '${_otBooks.length + _ntBooks.length} books',
                 style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.6),
                     fontSize: 13),
@@ -432,6 +508,39 @@ class _BiblePageState extends State<BiblePage>
       ),
       itemCount: 18,
       itemBuilder: (_, __) => _ShimmerCard(color: card),
+    );
+  }
+
+  Widget _errorView() {
+    final fg = _night ? Colors.white : _kInkDay;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.cloud_off_outlined,
+              size: 48, color: fg.withValues(alpha: 0.35)),
+          const SizedBox(height: 12),
+          Text('Could not load the Bible',
+              style: TextStyle(
+                  color: fg.withValues(alpha: 0.6),
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600)),
+          const SizedBox(height: 4),
+          Text('Check your connection and try again',
+              style: TextStyle(
+                  color: fg.withValues(alpha: 0.4), fontSize: 13)),
+          const SizedBox(height: 16),
+          TextButton.icon(
+            onPressed: () {
+              setState(() { _loading = true; _loadError = false; });
+              _loadData();
+            },
+            icon: const Icon(Icons.refresh, size: 18, color: _kGold),
+            label: const Text('Retry',
+                style: TextStyle(color: _kGold, fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -600,21 +709,17 @@ class _BiblePageState extends State<BiblePage>
                     ),
             ),
 
-            // bottom nav
+            // bottom nav — crosses book boundaries automatically
             _BottomNav(
               chapter:    _chapter!,
               maxChapter: _maxChapter,
               night:      _night,
-              onPrev: () {
-                final prev = _chapter! - 1;
-                _savePosition(_book!, prev);
-                setState(() => _chapter = prev);
-              },
-              onNext: () {
-                final next = _chapter! + 1;
-                _savePosition(_book!, next);
-                setState(() => _chapter = next);
-              },
+              hasPrev:    _chapter! > 1 || _bookIndex(_book!) > 0,
+              hasNext:    _chapter! < _maxChapter ||
+                  (_bookIndex(_book!) >= 0 &&
+                      _bookIndex(_book!) < _allBooks.length - 1),
+              onPrev: _goPrev,
+              onNext: _goNext,
             ),
           ],
         ),
@@ -739,12 +844,16 @@ class _BiblePageState extends State<BiblePage>
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new_rounded, color: fg, size: 20),
-          onPressed: () => setState(() {
-            _searchOpen = false;
-            _query      = '';
-            _results    = [];
-            _searchCtrl.clear();
-          }),
+          onPressed: () {
+            _searchDebounce?.cancel();
+            setState(() {
+              _searchOpen = false;
+              _query      = '';
+              _results    = [];
+              _bookMatches = [];
+              _searchCtrl.clear();
+            });
+          },
         ),
         title: TextField(
           controller: _searchCtrl,
@@ -755,18 +864,22 @@ class _BiblePageState extends State<BiblePage>
             hintStyle: TextStyle(color: fg.withValues(alpha: 0.35)),
             border: InputBorder.none,
           ),
-          onChanged: (v) { _query = v; _search(v); },
+          onChanged: _onSearchChanged,
         ),
         actions: [
           if (_query.isNotEmpty)
             IconButton(
               icon: Icon(Icons.clear,
                   color: fg.withValues(alpha: 0.5)),
-              onPressed: () { _searchCtrl.clear(); _search(''); },
+              onPressed: () {
+                _searchDebounce?.cancel();
+                _searchCtrl.clear();
+                _search('');
+              },
             ),
         ],
       ),
-      body: _results.isEmpty
+      body: _results.isEmpty && _bookMatches.isEmpty
           ? Center(
               child: Text(
                 _query.isEmpty
@@ -778,11 +891,60 @@ class _BiblePageState extends State<BiblePage>
             )
           : Column(
               children: [
+                // Matching books — tap to jump to the chapter grid
+                if (_bookMatches.isNotEmpty) ...[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text('Books',
+                          style: TextStyle(
+                              color: fg.withValues(alpha: 0.4),
+                              fontSize: 12)),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 38,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: _bookMatches.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      itemBuilder: (_, i) {
+                        final b = _bookMatches[i];
+                        return ActionChip(
+                          label: Text(b,
+                              style: const TextStyle(fontSize: 13)),
+                          backgroundColor: _night
+                              ? const Color(0xFF1E2A3A)
+                              : Colors.white,
+                          side: BorderSide(
+                              color: _kGold.withValues(alpha: 0.3)),
+                          onPressed: () {
+                            _searchDebounce?.cancel();
+                            setState(() {
+                              _book     = b;
+                              _chapter  = null;
+                              _searchOpen = false;
+                              _query    = '';
+                              _results  = [];
+                              _bookMatches = [];
+                              _searchCtrl.clear();
+                            });
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                   child: Align(
                     alignment: Alignment.centerLeft,
-                    child: Text('${_results.length} results',
+                    child: Text(
+                        _truncated
+                            ? '100+ results'
+                            : '${_results.length} results',
                         style: TextStyle(
                             color: fg.withValues(alpha: 0.4),
                             fontSize: 12)),
@@ -819,6 +981,7 @@ class _BiblePageState extends State<BiblePage>
                           ),
                         ),
                         onTap: () {
+                          _searchDebounce?.cancel();
                           _savePosition(v.book, v.chapter);
                           setState(() {
                             _book        = v.book;
@@ -826,6 +989,7 @@ class _BiblePageState extends State<BiblePage>
                             _searchOpen  = false;
                             _query       = '';
                             _results     = [];
+                            _bookMatches = [];
                             _searchCtrl.clear();
                           });
                         },
@@ -1085,7 +1249,7 @@ class _VerseRow extends StatelessWidget {
                 ),
 
                 // ── English — warm gold card, no border ─────────────────
-                if (showEng) ...[
+                if (showEng && verse.english.trim().isNotEmpty) ...[
                   const SizedBox(height: 8),
                   Container(
                     decoration: BoxDecoration(
@@ -1145,12 +1309,16 @@ class _BottomNav extends StatelessWidget {
   final int          chapter;
   final int          maxChapter;
   final bool         night;
+  final bool         hasPrev;
+  final bool         hasNext;
   final VoidCallback onPrev;
   final VoidCallback onNext;
   const _BottomNav({
     required this.chapter,
     required this.maxChapter,
     required this.night,
+    required this.hasPrev,
+    required this.hasNext,
     required this.onPrev,
     required this.onNext,
   });
@@ -1168,7 +1336,7 @@ class _BottomNav extends StatelessWidget {
             label:   'Previous',
             icon:    Icons.arrow_back_ios_rounded,
             leading: true,
-            enabled: chapter > 1,
+            enabled: hasPrev,
             fg:      fg,
             onTap:   onPrev,
           ),
@@ -1195,7 +1363,7 @@ class _BottomNav extends StatelessWidget {
             label:   'Next',
             icon:    Icons.arrow_forward_ios_rounded,
             leading: false,
-            enabled: chapter < maxChapter,
+            enabled: hasNext,
             fg:      fg,
             onTap:   onNext,
           ),

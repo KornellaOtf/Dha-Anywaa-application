@@ -1,7 +1,11 @@
 // ignore_for_file: prefer_const_constructors
 import 'package:audioplayers/audioplayers.dart';
 import 'package:dha_anywaaa/Sentence.dart';
+import 'package:dha_anywaaa/components/savedData.dart';
+import 'package:dha_anywaaa/services/analytics_service.dart';
+import 'package:dha_anywaaa/services/gamification_service.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
+import 'package:dha_anywaaa/widgets/celebration_widget.dart';
 import 'package:flutter/material.dart';
 
 class Page3 extends StatefulWidget {
@@ -11,14 +15,64 @@ class Page3 extends StatefulWidget {
 }
 
 class _Page3State extends State<Page3> {
+  static const String _category = 'reading';
   late AudioPlayer player;
   bool _isPlaying = false;
   int _playingIndex = -1;
+  int _learnedCount = 0;
+  late List<bool> _learned;
+  final SavedData _savedData = SavedData();
 
   @override
   void initState() {
     super.initState();
     player = AudioPlayer();
+    _learned = List.filled(wordAndSentence.length, false);
+    _loadProgress();
+  }
+
+  Future<void> _loadProgress() async {
+    int count = 0;
+    final loaded = <bool>[];
+    for (int i = 0; i < wordAndSentence.length; i++) {
+      final v = await _savedData.isLearned(_category, i);
+      loaded.add(v);
+      if (v) count++;
+    }
+    if (!mounted) return;
+    setState(() {
+      _learned = loaded;
+      _learnedCount = count;
+    });
+  }
+
+  Future<void> _toggleLearned(int i) async {
+    final val = !_learned[i];
+    await _savedData.setLearned(_category, i, value: val);
+
+    if (val) {
+      final wordId = wordAndSentence[i].word;
+      AnalyticsService.instance.logCompleteLesson(_category, wordId);
+      final gam = await GamificationService.instance.onLessonComplete();
+      if (mounted) {
+        if (gam.streakBonus > 0) {
+          AnalyticsService.instance.logStreakMilestone(gam.streakDays);
+          CelebrationHelper.showStreakMilestone(context, gam.streakDays);
+        } else if (gam.leveledUp) {
+          CelebrationHelper.showLevelUp(context, gam.level);
+        } else {
+          CelebrationHelper.showCorrectAnswer(context);
+        }
+      }
+    }
+
+    final count =
+        await _savedData.learnedCount(_category, wordAndSentence.length);
+    if (!mounted) return;
+    setState(() {
+      _learned[i] = val;
+      _learnedCount = count;
+    });
   }
 
   @override
@@ -102,6 +156,27 @@ class _Page3State extends State<Page3> {
                 fontWeight: FontWeight.bold, fontSize: 18, color: context.c.text)),
         centerTitle: true,
         actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: Center(
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                decoration: BoxDecoration(
+                  color: kGreen.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: kGreen.withValues(alpha: 0.2)),
+                ),
+                child: Text(
+                  '$_learnedCount/${wordAndSentence.length}',
+                  style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: kGreen),
+                ),
+              ),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: Center(
@@ -223,24 +298,53 @@ class _Page3State extends State<Page3> {
                         ),
                       ),
                       const SizedBox(width: 10),
-                      // Play/Pause icon
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: isActive
-                              ? kGreen.withValues(alpha: 0.15)
-                              : kGreen.withValues(alpha: 0.07),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          isActive
-                              ? Icons.pause_rounded
-                              : Icons.play_arrow_rounded,
-                          color: context.c.accent,
-                          size: 22,
-                        ),
+                      // Play/Pause + learned toggle
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: isActive
+                                  ? kGreen.withValues(alpha: 0.15)
+                                  : kGreen.withValues(alpha: 0.07),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              isActive
+                                  ? Icons.pause_rounded
+                                  : Icons.play_arrow_rounded,
+                              color: context.c.accent,
+                              size: 22,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          GestureDetector(
+                            onTap: () => _toggleLearned(idx),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                color: _learned[idx]
+                                    ? kGreen
+                                    : kGreen.withValues(alpha: 0.07),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                _learned[idx]
+                                    ? Icons.check_rounded
+                                    : Icons.add_task_outlined,
+                                color: _learned[idx]
+                                    ? Colors.white
+                                    : context.c.textSub,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

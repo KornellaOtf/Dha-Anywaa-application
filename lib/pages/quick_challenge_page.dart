@@ -228,7 +228,7 @@ class _QuickChallengePageState extends State<QuickChallengePage> {
           
           // Celebration overlay
           if (_showCelebration)
-            const CelebrationWidget(
+            const CelebrationOverlay(
               type: CelebrationType.quickWin,
             ),
         ],

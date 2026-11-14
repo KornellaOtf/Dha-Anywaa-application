@@ -19,6 +19,7 @@ class LearningEngine {
   static const _kWordStates     = 'fsrs_word_states_v1';
   static const _kReviewLog      = 'learn_review_log';       // kept for history
   static const _kDailyCompleted = 'learn_daily_completed_date';
+  static const _kDailyStreak    = 'learn_daily_streak';
 
   // ── FSRS-6 default weights (w0–w18) ──────────────────────────────────────
   static const List<double> _w = [
@@ -166,10 +167,24 @@ class LearningEngine {
     return (mastered, topicWordIds.length);
   }
 
-  /// Mark today's Daily 5 as completed.
+  /// Mark today's Daily 5 as completed and update the completion streak.
   Future<void> markDailyCompleted() async {
+    final p      = await SharedPreferences.getInstance();
+    final today  = _todayStr();
+    final last   = p.getString(_kDailyCompleted) ?? '';
+    if (last == today) return; // already counted today
+
+    final streak = last == _daysAgoStr(1)
+        ? (p.getInt(_kDailyStreak) ?? 0) + 1
+        : 1;
+    await p.setInt(_kDailyStreak, streak);
+    await p.setString(_kDailyCompleted, today);
+  }
+
+  /// Current Daily 5 completion streak (consecutive days).
+  Future<int> getDailyStreak() async {
     final p = await SharedPreferences.getInstance();
-    await p.setString(_kDailyCompleted, _todayStr());
+    return p.getInt(_kDailyStreak) ?? 0;
   }
 
   /// Whether today's Daily 5 session is already done.
@@ -362,6 +377,11 @@ class LearningEngine {
 
   String _todayStr() {
     final n = DateTime.now();
+    return '${n.year}-${n.month.toString().padLeft(2, '0')}-${n.day.toString().padLeft(2, '0')}';
+  }
+
+  String _daysAgoStr(int days) {
+    final n = DateTime.now().subtract(Duration(days: days));
     return '${n.year}-${n.month.toString().padLeft(2, '0')}-${n.day.toString().padLeft(2, '0')}';
   }
 }

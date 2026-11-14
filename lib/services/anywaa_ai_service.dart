@@ -17,23 +17,38 @@ class CulturalFact {
 
 /// One dictionary entry loaded from the bundled local data.
 class DictEntry {
-  final String en;   // English word
-  final String dha;  // Dha Anywaa term (may contain comma separated synonyms)
-  final String defs; // English definition
-  final List<String> syn; // split synonyms
+  final String en;    // English word
+  final String dha;   // Dha Anywaa term (may contain comma separated synonyms)
+  final String defs;  // English definition / note
+  final List<String> syn; // alternate English names
+  final String pos;   // part of speech (noun, verb, ...)
+  final String pron;  // pronunciation guide (e.g. "ah-cheek")
+  final String exDha; // example sentence in Dha Anywaa
+  final String exEn;  // English gloss of the example
+  final String cat;   // dictionary category
 
   const DictEntry({
     required this.en,
     required this.dha,
     required this.defs,
     required this.syn,
+    this.pos = '',
+    this.pron = '',
+    this.exDha = '',
+    this.exEn = '',
+    this.cat = '',
   });
 
   factory DictEntry.fromJson(Map<String, dynamic> j) => DictEntry(
         en: (j['en'] ?? '') as String,
         dha: (j['dha'] ?? '') as String,
-        defs: (j['defs'] ?? '') as String,
-        syn: ((j['syn'] ?? const []) as List).cast<String>(),
+        defs: (j['defs'] ?? j['note'] ?? '') as String,
+        syn: ((j['syn'] ?? j['alt'] ?? const []) as List).cast<String>(),
+        pos: (j['pos'] ?? '') as String,
+        pron: (j['pron'] ?? '') as String,
+        exDha: (j['ex_dha'] ?? j['exDha'] ?? '') as String,
+        exEn: (j['ex_en'] ?? j['exEn'] ?? '') as String,
+        cat: (j['cat'] ?? '') as String,
       );
 }
 
@@ -186,6 +201,11 @@ class AnywaaAiService {
           dha: dha,
           defs: note,
           syn: syn,
+          pos: (w['pos'] ?? '') as String,
+          pron: (w['pron'] ?? '') as String,
+          exDha: (w['ex_dha'] ?? '') as String,
+          exEn: (w['ex_en'] ?? '') as String,
+          cat: (w['cat'] ?? catMap['cat'] ?? '') as String,
         ));
       }
     }
@@ -406,6 +426,12 @@ class AnywaaAiService {
         if (qTokens.length >= 2 && hay != q && matched < qTokens.length) {
           s = 0;
         }
+        // Coverage penalty: when only part of a multi-word term matched, it is
+        // weaker evidence than a term that matched fully. Keeps "waterr" on
+        // "water" instead of "hot water".
+        if (s > 0 && hay != q && hayTokens.length > matched) {
+          s -= 0.1 * (hayTokens.length - matched);
+        }
         if (s > best) {
           best = s;
           src = side;
@@ -539,44 +565,61 @@ class AnywaaAiService {
 
   // ── Conversational follow-ups ──────────────────────────────────────────────
 
+  /// Detects which "field" a question is asking about, or null for a normal
+  /// lookup. Checked against the raw folded query so phrasing like "how do you
+  /// pronounce it" and "give me an example" both resolve.
+  String? _detectField(String raw) {
+    bool has(String s) => raw.contains(s);
+    if (has('again') || has('repeat') || has('once more')) return 'repeat';
+    if (has('plural')) return 'plural';
+    if (has('possessive')) return 'possessive';
+    if (has('example') || has('in a sentence') || has('use it')) return 'example';
+    if (has('it mean') || has('its meaning') ||
+        has('meaning of it') || has('what does it mean')) {
+      return 'meaning';
+    }
+    if (has('pronounce') || has('spell') || has('say it') ||
+        has('how is it spelled')) {
+      return 'pronounce';
+    }
+    if (has('part of speech') || has('what kind of word') ||
+        has('noun or') || has('verb or')) {
+      return 'pos';
+    }
+    if (has('similar') || has('synonym') || has('also called') ||
+        has('other name')) {
+      return 'similar';
+    }
+    if (has('opposite') || has('antonym')) return 'opposite';
+    return null;
+  }
+
   /// Resolves short follow-up questions against the last looked-up entry.
-  /// Returns null when the query is a fresh question, so the caller continues
-  /// through intents, numbers and a normal dictionary lookup.
+  /// Field questions asked with no prior context ("example for grasshopper")
+  /// are resolved by looking the term up directly. Returns null when the
+  /// query is a fresh question, so the caller continues through intents,
+  /// numbers and a normal dictionary lookup.
   AnywaaAnswer? _followUp(_Parsed p) {
     final raw = p.raw;
-    bool has(String s) => raw.contains(s);
+    final field = _detectField(raw);
 
-    final isPlural = has('plural');
-    final isPossessive = has('possessive');
-    final isRepeat = has('again') || has('repeat') || has('once more');
-    final isExample = has('example') || has('in a sentence') || has('use it');
-    final isMeaning = has('it mean') || has('its meaning') ||
-        has('meaning of it') || has('what does it mean');
-    final isAbout = has('what about') || has('how about');
-    // "and <word>" is a follow-up only when it is not one of the specific
-    // field questions above (those also begin with "and the").
-    final isAndWord = raw.startsWith('and ') && !isPlural && !isPossessive;
-
-    final needsSubject = isPlural || isPossessive || isRepeat ||
-        isExample || isMeaning;
-    if (needsSubject && _last == null) {
-      return const AnywaaAnswer(
-        text: 'Which word do you mean? Ask me about a word first, then you '
-            'can follow up on it.',
-        matches: [],
-      );
+    if (field != null) {
+      if (_last == null) {
+        // Fresh field question — try to resolve the term on its own.
+        final fresh = _freshField(p, field);
+        if (fresh != null) return fresh;
+        return const AnywaaAnswer(
+          text: 'Which word do you mean? Ask me about a word first, then you '
+              'can follow up on it.',
+          matches: [],
+        );
+      }
+      if (field == 'repeat') return _repeatLast();
+      return _fieldAnswer(field, _last!.match);
     }
 
-    if (isPlural) return _fieldFallback('plural');
-    if (isPossessive) return _fieldFallback('possessive');
-    if (isRepeat) return _repeatLast();
-    if (isExample) {
-      return const AnywaaAnswer(
-        text: "I don't have an example sentence for that word yet.",
-        matches: [],
-      );
-    }
-    if (isMeaning) return _meaning();
+    final isAbout = raw.contains('what about') || raw.contains('how about');
+    final isAndWord = raw.startsWith('and ');
 
     if (isAbout || isAndWord) {
       final term = _extractTerm(raw, isAbout: isAbout);
@@ -594,15 +637,117 @@ class AnywaaAiService {
     return null;
   }
 
+  /// Answers a field question ("example for X", "pronounce Y") when there is
+  /// no conversational subject yet, by extracting the term and looking it up.
+  /// Returns null when no usable term remains or nothing matches, so the
+  /// caller falls through to the normal flow.
+  AnywaaAnswer? _freshField(_Parsed p, String field) {
+    if (field == 'repeat') return null; // nothing to repeat yet
+    const fieldWords = {
+      'example', 'examples', 'sentence', 'use',
+      'pronounce', 'pronunciation', 'spell', 'spelled', 'spelling', 'say',
+      'part', 'speech', 'kind', 'type',
+      'similar', 'synonym', 'synonyms', 'also', 'called', 'other', 'name',
+      'opposite', 'antonym', 'plural', 'possessive', 'meaning', 'mean',
+      'means',
+    };
+    var tokens = p.core.where((t) => !fieldWords.contains(t)).toList();
+    // "and the plural of X" — a leading conjunction is phrasing, not the term.
+    if (tokens.isNotEmpty && tokens.first == 'and') {
+      tokens = tokens.sublist(1);
+    }
+    if (tokens.isEmpty) return null;
+    final term = tokens.join(' ');
+    final matches = _lookup(term, p);
+    if (matches.isEmpty) return null;
+    final top = matches.first;
+    _last = _Context(
+      match: top,
+      matches: matches,
+      toEnglish: _direction(top, p),
+      replyText: _compose(matches, p),
+    );
+    return _fieldAnswer(field, top);
+  }
+
+  /// Answers a field question against a specific entry — used both for
+  /// follow-ups (last looked-up word) and fresh field queries.
+  AnywaaAnswer _fieldAnswer(String field, AnywaaMatch m) {
+    final e = m.entry;
+    switch (field) {
+      case 'example':
+        if (e.exDha.trim().isNotEmpty) {
+          final exEn = e.exEn.trim();
+          return AnywaaAnswer(
+            text: 'Here\'s an example: "${e.exDha.trim()}"'
+                '${exEn.isEmpty ? '' : ' ("$exEn")'}.',
+            matches: [m],
+          );
+        }
+        return AnywaaAnswer(
+          text: 'I don\'t have an example sentence for that word yet.',
+          matches: const [],
+        );
+      case 'pronounce':
+        final dha = e.dha.split(',').first.trim();
+        if (e.pron.trim().isNotEmpty) {
+          return AnywaaAnswer(
+            text: '"$dha" is pronounced "${e.pron.trim()}".',
+            matches: [m],
+          );
+        }
+        final spelled = dha.split('').join('-');
+        return AnywaaAnswer(
+          text: '"$dha" is spelled $spelled.',
+          matches: [m],
+        );
+      case 'pos':
+        final pos = e.pos.trim();
+        if (pos.isNotEmpty) {
+          return AnywaaAnswer(
+            text: '"${e.en}" is a $pos in Dha Anywaa: ${e.dha}.',
+            matches: [m],
+          );
+        }
+        return AnywaaAnswer(
+          text: 'I don\'t have grammar details for "${e.en}", but its '
+              'Dha Anywaa word is ${e.dha}.',
+          matches: [m],
+        );
+      case 'similar':
+        final alts = e.syn.where((s) => s.trim().isNotEmpty).toList();
+        if (alts.isNotEmpty) {
+          return AnywaaAnswer(
+            text: '"${e.en}" is also called ${alts.join(', ')}.',
+            matches: [m],
+          );
+        }
+        return AnywaaAnswer(
+          text: 'I don\'t have other names for "${e.en}" in the local '
+              'dictionary.',
+          matches: [m],
+        );
+      case 'opposite':
+        return AnywaaAnswer(
+          text: 'I don\'t have an opposite for "${e.en}" in the local '
+              'dictionary. Its Dha Anywaa word is ${e.dha}.',
+          matches: [m],
+        );
+      case 'plural':
+      case 'possessive':
+        return _fieldFallback(field, e);
+      case 'meaning':
+        return _meaningOf(m);
+    }
+    return _meaningOf(m);
+  }
+
   /// The data has no plural or possessive field, and we never invent one, so
   /// report the gap honestly while re-grounding on the base word we do have.
-  AnywaaAnswer _fieldFallback(String field) {
-    final c = _last!;
-    final en = c.match.entry.en;
-    final dha = c.match.entry.dha;
+  AnywaaAnswer _fieldFallback(String field, DictEntry e) {
     return AnywaaAnswer(
-      text: 'I don\'t have a separate $field form for "$en" in the local '
-          'dictionary. Its base Dha Anywaa word is $dha.',
+      text: 'I don\'t have a separate $field form for "${e.en}" in the '
+          'local dictionary. Its base Dha Anywaa word is ${e.dha}.',
       matches: const [],
     );
   }
@@ -614,18 +759,17 @@ class AnywaaAiService {
     return AnywaaAnswer(text: c.replyText, matches: c.matches);
   }
 
-  AnywaaAnswer _meaning() {
-    final c = _last!;
-    final defs = c.match.entry.defs.trim();
+  AnywaaAnswer _meaningOf(AnywaaMatch m) {
+    final defs = m.entry.defs.trim();
     if (defs.isEmpty) {
-      return const AnywaaAnswer(
-        text: "I don't have a stored meaning for that word yet.",
-        matches: [],
+      return AnywaaAnswer(
+        text: 'I don\'t have a stored meaning for "${m.entry.dha}" yet.',
+        matches: [m],
       );
     }
     return AnywaaAnswer(
-      text: '"${c.match.entry.dha}" means $defs',
-      matches: [c.match],
+      text: '"${m.entry.dha}" means $defs',
+      matches: [m],
     );
   }
 
@@ -655,15 +799,37 @@ class AnywaaAiService {
       'In Dha Anywaa, "$en" is $dha.',
       'You can say $dha in Dha Anywaa for "$en".',
       'Good question! "$en" becomes $dha in Dha Anywaa.',
+      '"$en" is $dha in Dha Anywaa.',
+      'That\'s $dha, the Dha Anywaa way to say "$en".',
     ];
     final toEng = [
       'Sure! "$dha" means "$en" in English.',
       'That one means "$en" in English.',
       '"$dha" translates to "$en" in English.',
       'In English, "$dha" means "$en".',
+      '"$dha" is "$en" in English.',
+      'You\'d say "$en" in English for "$dha".',
     ];
     final opts = toEnglish ? toEng : toDha;
-    return opts[_pick(p.raw, opts.length)];
+    var text = opts[_pick(p.raw, opts.length)];
+    final meaning = _meaningBit(top.entry);
+    if (meaning != null) text += ' $meaning';
+    return text;
+  }
+
+  /// A short grounded meaning tail for the reply, or null when the note is
+  /// just a grammar tag ("noun. (bird)") that adds no information.
+  String? _meaningBit(DictEntry e) {
+    final d = e.defs.trim();
+    if (d.isEmpty) return null;
+    final isTag = RegExp(
+      r'^(noun|verb|adjective|adverb|pronoun|preposition|conjunction|'
+      r'interjection)\b',
+      caseSensitive: false,
+    ).hasMatch(d) &&
+        d.length < 40;
+    if (isTag) return null;
+    return 'It means $d.';
   }
 
   /// Stable hash so the same question always gets the same friendly wording.
@@ -707,6 +873,14 @@ class AnywaaAiService {
   AnywaaAnswer? _intent(_Parsed p) {
     final raw = p.raw;
     bool has(String s) => raw.contains(s);
+    // True when the message looks like a translation/lookup request, so
+    // conversational intents don't hijack queries about real entries
+    // ("how do you say good night" must still reach the dictionary).
+    final lookupCtx = has('say') ||
+        has('translate') ||
+        has('mean') ||
+        has('english') ||
+        has('how do you');
     if (has('who are you') || has('what are you') || has('your name')) {
       return const AnywaaAnswer(
         text: "I'm Anywaa AI, your offline Dha Anywaa helper. I answer using "
@@ -725,19 +899,89 @@ class AnywaaAiService {
     }
     if (has('what can you do') ||
         has('how can you help') ||
-        has('what do you do')) {
+        has('what do you do') ||
+        raw == 'help' ||
+        has('help me')) {
       return const AnywaaAnswer(
-        text: 'I can translate between English and Dha Anywaa, tell you what a '
-            'word means, and show how to say any number up to 9999. Try '
+        text: 'I can translate between English and Dha Anywaa, tell you '
+            'what a word means, give pronunciations and example sentences, '
+            'share cultural facts, and say any number up to 9999. Try '
             '"how do you say water" or "what does Wich mean".',
         matches: [],
       );
     }
-    const greetings = {'hi', 'hey', 'yo', 'sasa', 'moring'};
+    // Guard: "how do you say thank you" is a lookup, not gratitude.
+    if (!lookupCtx && has('thank')) {
+      return const AnywaaAnswer(
+        text: 'You\'re welcome! Come back anytime. I\'m always here, '
+            'fully offline.',
+        matches: [],
+      );
+    }
+    if (!lookupCtx &&
+        (has('goodbye') || has('bye') || has('see you') ||
+            has('good night'))) {
+      return const AnywaaAnswer(
+        text: 'Goodbye! Keep practicing. See you soon.',
+        matches: [],
+      );
+    }
+    // Note: bare "how are you" intentionally falls through to the dictionary —
+    // it is a real entry users may want translated.
+    if (has('who made you') || has('who created you') ||
+        has('who built you') || has('who designed you')) {
+      return const AnywaaAnswer(
+        text: 'I was built by the team behind Dha Anywaa, made for the '
+            'Anywaa community. I run entirely on your device. No internet '
+            'account, no data collection.',
+        matches: [],
+      );
+    }
+    if (has('are you real') || has('are you a robot') ||
+        has('are you human') || has('are you ai') || has('chatgpt') ||
+        has('are you gpt')) {
+      return const AnywaaAnswer(
+        text: 'I\'m Anywaa AI, not a human, but a small helper that lives '
+            'entirely on your phone. I know the Dha Anywaa dictionary '
+            'inside out and I never make up a translation.',
+        matches: [],
+      );
+    }
+    if (!lookupCtx && (has('what time') || has('time is it'))) {
+      final n = DateTime.now();
+      final h = n.hour % 12 == 0 ? 12 : n.hour % 12;
+      final mm = n.minute.toString().padLeft(2, '0');
+      final dayPeriod = n.hour < 12 ? 'AM' : 'PM';
+      return AnywaaAnswer(
+        text: 'It\'s $h:$mm $dayPeriod right now.',
+        matches: [],
+      );
+    }
+    if (!lookupCtx &&
+        (has('what day') || has('what date') || has('day is it') ||
+            has('date is it'))) {
+      final n = DateTime.now();
+      const months = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December',
+      ];
+      const days = [
+        'Monday', 'Tuesday', 'Wednesday', 'Thursday',
+        'Friday', 'Saturday', 'Sunday',
+      ];
+      return AnywaaAnswer(
+        text: 'Today is ${days[n.weekday - 1]}, '
+            '${months[n.month - 1]} ${n.day}, ${n.year}.',
+        matches: [],
+      );
+    }
+    const greetings = {
+      'hi', 'hey', 'hello', 'yo', 'sasa', 'moring', 'jeda', 'hallo',
+    };
     if (p.core.length == 1 && greetings.contains(p.core.first)) {
       return const AnywaaAnswer(
-        text: 'Hey there! Ask me any word in English or Dha Anywaa, or give '
-            'me a number up to 9999 and I will tell you how to say it.',
+        text: 'Hey there! Ask me any word in English or Dha Anywaa, or '
+            'give me a number up to 9999 and I will tell you how to say it.',
         matches: [],
       );
     }

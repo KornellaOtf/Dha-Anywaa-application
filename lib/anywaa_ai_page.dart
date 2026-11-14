@@ -444,6 +444,15 @@ class _AnswerBody extends StatelessWidget {
                         fontWeight: FontWeight.w800,
                         fontSize: 18,
                         color: c.accent)),
+                if (m.entry.pron.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text('• ${m.entry.pron}',
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                            color: c.textSub)),
+                  ),
                 if (m.entry.defs.isNotEmpty) ...[
                   const SizedBox(height: 6),
                   Text(m.entry.defs,

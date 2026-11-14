@@ -19,7 +19,9 @@ import 'package:dha_anywaaa/pages/page2.dart';
 import 'package:dha_anywaaa/pages/page3.dart';
 import 'package:dha_anywaaa/pages/page4.dart';
 import 'package:dha_anywaaa/pages/bible_page.dart';
+import 'package:dha_anywaaa/pages/daily_five_page.dart';
 import 'package:dha_anywaaa/pages/practice_learn_page.dart';
+import 'package:dha_anywaaa/services/word_aggregator.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:dha_anywaaa/wraper.dart';
 import 'package:flutter/material.dart';
@@ -172,9 +174,9 @@ class _MyAppState extends State<MyApp> {
           'anywaa_ai': () => const AnywaaAiPage(),
           'home_page': () => const HomePage(),
           'name_entry': () => const NameEntry(),
-          'practice': () => PracticeLearnShell(
-                overviewPage: const HomePage(),
-                progressPage: const HomePage(),
+          'practice': () => const PracticeLearnShell(),
+          'daily_five': () => DailyFivePage(
+                allWords: WordAggregator.instance.getAllWords(),
               ),
           'colors': () => const Kit(),
           'body': () => const BodyPart(),
@@ -187,8 +189,9 @@ class _MyAppState extends State<MyApp> {
         final builder = routes[settings.name];
         if (builder == null) return null;
 
-        // Quiz gets a slide-up for a more dramatic entrance
-        final transition = settings.name == 'quiz'
+        // Quiz and Daily Five get a slide-up for a more dramatic entrance
+        final transition = (settings.name == 'quiz' ||
+                settings.name == 'daily_five')
             ? RouteTransition.slideUp
             : RouteTransition.slide;
 
