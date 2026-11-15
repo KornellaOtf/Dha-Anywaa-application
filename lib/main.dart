@@ -1,8 +1,5 @@
-import 'dart:async';
-
 import 'package:dha_anywaaa/app_settings.dart';
 import 'package:dha_anywaaa/anywaa_ai_page.dart';
-import 'package:dha_anywaaa/services/groq_service.dart';
 import 'package:dha_anywaaa/services/ota_service.dart';
 import 'package:dha_anywaaa/services/retention_engine.dart';
 import 'package:dha_anywaaa/services/analytics_service.dart';
@@ -87,7 +84,6 @@ void main() async {
   // Non-critical services init after the first frame so startup stays fast.
   WidgetsBinding.instance.addPostFrameCallback((_) async {
     await OtaService.initialize();
-    unawaited(GroqService.instance.warmUp());
 
     try {
       await RetentionEngine.instance.initialize();
