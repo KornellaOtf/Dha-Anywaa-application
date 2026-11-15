@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'dart:math';
 
@@ -61,6 +62,15 @@ class RetentionEngine {
 
   Future<void> initialize() async {
     tz.initializeTimeZones();
+    // tz.local defaults to UTC — anchor it to the device timezone so
+    // scheduled reminders fire at the user's chosen local hour.
+    try {
+      final tzInfo = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(tzInfo.identifier));
+    } catch (_) {
+      // Fall back to UTC-based instants; delays are computed from
+      // DateTime.now() so first-fire timing stays correct regardless.
+    }
     
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     const linuxSettings = LinuxInitializationSettings(
@@ -85,15 +95,13 @@ class RetentionEngine {
       return true;
     }
     
-    // Request POST_NOTIFICATIONS permission (Android 13+)
+    // Request POST_NOTIFICATIONS permission (Android 13+).
+    // Exact alarms are intentionally NOT required: reminders use
+    // inexactAllowWhileIdle, which needs no special permission and
+    // still fires reliably (a few minutes late at worst in deep doze).
     final notificationPermission = await androidImpl.requestNotificationsPermission();
     
-    // Request exact alarm permission (Android 12+)
-    // Note: On Android 12+, exact alarms require explicit permission
-    // Users may need to enable this in Settings > Apps > Learn Dha Anywaa > Alarms & reminders
-    final exactAlarmPermission = await androidImpl.requestExactAlarmsPermission();
-    
-    return (notificationPermission ?? false) && (exactAlarmPermission ?? true);
+    return notificationPermission ?? false;
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -194,24 +202,36 @@ class RetentionEngine {
     final (title, body) = _getNotificationContent(type);
     final scheduledTime = tz.TZDateTime.now(tz.local).add(delay);
 
-    await _notifications.zonedSchedule(
-      0, // notification ID
-      title,
-      body,
-      scheduledTime,
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'daily_reminder',
-          'Daily Learning Reminder',
-          channelDescription: 'Reminds you to practice Dha Anywaa daily',
-          importance: Importance.high,
-          priority: Priority.high,
-          icon: '@mipmap/ic_launcher',
+    try {
+      await _notifications.zonedSchedule(
+        0, // notification ID
+        title,
+        body,
+        scheduledTime,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'daily_reminder',
+            'Daily Learning Reminder',
+            channelDescription: 'Reminds you to practice Dha Anywaa daily',
+            importance: Importance.high,
+            priority: Priority.high,
+            icon: '@mipmap/ic_launcher',
+          ),
         ),
-      ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-    );
+        // Inexact alarms need no special permission on Android 12+.
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        // Daily reminders repeat every day at the chosen hour without
+        // needing the app to be opened again. One-shot types
+        // (comeback, streak danger) fire once.
+        matchDateTimeComponents: type == NotificationType.daily
+            ? DateTimeComponents.time
+            : null,
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      );
+    } catch (e) {
+      debugPrint('RetentionEngine: schedule failed: $e');
+      return;
+    }
 
     // Log it
     final p = await SharedPreferences.getInstance();
