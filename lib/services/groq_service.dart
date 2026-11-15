@@ -25,9 +25,24 @@ class GroqService {
   GroqService._();
   static final GroqService instance = GroqService._();
 
-  static const _endpoint = 'https://api.groq.com/openai/v1/chat/completions';
-  static const _model = 'openai/gpt-oss-120b';
   static const _timeout = Duration(seconds: 25);
+
+  /// Provider chain, tried in order. NVIDIA Nemotron is the default;
+  /// Groq remains as a free fallback when its key is configured.
+  static const _providers = [
+    (
+      endpoint: 'https://integrate.api.nvidia.com/v1/chat/completions',
+      model: 'nvidia/nemotron-3.5-lightning-30b-a3b',
+      key: '', // resolved from Secrets at call time
+      reasoningOff: true,
+    ),
+    (
+      endpoint: 'https://api.groq.com/openai/v1/chat/completions',
+      model: 'openai/gpt-oss-120b',
+      key: '',
+      reasoningOff: false,
+    ),
+  ];
 
   static const _kCommunityNotes = 'groq_community_notes';
   static const _maxNotes = 200;
@@ -35,8 +50,34 @@ class GroqService {
   List<Map<String, dynamic>>? _facts;
 
   bool get isConfigured =>
-      Secrets.groqApiKey.isNotEmpty &&
-      !Secrets.groqApiKey.startsWith('gsk_xxx');
+      _nvidiaKey.isNotEmpty ||
+      (Secrets.groqApiKey.isNotEmpty &&
+          !Secrets.groqApiKey.startsWith('gsk_xxx'));
+
+  String get _nvidiaKey => Secrets.nvidiaApiKey;
+
+  List<({String endpoint, String model, String key, bool reasoningOff})>
+      get _activeProviders {
+    final out = <({String endpoint, String model, String key, bool reasoningOff})>[];
+    if (_nvidiaKey.isNotEmpty && !_nvidiaKey.startsWith('nvapi-xxx')) {
+      out.add((
+        endpoint: _providers[0].endpoint,
+        model: _providers[0].model,
+        key: _nvidiaKey,
+        reasoningOff: true,
+      ));
+    }
+    if (Secrets.groqApiKey.isNotEmpty &&
+        !Secrets.groqApiKey.startsWith('gsk_xxx')) {
+      out.add((
+        endpoint: _providers[1].endpoint,
+        model: _providers[1].model,
+        key: Secrets.groqApiKey,
+        reasoningOff: false,
+      ));
+    }
+    return out;
+  }
 
   // ── Public API ────────────────────────────────────────────────────────────
 
@@ -76,24 +117,49 @@ class GroqService {
         {'role': 'user', 'content': userText},
       ];
 
+      final providers = _activeProviders;
+      if (providers.isEmpty) return null;
+
+      for (final prov in providers) {
+        final reply = await _request(prov, messages, userText);
+        if (reply != null) return reply;
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Groq: request failed: $e');
+      return null;
+    }
+  }
+
+  Future<GroqReply?> _request(
+    ({String endpoint, String model, String key, bool reasoningOff}) prov,
+    List<Map<String, String>> messages,
+    String userText) async {
+    try {
+      final body = <String, dynamic>{
+        'model': prov.model,
+        'messages': messages,
+        'temperature': 0.3,
+        'max_tokens': 512,
+      };
+      if (prov.reasoningOff) {
+        // Nemotron is a reasoning model — keep thinking off so the token
+        // budget goes to the answer, not hidden reasoning.
+        body['chat_template_kwargs'] = {'enable_thinking': false};
+      }
       final res = await http
           .post(
-            Uri.parse(_endpoint),
+            Uri.parse(prov.endpoint),
             headers: {
-              'Authorization': 'Bearer ${Secrets.groqApiKey}',
+              'Authorization': 'Bearer ${prov.key}',
               'Content-Type': 'application/json',
             },
-            body: jsonEncode({
-              'model': _model,
-              'messages': messages,
-              'temperature': 0.3,
-              'max_tokens': 350,
-            }),
+            body: jsonEncode(body),
           )
           .timeout(_timeout);
 
       if (res.statusCode != 200) {
-        debugPrint('Groq: HTTP ${res.statusCode} ${res.body}');
+        debugPrint('AI: HTTP ${res.statusCode} from ${prov.endpoint}');
         return null;
       }
 
@@ -109,7 +175,7 @@ class GroqService {
 
       return _postProcess(content);
     } catch (e) {
-      debugPrint('Groq: request failed: $e');
+      debugPrint('AI: request failed (${prov.endpoint}): $e');
       return null;
     }
   }
