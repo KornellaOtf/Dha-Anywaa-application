@@ -9,9 +9,6 @@ Released: 2026-11-15
   longer requires exact-alarm access, reminders repeat daily at the
   chosen hour, and device timezone is used correctly
 
-### Changed
-- Removed remaining Nuer references from prompts, cultural facts, docs
-
 ## 2.0.6 (build 2206)
 
 Released: 2026-11-15
