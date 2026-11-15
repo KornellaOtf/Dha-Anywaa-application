@@ -29,13 +29,12 @@ and an offline AI assistant.
   celebrations
 - **Daily 5** — a short spaced-repetition session that brings back words
   you're about to forget
-- **Ask Anywaa AI** — an offline assistant that translates between English
-  and Dha Anywaa, gives pronunciations and example sentences, explains
-  numbers, and shares cultural facts. Everything runs on your device; no
-  internet needed
+- **Ask Anywaa AI** — a cultural assistant for Anywaa history, traditions,
+  Gambella, and the app itself. Answers stream in live, with an offline
+  dictionary fallback when there's no connection
 - **Read the Bible** — the full Bible (66 books) in Anywaa with English,
   search, night mode, and adjustable text size
-- **Use the dictionary** — over 3,400 words with pronunciation guides and
+- **Use the dictionary** — over 3,470 words with pronunciation guides and
   examples
 
 The app keeps track of your progress with streaks, XP, and levels, and can
@@ -51,7 +50,7 @@ Best wishes!
 Get the latest version from [Releases](https://github.com/KornellaOtf/Dha-Anywaa-application/releases/latest).
 The app checks for updates automatically (about every 6 hours when online).
 
-**Current version:** 2.0.2
+**Current version:** 2.0.6
 
 Full feature, architecture, and release documentation:
 [APP_DOCUMENTATION.md](APP_DOCUMENTATION.md)

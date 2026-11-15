@@ -7,7 +7,7 @@
 - **App name:** Dha Anywaa
 - **Dart package:** `dha_anywaaa`
 - **Android application id:** `com.kornellaotf.learn_dha_anywaa`
-- **Current version:** `2.0.2+2202` (see `pubspec.yaml` and `manifest.json`)
+- **Current version:** `2.0.6+2206` (see `pubspec.yaml` and `manifest.json`)
 - **Developer:** Kornella Otf — kornellaotf@gmail.com
 - **Repository:** https://github.com/KornellaOtf/Dha-Anywaa-application
 - **Primary platform:** Android · also builds/runs on Linux desktop
@@ -21,8 +21,7 @@ Sudanic branch, closely related to Dinka, spoken primarily in the
 Gambella region of Ethiopia and along the rivers of South Sudan.
 
 This is an **offline-first** learning app: alphabet, illustrated vocabulary,
-reading sentences, quizzes, spaced-repetition practice, an offline Anywaa AI
-assistant, and the full Bible in Anywaa with English translation. No account
+reading sentences, quizzes, spaced-repetition practice, an Anywaa AI assistant, and the full Bible in Anywaa with English translation. No account
 required. The only network use is the optional OTA update check against
 GitHub Releases and anonymous Firebase Analytics.
 
@@ -35,13 +34,13 @@ Target audience: children and beginner learners of the language.
 | Area | Choice |
 |---|---|
 | Framework | Flutter / Dart (`>=3.2.1 <4.0.0`) |
-| State | `provider` (AppSettings), `setState`, singletons for services |
+| State | `setState`, `InheritedNotifier` (AppSettings), singletons for services |
 | Storage | `shared_preferences` (all progress, prefs, FSRS state) |
 | Spaced repetition | Custom FSRS-6 implementation (`LearningEngine`) |
 | Analytics | Firebase Analytics (guarded — no-ops when unavailable) |
 | Audio | `audioplayers` |
 | Updates | Custom OTA via GitHub Releases (`OtaService`) |
-| Fonts | `google_fonts` (Playfair Display for display text) |
+| Fonts | `google_fonts` (Playfair Display for display text), Charis SIL (Anywaa glyphs) |
 
 ---
 
@@ -107,18 +106,29 @@ answer into FSRS** and award XP, but do **not** consume the daily slot.
 - All preferences persisted (`bible_night`, `bible_show_eng`,
   `bible_font_size`, last position)
 
-### Anywaa AI
-- Groq-powered cultural guide (Anywaa Perspective persona): history,
-  culture, Gambella, quizzes, app help, with conversation memory
-- Files: `lib/anyaawa_ai_page.dart` (chat UI + Community knowledge sheet),
-  `lib/services/groq_service.dart` + `groq_prompts.dart` (API + prompts),
-  `lib/services/anyaawa_ai_service.dart` (offline fallback, 3,400+ entries)
-- Local data injection per request: keyword-matched `cultural_facts.json`
-  entries + top dictionary matches feed the verified-data block
+### Anywaa AI (`lib/anywaa_ai_page.dart`)
+- Cultural guide persona (Anywaa Perspective): history, culture,
+  Gambella, quizzes, app help, with conversation memory
+- **Providers:** NVIDIA Nemotron 3.5 Lightning (`integrate.api.nvidia.com`)
+  is the default; Groq `gpt-oss-120b` is the automatic fallback. Keys live
+  in gitignored `lib/secrets.dart`.
+- **Streaming:** replies render token-by-token over SSE
+  (`chatStream`), with a non-stream fallback per provider
+- **Prompt:** main persona + language rules only — the model answers from
+  its own knowledge; no local app data is injected
+- **Output rules:** never writes Dha Anywaa sentences/phrases
+  (single dictionary headword allowed for translation answers);
+  `cleanReply` strips Anywaa orthography, invisible characters, dashes,
+  markdown, emoji, and leaked model names
+- **Thinking orbs:** `lib/widgets/thinking_orb.dart` — a Flutter port of
+  the MIT-licensed thinking-orbs engine. Nine states (working, searching,
+  solving, listening, connecting, weaving, composing, breathing, shaping)
+  rendered via `CustomPainter`; the chat picks a state matching the
+  question intent and shows it bare next to the assistant mark
 - Community learning: `[[SAVE: ...]]` tags capture shared knowledge into
   unverified notes, reviewable in the Community knowledge sheet
-- Offline fallback: when Groq is unreachable, the on-device dictionary
-  engine answers instead
+- Offline fallback: when all providers fail, the on-device dictionary
+  engine (`lib/services/anywaa_ai_service.dart`) answers instead
 
 ### Dictionary (`lib/dictionary_page.dart`)
 - Full browse/search dictionary with examples, pronunciation, categories;
@@ -150,11 +160,12 @@ lib/
                                 #   routes, OTA auto-check
   wraper.dart                   # name-gate → NameEntry or HomePage (+ splash)
   home_page.dart                # home screen + drawer
-  app_settings.dart             # ThemeMode + sound notifier (provider)
+  app_settings.dart             # ThemeMode + sound notifier
   theme/app_theme.dart          # brand tokens + light/dark ThemeData +
                                 #   context.c semantic colors + shadows
   widgets/floating_nav.dart     # shared animated bottom nav (Home + Practice)
   widgets/celebration_widget.dart
+  widgets/thinking_orb.dart     # AI thinking animation (9 states)
   pages/                        # screens listed above
   services/
     learning_engine.dart        # FSRS-6 scheduler + word states
@@ -162,7 +173,7 @@ lib/
     retention_engine.dart       # local notifications + comeback bonus
     ota_service.dart            # GitHub Releases manifest + APK download
     analytics_service.dart      # Firebase Analytics wrapper (null-safe)
-    word_aggregator.dart        # WordData model + full vocabulary (~129 words)
+    word_aggregator.dart        # WordData model + full vocabulary (3,472 words)
     anywaa_ai_service.dart      # offline dictionary/AI replies
     share_helper.dart
     audio_helper.dart (components/)
@@ -311,4 +322,4 @@ includes Linux settings; `zonedSchedule` is Android-only.
 
 ---
 
-*Last updated for v2.0.2 (build 2202).*
+*Last updated for v2.0.6 (build 2206).*
