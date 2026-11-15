@@ -148,7 +148,7 @@ class _OtaUpdatePageState extends State<OtaUpdatePage> {
               Expanded(
                 child: Text(
                   'If Android says "package invalid" after downloading, '
-                  'go to Settings → Apps → find Dha Anywaa → Uninstall, '
+                  'go to Settings > Apps > find Dha Anywaa > Uninstall, '
                   'then open the downloaded file to install. '
                   'This is a one-time step.',
                   style: TextStyle(fontSize: 13, height: 1.5, color: kGold.withValues(alpha: 0.85)),
@@ -252,7 +252,7 @@ class _OtaUpdatePageState extends State<OtaUpdatePage> {
               Expanded(
                 child: Text(
                   'If Android says "package invalid", uninstall the old app first from '
-                  'Settings → Apps → Dha Anywaa → Uninstall, then tap Install again.',
+                  'Settings > Apps > Dha Anywaa > Uninstall, then tap Install again.',
                   style: TextStyle(fontSize: 13, height: 1.5, color: kGold.withValues(alpha: 0.85)),
                 ),
               ),

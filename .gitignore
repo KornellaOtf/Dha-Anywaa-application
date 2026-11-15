@@ -44,3 +44,6 @@ app.*.map.json
 
 android/build/
 *.apk
+
+# Local API secrets — never commit
+lib/secrets.dart

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:dha_anywaaa/services/anywaa_ai_service.dart';
+import 'package:dha_anywaaa/services/groq_service.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
 
 /// Anywaa AI Chat Interface
@@ -29,6 +30,7 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
   final _ctrl  = TextEditingController();
   final _scroll = ScrollController();
   final List<_Msg> _msgs = [];
+  final List<Map<String, String>> _history = [];
   bool _loading  = true;
   bool _thinking = false;
   Timer? _rotate;
@@ -75,14 +77,46 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
   }
 
   Future<void> _generateReply(String text) async {
-    await Future.delayed(const Duration(milliseconds: 120));
+    // Groq AI answers first; the offline dictionary engine is the fallback
+    // for offline use or any API failure.
+    final groq = await GroqService.instance.chat(text, _history);
+    if (!mounted) return;
+
+    if (groq != null) {
+      _history.add({'role': 'user', 'content': text});
+      _history.add({'role': 'assistant', 'content': groq.text});
+      if (_history.length > 20) {
+        _history.removeRange(0, _history.length - 20);
+      }
+      setState(() {
+        _thinking = false;
+        _msgs.add(_Msg.bot(groq.text));
+      });
+      _scrollDown();
+      return;
+    }
+
     final dictResult = _ai.answer(text);
     if (!mounted) return;
+    _history.add({'role': 'user', 'content': text});
+    _history.add({'role': 'assistant', 'content': dictResult.text});
+    if (_history.length > 20) {
+      _history.removeRange(0, _history.length - 20);
+    }
     setState(() {
       _thinking = false;
       _msgs.add(_Msg.bot(dictResult.text, dictResult));
     });
     _scrollDown();
+  }
+
+  void _showCommunitySheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const _CommunitySheet(),
+    );
   }
 
   void _scrollDown() {
@@ -116,7 +150,7 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
               children: [
                 const Text('Anywaa AI',
                     style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
-                Text('on-device · 3,346 words',
+                Text('Your guide to Anywaa & Gambella',
                     style: TextStyle(
                         fontSize: 11, color: Colors.white.withValues(alpha: 0.75))),
               ],
@@ -125,39 +159,24 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
         ),
         actions: [
           IconButton(
+            tooltip: 'Community knowledge',
+            icon: const Icon(Icons.groups_rounded,
+                color: Colors.white, size: 22),
+            onPressed: _showCommunitySheet,
+          ),
+          IconButton(
             tooltip: 'New chat',
             icon: const Icon(Icons.add_rounded, color: Colors.white, size: 24),
             onPressed: () {
               _ai.newChat();
               setState(() {
                 _msgs.clear();
+                _history.clear();
                 _examples = _ai.sampleQuestions(count: 6);
               });
             },
           ),
-          Padding(
-            padding: const EdgeInsets.only(right: 14),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.lock_outline_rounded,
-                      size: 13, color: Colors.white.withValues(alpha: 0.9)),
-                  const SizedBox(width: 5),
-                  Text('Offline',
-                      style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white.withValues(alpha: 0.9))),
-                ],
-              ),
-            ),
-          ),
+          const SizedBox(width: 8),
         ],
       ),
       body: _loading
@@ -187,56 +206,84 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
 
   Widget _hero(AppColors c) {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 28, 20, 8),
+      padding: const EdgeInsets.fromLTRB(20, 32, 20, 8),
       children: [
         Center(
-          child: TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.85, end: 1.0),
-            duration: const Duration(milliseconds: 260),
-            curve: Curves.easeOutBack,
-            builder: (_, scale, child) =>
-                Transform.scale(scale: scale, child: child),
-            child: const _EcoMark(size: 92),
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: kGreen.withValues(alpha: 0.25), width: 1.5),
+            ),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.85, end: 1.0),
+              duration: const Duration(milliseconds: 260),
+              curve: Curves.easeOutBack,
+              builder: (_, scale, child) =>
+                  Transform.scale(scale: scale, child: child),
+              child: const _EcoMark(size: 88),
+            ),
           ),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 20),
         Text(
-          'Dëëri jööt? Ask me anything in Dha Anywaa',
+          'Dëëri jööt?',
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 22,
+            fontSize: 30,
             fontWeight: FontWeight.w800,
             color: c.text,
-            height: 1.25,
+            height: 1.2,
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          'I translate words, explain meanings, and say numbers. '
-          'Everything runs fully offline on your device.',
+          'I am Anywaa AI, your guide to the Anywaa people, Gambella, '
+          'and their culture. Ask me about traditions, history, words, '
+          'quizzes, or the Bible.',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 14, height: 1.5, color: c.textSub),
+          style: TextStyle(fontSize: 14.5, height: 1.55, color: c.textSub),
         ),
-        const SizedBox(height: 22),
+        const SizedBox(height: 26),
         Text('Try asking',
             style: TextStyle(
                 fontSize: 12,
                 letterSpacing: 1.2,
                 fontWeight: FontWeight.bold,
                 color: c.textSub)),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         Wrap(
           spacing: 8,
           runSpacing: 8,
           children: _examples
-              .map((e) => ActionChip(
-                    label: Text(e, style: TextStyle(fontSize: 12.5, color: c.text)),
-                    avatar: Icon(Icons.arrow_forward_rounded, size: 15, color: c.accent),
-                    backgroundColor: c.card,
-                    side: BorderSide(color: c.border),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20)),
-                    onPressed: () => _send(e),
+              .map((e) => Material(
+                    color: c.card,
+                    borderRadius: BorderRadius.circular(22),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(22),
+                      onTap: () => _send(e),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(22),
+                          border: Border.all(color: c.border),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.chat_bubble_outline_rounded,
+                                size: 14, color: c.accent),
+                            const SizedBox(width: 7),
+                            Text(e,
+                                style: TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: c.text)),
+                          ],
+                        ),
+                      ),
+                    ),
                   ))
               .toList(),
         ),
@@ -274,7 +321,7 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
                         onSubmitted: (_) => _send(),
                         style: TextStyle(color: c.text, fontSize: 15),
                         decoration: InputDecoration(
-                          hintText: 'Ask a word, number, or anything',
+                          hintText: 'Ask about Anywaa culture, words, or the app',
                           hintStyle: TextStyle(color: c.textSub),
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.symmetric(
@@ -414,8 +461,6 @@ class _AnswerBody extends StatelessWidget {
       );
     }
     final items = answer.matches;
-    final isNumber = items.isNotEmpty &&
-        items.every((m) => m.source == 'number');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -423,64 +468,60 @@ class _AnswerBody extends StatelessWidget {
           Container(
             width: double.infinity,
             margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+            clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               color: c.card,
               borderRadius: BorderRadius.circular(16),
-              boxShadow: const [kShadowSoft],
+              border: Border.all(color: c.border.withValues(alpha: 0.6)),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(m.entry.en,
-                    style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12.5,
-                        letterSpacing: 0.4,
-                        color: c.textSub)),
-                const SizedBox(height: 2),
-                Text(m.entry.dha,
-                    style: TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 18,
-                        color: c.accent)),
-                if (m.entry.pron.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text('• ${m.entry.pron}',
-                        style: TextStyle(
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
-                            color: c.textSub)),
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(width: 4, color: c.accent),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 10, 14, 10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(m.entry.en,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12,
+                                  letterSpacing: 0.5,
+                                  color: c.textSub)),
+                          const SizedBox(height: 2),
+                          Text(m.entry.dha,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 18,
+                                  color: c.accent)),
+                          if (m.entry.pron.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text('/${m.entry.pron}/',
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
+                                      color: c.textSub)),
+                            ),
+                          if (m.entry.defs.isNotEmpty) ...[
+                            const SizedBox(height: 5),
+                            Text(m.entry.defs,
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    height: 1.4,
+                                    color: c.textSub)),
+                          ],
+                        ],
+                      ),
+                    ),
                   ),
-                if (m.entry.defs.isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Text(m.entry.defs,
-                      style: TextStyle(
-                          fontSize: 13, height: 1.4, color: c.textSub)),
                 ],
-              ],
+              ),
             ),
           ),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isNumber
-                  ? Icons.calculate_outlined
-                  : Icons.verified_user_outlined,
-              size: 13,
-              color: c.textSub,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              isNumber
-                  ? 'Spelled with the taught counting rules'
-                  : 'From the on-device dictionary',
-              style: TextStyle(fontSize: 11, color: c.textSub),
-            ),
-          ],
-        ),
       ],
     );
   }
@@ -553,3 +594,256 @@ class _EcoMark extends StatelessWidget {
 ///
 /// Anywaa-LM STATUS: ✅ Integrated via fllama (llama.cpp)
 
+
+// ── Community knowledge sheet ────────────────────────────────────────────────
+// Shows what people have shared with Anywaa AI (captured via [[SAVE: ...]]
+// tags). Unverified until reviewed; feeds the COMMUNITY NOTES block.
+
+class _CommunitySheet extends StatefulWidget {
+  const _CommunitySheet();
+
+  @override
+  State<_CommunitySheet> createState() => _CommunitySheetState();
+}
+
+class _CommunitySheetState extends State<_CommunitySheet> {
+  List<Map<String, dynamic>> _notes = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final notes = await GroqService.instance.communityNotes();
+    if (!mounted) return;
+    setState(() {
+      _notes = notes;
+      _loading = false;
+    });
+  }
+
+  Future<void> _delete(int i) async {
+    await GroqService.instance.deleteCommunityNote(i);
+    _load();
+  }
+
+  Future<void> _clearAll() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        final c = ctx.c;
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Container(
+            padding: const EdgeInsets.all(22),
+            decoration: BoxDecoration(
+              color: c.card,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: c.border),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Clear all notes?',
+                    style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        color: c.text)),
+                const SizedBox(height: 8),
+                Text('Every shared contribution will be removed.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 13, color: c.textSub)),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: const Text('Cancel'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kRust,
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: const Text('Clear'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    if (ok == true) {
+      await GroqService.instance.clearCommunityNotes();
+      _load();
+    }
+  }
+
+  String _formatDate(String iso) {
+    try {
+      final d = DateTime.parse(iso).toLocal();
+      return '${d.day}/${d.month}/${d.year}';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.c;
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * 0.75,
+      ),
+      decoration: BoxDecoration(
+        color: c.card,
+        borderRadius:
+            const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 10),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: c.border,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 14, 8, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Community knowledge',
+                            style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: c.text)),
+                        const SizedBox(height: 2),
+                        Text(
+                          'What people have shared with Anywaa AI. '
+                          'Reviewed before it becomes verified knowledge.',
+                          style: TextStyle(
+                              fontSize: 12, height: 1.4, color: c.textSub),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (_notes.isNotEmpty)
+                    TextButton(
+                      onPressed: _clearAll,
+                      child: Text('Clear all',
+                          style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: kRust)),
+                    ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            Flexible(
+              child: _loading
+                  ? const Padding(
+                      padding: EdgeInsets.all(32),
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  : _notes.isEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.all(32),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.groups_outlined,
+                                  size: 44, color: c.textSub),
+                              const SizedBox(height: 10),
+                              Text(
+                                'Nothing shared yet. When someone teaches '
+                                'Anywaa AI something new, it appears here '
+                                'for you to review.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                    fontSize: 13.5,
+                                    height: 1.5,
+                                    color: c.textSub),
+                              ),
+                            ],
+                          ),
+                        )
+                      : ListView.separated(
+                          shrinkWrap: true,
+                          padding: const EdgeInsets.fromLTRB(14, 10, 14, 20),
+                          itemCount: _notes.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 8),
+                          itemBuilder: (_, i) {
+                            final n = _notes[i];
+                            return Container(
+                              padding: const EdgeInsets.fromLTRB(12, 10, 6, 10),
+                              decoration: BoxDecoration(
+                                color: c.bg,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                    color: c.border.withValues(alpha: 0.6)),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          n['text']?.toString() ?? '',
+                                          style: TextStyle(
+                                              fontSize: 13.5,
+                                              height: 1.45,
+                                              color: c.text),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Unverified · ${_formatDate(n['ts']?.toString() ?? '')}',
+                                          style: TextStyle(
+                                              fontSize: 11,
+                                              color: c.textSub),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: Icon(Icons.delete_outline_rounded,
+                                        size: 18, color: c.textSub),
+                                    onPressed: () => _delete(i),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

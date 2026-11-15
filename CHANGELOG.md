@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.0.0 (build 2200)
+
+Released: 2026-11-14
+
+### Added
+- Anywaa AI is now powered by Groq: a warm, knowledgeable guide to Anywaa history, Gambella, culture, and the app itself, with conversation memory
+- Community knowledge: the AI learns from what people share, and you can review every contribution in the new Community knowledge sheet
+- Anywaa Perspective persona: the AI speaks as a child of the heritage, defending the community with dignity and honesty
+
+### Changed
+- Anywaa AI chat redesigned: cleaner welcome screen, restyled dictionary cards, technical labels removed
+- All user-facing text cleaned of emojis, arrows, and dash symbols
+
 ## 1.9.10 (build 2196)
 
 Released: 2026-11-14

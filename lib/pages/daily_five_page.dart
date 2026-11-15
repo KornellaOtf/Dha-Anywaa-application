@@ -945,7 +945,7 @@ class SessionSummaryPage extends StatelessWidget {
 
               // ── Headline ─────────────────────────────────────────────────
               Text(
-                isPerfect ? '🌟 Perfect session!' : '✨ Great work!',
+                isPerfect ? 'Perfect session!' : 'Great work!',
                 style: const TextStyle(
                   fontSize:   30,
                   fontWeight: FontWeight.bold,

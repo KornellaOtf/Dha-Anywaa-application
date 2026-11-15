@@ -301,7 +301,7 @@ class _PracticeLearnShellState extends State<PracticeLearnShell> {
   void _openPractice(List<WordData> words, String title, String exercise) {
     if (words.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No words to practice yet — try Daily 5 first!')),
+        const SnackBar(content: Text('No words to practice yet, try Daily 5 first!')),
       );
       return;
     }
@@ -477,25 +477,25 @@ class PracticePage extends StatelessWidget {
         ExploreRow(
           icon: Icons.casino_outlined,
           title: 'Random Words',
-          subtitle: 'Picture quiz — mixed words',
+          subtitle: 'Picture quiz, mixed words',
           onTap: onRandom,
         ),
         ExploreRow(
           icon: Icons.edit_outlined,
           title: 'Mistakes',
-          subtitle: 'English → Anywaa review',
+          subtitle: 'English to Anywaa review',
           onTap: onMistakes,
         ),
         ExploreRow(
           icon: Icons.bookmark,
           title: 'Saved Words',
-          subtitle: 'Anywaa → English recall',
+          subtitle: 'Anywaa to English recall',
           onTap: onSaved,
         ),
         ExploreRow(
           icon: Icons.workspace_premium_outlined,
           title: 'Long Session',
-          subtitle: 'Mixed quiz — full session',
+          subtitle: 'Mixed quiz, full session',
           onTap: onLongSession,
         ),
       ],

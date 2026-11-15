@@ -7,7 +7,7 @@
 - **App name:** Dha Anywaa
 - **Dart package:** `dha_anywaaa`
 - **Android application id:** `com.kornellaotf.learn_dha_anywaa`
-- **Current version:** `1.9.10+2196` (see `pubspec.yaml` and `manifest.json`)
+- **Current version:** `2.0.0+2200` (see `pubspec.yaml` and `manifest.json`)
 - **Developer:** Kornella Otf — kornellaotf@gmail.com
 - **Repository:** https://github.com/KornellaOtf/Dha-Anywaa-application
 - **Primary platform:** Android · also builds/runs on Linux desktop
@@ -107,15 +107,22 @@ answer into FSRS** and award XP, but do **not** consume the daily slot.
 - All preferences persisted (`bible_night`, `bible_show_eng`,
   `bible_font_size`, last position)
 
-### Anywaa AI (`lib/anywaa_ai_page.dart`, `lib/services/anywaa_ai_service.dart`)
-- Fully offline assistant: word lookup, English↔Anywaa, pronunciation,
-  examples, numbers, cultural facts
-- Backed by `assets/data/dictionary_full.json` (3,400+ entries, includes
-  merged entries from external News scrape)
+### Anywaa AI
+- Groq-powered cultural guide (Anywaa Perspective persona): history,
+  culture, Gambella, quizzes, app help, with conversation memory
+- Files: `lib/anyaawa_ai_page.dart` (chat UI + Community knowledge sheet),
+  `lib/services/groq_service.dart` + `groq_prompts.dart` (API + prompts),
+  `lib/services/anyaawa_ai_service.dart` (offline fallback, 3,400+ entries)
+- Local data injection per request: keyword-matched `cultural_facts.json`
+  entries + top dictionary matches feed the verified-data block
+- Community learning: `[[SAVE: ...]]` tags capture shared knowledge into
+  unverified notes, reviewable in the Community knowledge sheet
+- Offline fallback: when Groq is unreachable, the on-device dictionary
+  engine answers instead
 
-### Dictionary
-- Currently a "Coming Soon" placeholder page (real dictionary data lives in
-  the Anywaa AI and `dictionary_full.json`)
+### Dictionary (`lib/dictionary_page.dart`)
+- Full browse/search dictionary with examples, pronunciation, categories;
+  reached from the sidebar (replaces the old Coming Soon page)
 
 ### Settings (`lib/settings_page.dart`)
 - Theme picker (System / Light / Dark) — branded choice dialog
@@ -131,7 +138,6 @@ answer into FSRS** and award XP, but do **not** consume the daily slot.
 ### Other pages
 - `nameEntry.dart` — first-run name entry (wrapper routes here when no name)
 - `about.dart`, `help.dart`, `terms_page.dart`, `privacy_policy_page.dart`
-- `dictionary_coming_soon_page.dart`
 
 ---
 
@@ -291,7 +297,7 @@ includes Linux settings; `zonedSchedule` is Android-only.
 
 ## 11. Known limitations / tech debt
 
-- Dictionary is a "Coming Soon" placeholder (data exists in Anywaa AI)
+- Dictionary page exists but the old coming-soon file remains unused in lib/
 - Bible audio is a placeholder pill
 - Scheduled local notifications are Android-only (Linux plugin lacks
   `zonedSchedule`)
@@ -305,4 +311,4 @@ includes Linux settings; `zonedSchedule` is Android-only.
 
 ---
 
-*Last updated for v1.9.10 (build 2196).*
+*Last updated for v2.0.0 (build 2200).*

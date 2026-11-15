@@ -352,7 +352,7 @@ class DailyGoalCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    completed ? 'Completed! 🎉' : 'Tap to start',
+                    completed ? 'Completed!' : 'Tap to start',
                     style: TextStyle(
                       fontSize: 14,
                       color: completed ? Colors.green : Colors.white70,

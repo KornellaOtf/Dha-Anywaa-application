@@ -477,8 +477,8 @@ class _Page4State extends State<Page4> {
                             : null,
                         child: Text(
                           (pageIdx + 1) == _questionsList.length
-                              ? 'See results  →'
-                              : 'Next question  →',
+                              ? 'See results'
+                              : 'Next question',
                           style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16),

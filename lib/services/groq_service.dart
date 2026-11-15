@@ -1,0 +1,282 @@
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:dha_anywaaa/secrets.dart';
+import 'package:dha_anywaaa/services/anywaa_ai_service.dart';
+import 'package:dha_anywaaa/services/groq_prompts.dart';
+
+/// Result of a Groq chat call. [text] is display-ready (tags stripped,
+/// dashes cleaned). [contribution] is a non-null community note captured
+/// from a [[SAVE: ...]] tag that the app should store for review.
+class GroqReply {
+  final String text;
+  final String? contribution;
+  const GroqReply(this.text, [this.contribution]);
+}
+
+/// Groq-powered Anywaa AI. Falls back gracefully: returns null on any
+/// failure so the caller can use the offline dictionary engine instead.
+class GroqService {
+  GroqService._();
+  static final GroqService instance = GroqService._();
+
+  static const _endpoint = 'https://api.groq.com/openai/v1/chat/completions';
+  static const _model = 'openai/gpt-oss-120b';
+  static const _timeout = Duration(seconds: 25);
+
+  static const _kCommunityNotes = 'groq_community_notes';
+  static const _maxNotes = 200;
+
+  List<Map<String, dynamic>>? _facts;
+
+  bool get isConfigured =>
+      Secrets.groqApiKey.isNotEmpty &&
+      !Secrets.groqApiKey.startsWith('gsk_xxx');
+
+  // ── Public API ────────────────────────────────────────────────────────────
+
+  /// Send a user message. [history] is the recent chat as
+  /// {'role': 'user'|'assistant', 'content': ...} maps (max ~10).
+  /// Returns null when the API is unreachable or errors — caller falls back.
+  Future<GroqReply?> chat(
+    String userText,
+    List<Map<String, String>> history,
+  ) async {
+    if (!isConfigured) return null;
+
+    // Fast identity answers don't need the API at all.
+    if (_isIdentityQuestion(userText)) {
+      return const GroqReply(
+        'I am Anywaa AI, your guide to the Anywaa people, Gambella, and their culture. '
+        'What would you like to explore today?',
+      );
+    }
+
+    try {
+      final verified   = await _verifiedEntries(userText);
+      final community  = await _communityNotes();
+      final localBlock = GroqPrompts.localData(verified, community);
+
+      final messages = <Map<String, String>>[
+        {'role': 'system', 'content': GroqPrompts.main},
+        {'role': 'system', 'content': localBlock},
+        // Few-shot identity examples make the name stick.
+        {'role': 'user', 'content': 'Who are you?'},
+        {'role': 'assistant',
+         'content': 'I am Anywaa AI, your guide to the Anywaa people, Gambella, and their culture. What would you like to explore today?'},
+        {'role': 'user', 'content': 'What is your name?'},
+        {'role': 'assistant',
+         'content': 'My name is Anywaa AI. I am here to help you learn about the Anywaa heritage and practice Dha Anywaa.'},
+        ...history,
+        {'role': 'user', 'content': userText},
+      ];
+
+      final res = await http
+          .post(
+            Uri.parse(_endpoint),
+            headers: {
+              'Authorization': 'Bearer ${Secrets.groqApiKey}',
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              'model': _model,
+              'messages': messages,
+              'temperature': 0.3,
+              'max_tokens': 350,
+            }),
+          )
+          .timeout(_timeout);
+
+      if (res.statusCode != 200) {
+        debugPrint('Groq: HTTP ${res.statusCode} ${res.body}');
+        return null;
+      }
+
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      final content =
+          (((data['choices'] as List?)?.first
+                  as Map<String, dynamic>?)?['message']
+              as Map<String, dynamic>?)?['content'] as String?;
+      if (content == null || content.trim().isEmpty) return null;
+
+      return _postProcess(content);
+    } catch (e) {
+      debugPrint('Groq: request failed: $e');
+      return null;
+    }
+  }
+
+  /// Store a community contribution captured via [[SAVE: ...]].
+  Future<void> saveContribution(String text) async {
+    final p = await SharedPreferences.getInstance();
+    final raw = p.getString(_kCommunityNotes) ?? '[]';
+    List<dynamic> list;
+    try {
+      final d = jsonDecode(raw);
+      list = d is List ? d : <dynamic>[];
+    } catch (_) {
+      list = <dynamic>[];
+    }
+    list.add({
+      'text': text,
+      'ts': DateTime.now().toIso8601String(),
+    });
+    if (list.length > _maxNotes) {
+      list.removeRange(0, list.length - _maxNotes);
+    }
+    await p.setString(_kCommunityNotes, jsonEncode(list));
+  }
+
+  // ── Local data for the knowledge block ────────────────────────────────────
+
+  Future<void> _ensureFacts() async {
+    if (_facts != null) return;
+    try {
+      final raw = await rootBundle.loadString('assets/data/cultural_facts.json');
+      final map = jsonDecode(raw) as Map<String, dynamic>;
+      _facts = (map['facts'] as List? ?? const [])
+          .whereType<Map<String, dynamic>>()
+          .toList();
+    } catch (_) {
+      _facts = const [];
+    }
+  }
+
+  /// 3–5 most relevant verified entries for this question.
+  Future<String> _verifiedEntries(String query) async {
+    await _ensureFacts();
+    final q = query.toLowerCase();
+    final lines = <String>[];
+
+    // Cultural facts scored by keyword hits.
+    final scored = <MapEntry<int, Map<String, dynamic>>>[];
+    for (final f in _facts ?? const <Map<String, dynamic>>[]) {
+      final kws = (f['keywords'] as List? ?? const [])
+          .map((k) => k.toString().toLowerCase());
+      final hits = kws.where((k) => q.contains(k)).length;
+      if (hits > 0) scored.add(MapEntry(hits, f));
+    }
+    scored.sort((a, b) => b.key.compareTo(a.key));
+    for (final e in scored.take(3)) {
+      lines.add('- ${e.value['fact']}');
+    }
+
+    // Grounded dictionary entries for word/meaning questions.
+    try {
+      final ans = AnywaaAiService.instance.answer(query);
+      if (ans.found) {
+        for (final m in ans.matches.take(2)) {
+          final e = m.entry;
+          final buf = StringBuffer('- ${e.en} = ${e.dha}');
+          if (e.pron.isNotEmpty) buf.write(' (${e.pron})');
+          if (e.defs.isNotEmpty) buf.write(': ${e.defs}');
+          lines.add(buf.toString());
+        }
+      }
+    } catch (_) {}
+
+    return lines.isEmpty ? '(none)' : lines.join('\n');
+  }
+
+  // ── Community notes (for the review UI) ───────────────────────────────────
+
+  /// All saved community contributions, newest first.
+  /// Each item: {'text': String, 'ts': String(ISO8601)}.
+  Future<List<Map<String, dynamic>>> communityNotes() async {
+    try {
+      final p = await SharedPreferences.getInstance();
+      final raw = p.getString(_kCommunityNotes) ?? '[]';
+      final list = jsonDecode(raw);
+      if (list is! List) return const [];
+      return list
+          .whereType<Map>()
+          .map((n) => Map<String, dynamic>.from(n))
+          .toList()
+          .reversed
+          .toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  /// Delete one community note by its index in the stored list
+  /// (oldest-first order, matching communityNotes() reversed output).
+  Future<void> deleteCommunityNote(int reversedIndex) async {
+    final p = await SharedPreferences.getInstance();
+    final raw = p.getString(_kCommunityNotes) ?? '[]';
+    List<dynamic> list;
+    try {
+      final d = jsonDecode(raw);
+      list = d is List ? d : <dynamic>[];
+    } catch (_) {
+      return;
+    }
+    final realIndex = list.length - 1 - reversedIndex;
+    if (realIndex < 0 || realIndex >= list.length) return;
+    list.removeAt(realIndex);
+    await p.setString(_kCommunityNotes, jsonEncode(list));
+  }
+
+  Future<void> clearCommunityNotes() async {
+    final p = await SharedPreferences.getInstance();
+    await p.remove(_kCommunityNotes);
+  }
+
+  Future<String> _communityNotes() async {
+    try {
+      final p = await SharedPreferences.getInstance();
+      final raw = p.getString(_kCommunityNotes) ?? '[]';
+      final list = jsonDecode(raw);
+      if (list is! List || list.isEmpty) return '(none yet)';
+      final recent = list.reversed.take(10);
+      return recent
+          .map((n) => '- ${(n as Map)['text']}')
+          .join('\n');
+    } catch (_) {
+      return '(none yet)';
+    }
+  }
+
+  // ── Post-processing ───────────────────────────────────────────────────────
+
+  static final _saveTag = RegExp(r'\[\[SAVE:\s*(.*?)\]\]', dotAll: true);
+
+  GroqReply _postProcess(String raw) {
+    String? contribution;
+    var text = raw;
+
+    final m = _saveTag.firstMatch(text);
+    if (m != null) {
+      contribution = m.group(1)?.trim();
+      text = text.replaceAll(_saveTag, '').trim();
+      if (contribution != null && contribution.isNotEmpty) {
+        unawaited(saveContribution(contribution));
+      }
+    }
+
+
+    // Style backstop: no em/en dashes, no leaked model names.
+    text = text
+        .replaceAll('—', ',')
+        .replaceAll('–', ',')
+        .replaceAll(RegExp(r'\bLlama\b', caseSensitive: false), 'Anywaa AI')
+        .replaceAll(RegExp(r'\bMeta AI\b', caseSensitive: false), 'Anywaa AI')
+        .replaceAll(RegExp(r'\bGroq\b', caseSensitive: false), 'Anywaa AI')
+        .replaceAll(RegExp(r'\bChatGPT\b', caseSensitive: false), 'Anywaa AI')
+        .replaceAll(RegExp(r'\bClaude\b', caseSensitive: false), 'Anywaa AI');
+
+    return GroqReply(text, contribution);
+  }
+
+  bool _isIdentityQuestion(String q) {
+    final l = q.toLowerCase();
+    return RegExp(r'\b(who are you|what are you|your name|who made you|'
+            r'what is your name|introduce yourself)\b')
+        .hasMatch(l);
+  }
+}
