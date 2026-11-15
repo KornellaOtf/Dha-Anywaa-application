@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.4 (build 2204)
+
+Released: 2026-11-15
+
+### Added
+- Animated thinking orb in Anywaa AI chat: nine hand-tuned dotted-orb states ported from the MIT-licensed thinking-orbs engine, tinted with the app theme
+
 ## 2.0.3 (build 2203)
 
 Released: 2026-11-15
