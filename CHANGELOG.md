@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.0.5 (build 2205)
+
+Released: 2026-11-15
+
+### Added
+- Anywaa AI now runs on NVIDIA Nemotron (Groq kept as fallback)
+- AI replies stream token-by-token for faster perceived responses
+- Thinking orb adapts to the question: searching, composing, listening, connecting, weaving, breathing, solving, or working
+
+### Fixed
+- Garbled Anywaa letters (mojibake) in AI replies; invisible characters now normalized
+
 ## 2.0.4 (build 2204)
 
 Released: 2026-11-15
