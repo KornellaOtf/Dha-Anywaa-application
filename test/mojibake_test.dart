@@ -34,9 +34,12 @@ void main() {
       expect(GroqService.cleanReply('**bold** `code`'), 'bold code');
     });
 
-    test('leaves normal Anywaa spelling untouched', () {
-      const s = 'Dëëri jööt? Dha Anywaa';
-      expect(GroqService.cleanReply(s), s);
+    test('transliterates Anywaa orthography out of replies', () {
+      // ë ï ö ŋ ɔ ə and friends never render in AI output.
+      expect(GroqService.cleanReply('Dëëri jööt?'), 'Deeri joot?');
+      expect(GroqService.cleanReply('ŋ ɔ ə'), 'ng o e');
+      // plain text is unaffected
+      expect(GroqService.cleanReply('Hello there'), 'Hello there');
     });
   });
 }

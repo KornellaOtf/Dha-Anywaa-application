@@ -619,7 +619,20 @@ class GroqService {
   /// dashes, no markdown, no emoji or arrow glyphs, no leaked model names.
   /// Does NOT touch [[SAVE: ...]] tags — that only happens once, at the
   /// end, in [_postProcess].
-  static String cleanReply(String text) => text
+  /// Anywaa/Nuer-specific letters that should never appear in AI output.
+  /// Transliteration is a backstop: the prompt already bans Anywaa
+  /// sentences, and this guarantees no Anywaa orthography renders even
+  /// if the model slips (single headwords become readable approximations).
+  static const _anywaaChars = {
+    'ë': 'e', 'ï': 'i', 'ö': 'o', 'ŋ': 'ng', 'ɔ': 'o', 'ə': 'e',
+    'ӓ': 'a', 'ӧ': 'o', 'є': 'e', 'і': 'i', 'ӣ': 'i', 'ӳ': 'y',
+    'ԑ': 'e', 'ԝ': 'w', 'ԛ': 'q',
+  };
+
+  static String cleanReply(String text) {
+    var t = text;
+    _anywaaChars.forEach((k, v) => t = t.replaceAll(k, v));
+    return t
         .replaceAll('\u202F', ' ') // narrow no-break space
         .replaceAll('\u00A0', ' ') // no-break space
         .replaceAll('\u2011', '-') // non-breaking hyphen
@@ -640,6 +653,7 @@ class GroqService {
         .replaceAll(RegExp(r'\bGroq\b', caseSensitive: false), 'Anywaa AI')
         .replaceAll(RegExp(r'\bChatGPT\b', caseSensitive: false), 'Anywaa AI')
         .replaceAll(RegExp(r'\bClaude\b', caseSensitive: false), 'Anywaa AI');
+  }
 
   bool _isIdentityQuestion(String q) {
     final l = q.toLowerCase();
