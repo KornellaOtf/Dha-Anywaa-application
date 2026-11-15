@@ -559,23 +559,13 @@ class _ThinkingBubble extends StatelessWidget {
   const _ThinkingBubble();
   @override
   Widget build(BuildContext context) {
-    final c = context.c;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         children: [
           const _EcoMark(size: 26),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              color: c.card,
-              borderRadius: const BorderRadius.all(Radius.circular(16)),
-              boxShadow: const [kShadowSoft],
-            ),
-            child: const ThinkingOrb(size: 44),
-          ),
+          const SizedBox(width: 10),
+          const ThinkingOrb(size: 40),
         ],
       ),
     );
