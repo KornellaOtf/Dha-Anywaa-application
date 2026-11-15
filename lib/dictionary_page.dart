@@ -480,16 +480,31 @@ class _DictionaryPageState extends State<DictionaryPage> {
     super.dispose();
   }
 
+  // Parsed once per app run — the 3,472-word JSON is ~0.5 MB and was being
+  // decoded on every page visit.
+  static List<_Category>? _cachedCategories;
+  static int _cachedTotal = 0;
+
   Future<void> _load() async {
+    if (_cachedCategories != null) {
+      setState(() {
+        _categories = _cachedCategories!;
+        _total = _cachedTotal;
+        _loaded = true;
+      });
+      return;
+    }
     final raw = await rootBundle.loadString('assets/data/dictionary_full.json');
     final map = json.decode(raw) as Map<String, dynamic>;
     final cats = ((map['categories'] ?? const []) as List)
         .map((c) => _Category.fromJson(c as Map<String, dynamic>))
         .toList();
+    _cachedCategories = cats;
+    _cachedTotal = (map['total'] ?? 0) as int;
     if (!mounted) return;
     setState(() {
       _categories = cats;
-      _total = (map['total'] ?? 0) as int;
+      _total = _cachedTotal;
       _loaded = true;
     });
   }

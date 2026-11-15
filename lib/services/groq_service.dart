@@ -98,10 +98,13 @@ class GroqService {
       }
 
       final data = jsonDecode(res.body) as Map<String, dynamic>;
-      final content =
-          (((data['choices'] as List?)?.first
-                  as Map<String, dynamic>?)?['message']
-              as Map<String, dynamic>?)?['content'] as String?;
+      final choices = data['choices'] as List?;
+      if (choices == null || choices.isEmpty) return null;
+      final first = choices.first;
+      if (first is! Map<String, dynamic>) return null;
+      final message = first['message'];
+      if (message is! Map<String, dynamic>) return null;
+      final content = message['content'] as String?;
       if (content == null || content.trim().isEmpty) return null;
 
       return _postProcess(content);
@@ -250,9 +253,19 @@ class GroqService {
     String? contribution;
     var text = raw;
 
-    final m = _saveTag.firstMatch(text);
-    if (m != null) {
-      contribution = m.group(1)?.trim();
+    // Strip ALL save tags from display text; only the first becomes a note.
+    final all = _saveTag.allMatches(text).toList();
+    if (all.isNotEmpty) {
+      contribution = all.first.group(1)?.trim();
+      // Cap length and strip bracket/instruction-like content.
+      if (contribution != null) {
+        contribution = contribution
+            .replaceAll(RegExp(r'[\[\]{}<>]'), '')
+            .trim();
+        if (contribution.length > 300) {
+          contribution = contribution.substring(0, 300);
+        }
+      }
       text = text.replaceAll(_saveTag, '').trim();
       if (contribution != null && contribution.isNotEmpty) {
         unawaited(saveContribution(contribution));

@@ -504,6 +504,7 @@ class _DailyFivePageState extends State<DailyFivePage>
                       borderRadius: BorderRadius.circular(16),
                       child: Image.asset(
                         word.imageUrl,
+                        cacheWidth: 400,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Icon(
                           Icons.image_not_supported_rounded,
@@ -1015,6 +1016,7 @@ class SessionSummaryPage extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8),
                             child: Image.asset(
                               words[i].imageUrl,
+                        cacheWidth: 96,
                               width:  44,
                               height: 44,
                               fit:    BoxFit.cover,

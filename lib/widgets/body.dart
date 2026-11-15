@@ -53,6 +53,7 @@ class Body extends StatelessWidget {
                   ),
                   child: Image.asset(
                     'assets/word_images/body.jpg',
+                        cacheWidth: 400,
                     fit: BoxFit.contain,
                     alignment: Alignment.center,
                     errorBuilder: (_, __, ___) => const SizedBox(
@@ -119,6 +120,7 @@ class Body extends StatelessWidget {
                       padding: const EdgeInsets.all(8),
                       child: Image.asset(
                         p['img']!,
+                        cacheWidth: 256,
                         fit: BoxFit.contain,
                         errorBuilder: (_, __, ___) => Icon(
                             Icons.accessibility_new_rounded,

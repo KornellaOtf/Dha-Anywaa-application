@@ -40,10 +40,10 @@ bool firebaseReady = false;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize timezone data for notifications
   tz.initializeTimeZones();
-  
+
   // Initialize Firebase (Analytics only - no FCM for now)
   try {
     await Firebase.initializeApp();
@@ -51,8 +51,10 @@ void main() async {
     // and distribution channel. Helps replace "(not set)" with real data.
     final analytics = FirebaseAnalytics.instance;
     final pkgInfo = await PackageInfo.fromPlatform();
-    await analytics.setUserProperty(name: 'app_version', value: pkgInfo.version);
-    await analytics.setUserProperty(name: 'build_number', value: pkgInfo.buildNumber);
+    await analytics.setUserProperty(
+        name: 'app_version', value: pkgInfo.version);
+    await analytics.setUserProperty(
+        name: 'build_number', value: pkgInfo.buildNumber);
     await analytics.setUserProperty(name: 'distribution', value: 'github');
 
     // Restore hashed user ID and log app open via unified service
@@ -63,49 +65,7 @@ void main() async {
     debugPrint('Firebase initialization error: $e');
   }
 
-  // Initialize background downloader so OTA downloads survive backgrounding
-  await OtaService.initialize();
-  
-  // Initialize retention engine for smart notifications
-  try {
-    await RetentionEngine.instance.initialize();
-  } catch (e) {
-    debugPrint('Retention engine initialization error: $e');
-  }
-  
-  // Home screen shortcuts are Android/iOS-only — the plugin has no desktop
-  // implementation, so skip entirely off-mobile.
-  final isMobile = defaultTargetPlatform == TargetPlatform.android ||
-      defaultTargetPlatform == TargetPlatform.iOS;
   final quickActions = const QuickActions();
-  if (isMobile) {
-    try {
-      await quickActions.setShortcutItems(<ShortcutItem>[
-      const ShortcutItem(
-        type: 'action_quiz',
-        localizedTitle: 'Take a Quiz',
-        icon: 'ic_launcher',
-      ),
-      const ShortcutItem(
-        type: 'action_ai',
-        localizedTitle: 'Ask Anywaa AI',
-        icon: 'ic_launcher',
-      ),
-      const ShortcutItem(
-        type: 'action_bible',
-        localizedTitle: 'Wëël Jwøk',
-        icon: 'ic_launcher',
-      ),
-      const ShortcutItem(
-        type: 'action_share',
-        localizedTitle: 'Share App',
-        icon: 'ic_launcher',
-      ),
-      ]);
-    } catch (e) {
-      debugPrint('Quick actions initialization error: $e');
-    }
-  }
 
   // Load the saved preference first so the correct theme is applied from the
   // very first frame instead of flashing the system theme on relaunch.
@@ -120,11 +80,53 @@ void main() async {
       child: MyApp(quickActions: quickActions),
     ),
   );
+
+  // Non-critical services init after the first frame so startup stays fast.
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
+    await OtaService.initialize();
+
+    try {
+      await RetentionEngine.instance.initialize();
+    } catch (e) {
+      debugPrint('Retention engine initialization error: $e');
+    }
+
+    final isMobile = defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS;
+    if (isMobile) {
+      try {
+        await quickActions.setShortcutItems(<ShortcutItem>[
+          const ShortcutItem(
+            type: 'action_quiz',
+            localizedTitle: 'Take a Quiz',
+            icon: 'ic_launcher',
+          ),
+          const ShortcutItem(
+            type: 'action_ai',
+            localizedTitle: 'Ask Anywaa AI',
+            icon: 'ic_launcher',
+          ),
+          const ShortcutItem(
+            type: 'action_bible',
+            localizedTitle: 'Wëël Jwök',
+            icon: 'ic_launcher',
+          ),
+          const ShortcutItem(
+            type: 'action_share',
+            localizedTitle: 'Share App',
+            icon: 'ic_launcher',
+          ),
+        ]);
+      } catch (e) {
+        debugPrint('Quick actions initialization error: $e');
+      }
+    }
+  });
 }
 
 class MyApp extends StatefulWidget {
   final QuickActions quickActions;
-  
+
   const MyApp({super.key, required this.quickActions});
 
   @override
@@ -137,19 +139,19 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    
+
     // Handle home screen shortcut taps (mobile only — no desktop plugin)
     final isMobile = defaultTargetPlatform == TargetPlatform.android ||
         defaultTargetPlatform == TargetPlatform.iOS;
     if (isMobile) {
       try {
         widget.quickActions.initialize((String type) {
-      if (type == 'action_quiz') {
-        _navigatorKey.currentState?.pushNamed('quiz');
-      } else if (type == 'action_ai') {
-        _navigatorKey.currentState?.pushNamed('anywaa_ai');
-      } else if (type == 'action_bible') {
-        _navigatorKey.currentState?.pushNamed('bible');
+          if (type == 'action_quiz') {
+            _navigatorKey.currentState?.pushNamed('quiz');
+          } else if (type == 'action_ai') {
+            _navigatorKey.currentState?.pushNamed('anywaa_ai');
+          } else if (type == 'action_bible') {
+            _navigatorKey.currentState?.pushNamed('bible');
           } else if (type == 'action_share') {
             ShareHelper.instance.shareApp();
           }
@@ -162,7 +164,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     // Depend on the settings notifier so a theme change rebuilds MaterialApp.
     final settings = AppSettings.of(context);
-    
+
     return MaterialApp(
       navigatorKey: _navigatorKey,
       debugShowCheckedModeBanner: false,
@@ -206,10 +208,10 @@ class _MyAppState extends State<MyApp> {
         if (builder == null) return null;
 
         // Quiz and Daily Five get a slide-up for a more dramatic entrance
-        final transition = (settings.name == 'quiz' ||
-                settings.name == 'daily_five')
-            ? RouteTransition.slideUp
-            : RouteTransition.slide;
+        final transition =
+            (settings.name == 'quiz' || settings.name == 'daily_five')
+                ? RouteTransition.slideUp
+                : RouteTransition.slide;
 
         return buildRoute(
           page: builder(),

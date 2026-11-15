@@ -67,6 +67,12 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
   void _send([String? preset]) {
     final text = (preset ?? _ctrl.text).trim();
     if (text.isEmpty || _thinking) return;
+    if (text.length > 1000) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please keep messages under 1000 characters')),
+      );
+      return;
+    }
     setState(() {
       _msgs.add(_Msg.user(text));
       _ctrl.clear();

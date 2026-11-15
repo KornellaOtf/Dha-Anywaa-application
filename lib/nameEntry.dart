@@ -220,9 +220,14 @@ class _NameEntryState extends State<NameEntry> {
                               focusNode: _focusNode,
                               onChanged: (val) =>
                                   setState(() => name = val),
-                              validator: (v) => (v == null || v.isEmpty)
-                                  ? 'Please enter your name'
-                                  : null,
+                              validator: (v) {
+                                final t = v?.trim() ?? '';
+                                if (t.isEmpty) return 'Please enter your name';
+                                if (t.length < 2) {
+                                  return 'Name must be at least 2 characters';
+                                }
+                                return null;
+                              },
                               textCapitalization:
                                   TextCapitalization.words,
                               style: TextStyle(

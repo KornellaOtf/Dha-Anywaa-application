@@ -94,8 +94,10 @@ class _PolicyBody extends StatelessWidget {
         ),
         _section(context, 
           'Third-party services',
-          'The app uses Google Fonts (Nunito) loaded from the app bundle, not from the network. '
-          'No other third-party services are used.',
+          'The app uses Google Fonts (Nunito and Playfair Display) loaded from the app bundle, not from the network. '
+          'Anywaa AI chat sends your messages to the Groq API (groq.com) to generate replies. '
+          'Only the text you type is sent; no name, progress, or other personal data is included. '
+          'The app also downloads updates from GitHub Releases when you choose to update.',
         ),
         _section(context, 
           'Data deletion',

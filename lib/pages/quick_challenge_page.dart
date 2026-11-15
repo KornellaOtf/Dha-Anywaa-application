@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../services/leaderboard_service.dart';
 import '../theme/app_theme.dart';
@@ -98,7 +97,7 @@ class _QuickChallengePageState extends State<QuickChallengePage> {
           'Quick Challenge - ${_currentRound + 1}/$_maxRounds',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 18.sp,
+            fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -111,7 +110,7 @@ class _QuickChallengePageState extends State<QuickChallengePage> {
         children: [
           SafeArea(
             child: Padding(
-              padding: EdgeInsets.all(24.w),
+              padding: EdgeInsets.all(24),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -120,17 +119,17 @@ class _QuickChallengePageState extends State<QuickChallengePage> {
                     value: (_currentRound + 1) / _maxRounds,
                     backgroundColor: context.c.border,
                     valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF1F4D3A)),
-                    minHeight: 8.h,
+                    minHeight: 8,
                   ),
-                  SizedBox(height: 40.h),
+                  SizedBox(height: 40),
                   
                   // Word image
                   if (word['imagePath'] != null)
                     Container(
-                      height: 200.h,
-                      width: 200.w,
+                      height: 200,
+                      width: 200,
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16.r),
+                        borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.1),
@@ -140,47 +139,49 @@ class _QuickChallengePageState extends State<QuickChallengePage> {
                         ],
                       ),
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16.r),
+                        borderRadius: BorderRadius.circular(16),
                         child: Image.asset(
                           word['imagePath'],
+                        cacheWidth: 400,
                           fit: BoxFit.cover,
                         ),
                       ),
                     ),
                   
-                  SizedBox(height: 32.h),
+                  SizedBox(height: 32),
                   
                   // Anywaa word
                   Text(
                     word['anywaa'] ?? '',
                     style: TextStyle(
-                      fontSize: 36.sp,
+                      fontSize: 36,
                       fontWeight: FontWeight.bold,
                       color: context.c.accent,
                     ),
                     textAlign: TextAlign.center,
                   ),
                   
-                  SizedBox(height: 12.h),
+                  SizedBox(height: 12),
                   
                   // English translation
                   Text(
                     word['english'] ?? '',
                     style: TextStyle(
-                      fontSize: 24.sp,
+                      fontSize: 24,
                       color: context.c.textSub,
                     ),
                     textAlign: TextAlign.center,
                   ),
                   
-                  SizedBox(height: 32.h),
+                  SizedBox(height: 32),
                   
                   // Play audio button
+                  if (_currentWord?['soundFile'] != null)
                   IconButton(
                     onPressed: _playAudio,
                     icon: Icon(
                       Icons.volume_up,
-                      size: 48.sp,
+                      size: 48,
                       color: context.c.accent,
                     ),
                   ),
@@ -190,27 +191,27 @@ class _QuickChallengePageState extends State<QuickChallengePage> {
                   // Learned button
                   SizedBox(
                     width: double.infinity,
-                    height: 56.h,
+                    height: 56,
                     child: ElevatedButton(
                       onPressed: _onLearned,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF1F4D3A),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.r),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                       child: Text(
                         'Learned',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 18.sp,
+                          fontSize: 18,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
                   ),
                   
-                  SizedBox(height: 16.h),
+                  SizedBox(height: 16),
                   
                   // Skip button
                   TextButton(
@@ -219,7 +220,7 @@ class _QuickChallengePageState extends State<QuickChallengePage> {
                       'Take a break',
                       style: TextStyle(
                         color: context.c.textSub,
-                        fontSize: 16.sp,
+                        fontSize: 16,
                       ),
                     ),
                   ),
@@ -243,57 +244,57 @@ class _QuickChallengePageState extends State<QuickChallengePage> {
       backgroundColor: context.c.bg,
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.all(24.w),
+          padding: EdgeInsets.all(24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 Icons.check_circle,
-                size: 100.sp,
+                size: 100,
                 color: context.c.accent,
               ),
               
-              SizedBox(height: 24.h),
+              SizedBox(height: 24),
               
               Text(
                 'Challenge Complete!',
                 style: TextStyle(
-                  fontSize: 28.sp,
+                  fontSize: 28,
                   fontWeight: FontWeight.bold,
                   color: context.c.accent,
                 ),
                 textAlign: TextAlign.center,
               ),
               
-              SizedBox(height: 16.h),
+              SizedBox(height: 16),
               
               Text(
                 'You learned $_wordsLearned words in 30 seconds',
                 style: TextStyle(
-                  fontSize: 18.sp,
+                  fontSize: 18,
                   color: context.c.textSub,
                 ),
                 textAlign: TextAlign.center,
               ),
               
-              SizedBox(height: 48.h),
+              SizedBox(height: 48),
               
               SizedBox(
                 width: double.infinity,
-                height: 56.h,
+                height: 56,
                 child: ElevatedButton(
                   onPressed: _exitChallenge,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF1F4D3A),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.r),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   child: Text(
                     'Done',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 18.sp,
+                      fontSize: 18,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

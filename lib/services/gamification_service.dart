@@ -172,16 +172,17 @@ class GamificationService {
       await p.setInt(_kStreakDays, streak);
       await p.setString(_kLastActive, today);
     } else {
-      // Missed at least one day
-      if (freezes > 0) {
-        // Auto-use freeze silently
-        freezes--;
+      // Missed at least one day — freezes must cover every missed day.
+      final daysMissed = _daysBetween(lastActive, today);
+      final needed = daysMissed > 0 ? daysMissed - 1 : 1;
+      if (freezes >= needed) {
+        freezes -= needed;
         streak++;
         await p.setInt(_kStreakFreeze, freezes);
         await p.setInt(_kStreakDays, streak);
         await p.setString(_kLastActive, today);
       } else {
-        // Streak broken
+        // Not enough freezes — streak broken
         streak = 1;
         await p.setInt(_kStreakDays, streak);
         await p.setString(_kLastActive, today);
@@ -223,6 +224,17 @@ class GamificationService {
   String _daysAgo(int n) {
     final d = DateTime.now().subtract(Duration(days: n));
     return '${d.year}-${d.month.toString().padLeft(2,'0')}-${d.day.toString().padLeft(2,'0')}';
+  }
+
+  /// Whole days between two 'YYYY-MM-DD' strings; -1 on parse failure.
+  int _daysBetween(String from, String to) {
+    try {
+      final f = DateTime.parse(from);
+      final t = DateTime.parse(to);
+      return t.difference(f).inDays;
+    } catch (_) {
+      return -1;
+    }
   }
 
   String _weekNumber() {

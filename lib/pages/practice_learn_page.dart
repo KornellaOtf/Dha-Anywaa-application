@@ -5,6 +5,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:dha_anywaaa/pages/daily_five_page.dart';
+import 'package:dha_anywaaa/pages/quick_challenge_page.dart';
 import 'package:dha_anywaaa/services/word_aggregator.dart';
 import 'package:dha_anywaaa/services/learning_engine.dart';
 import 'package:dha_anywaaa/services/gamification_service.dart';
@@ -257,6 +258,7 @@ class _PracticeLearnShellState extends State<PracticeLearnShell> {
         onMistakes: _openMistakes,
         onSaved: _openSavedWords,
         onLongSession: _openLongSession,
+        onQuickChallenge: _openQuickChallenge,
         onOpenWords: () => setState(() => _index = 1),
         onNotifications: _showNotificationsSheet,
       ),
@@ -328,6 +330,29 @@ class _PracticeLearnShellState extends State<PracticeLearnShell> {
     _openPractice(pool.take(20).toList(), 'Long Session', 'mixed');
   }
 
+  void _openQuickChallenge() {
+    if (_allWords.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No words to practice yet, try Daily 5 first!')),
+      );
+      return;
+    }
+    final pool = List<WordData>.from(_allWords)..shuffle(math.Random());
+    final words = pool
+        .take(10)
+        .map((w) => <String, dynamic>{
+              'imagePath': w.imageUrl,
+              'soundFile': w.audioPath,
+              'anywaa': w.anywaa,
+              'english': w.english,
+            })
+        .toList();
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => QuickChallengePage(words: words)),
+    );
+  }
+
   Future<void> _openMistakes() async {
     final states = await LearningEngine.instance.loadStates();
     // Words that need work: lapses, low accuracy, or high difficulty
@@ -373,6 +398,7 @@ class PracticePage extends StatelessWidget {
       onMistakes,
       onSaved,
       onLongSession,
+      onQuickChallenge,
       onOpenWords,
       onNotifications;
 
@@ -385,6 +411,7 @@ class PracticePage extends StatelessWidget {
     required this.onMistakes,
     required this.onSaved,
     required this.onLongSession,
+    required this.onQuickChallenge,
     required this.onOpenWords,
     required this.onNotifications,
   });
@@ -497,6 +524,12 @@ class PracticePage extends StatelessWidget {
           title: 'Long Session',
           subtitle: 'Mixed quiz, full session',
           onTap: onLongSession,
+        ),
+        ExploreRow(
+          icon: Icons.timer_outlined,
+          title: 'Quick Challenge',
+          subtitle: 'Three words, learn them fast',
+          onTap: onQuickChallenge,
         ),
       ],
     );
@@ -843,6 +876,7 @@ class TopicCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(14),
               child: Image.asset(
                 c.imageAsset,
+                        cacheWidth: 256,
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => Container(
                   color: _tileOf(context),
@@ -1436,6 +1470,7 @@ class _CategoryProgressRow extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
               child: Image.asset(
                 c.imageAsset,
+                        cacheWidth: 256,
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => Container(
                   color: _tileOf(context),

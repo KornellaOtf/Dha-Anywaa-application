@@ -159,8 +159,9 @@ class WordAggregator {
     {'id': 'word_yiie',    'english': 'Inside',                 'anywaa': 'Yiie',   'imageUrl': 'assets/word_images/carton.png',   'category': 'Words'},
   ];
 
-  /// All vocabulary words as typed objects.
-  List<WordData> getAllWords() => _allWordsData
+  /// All vocabulary words as typed objects (memoized — the list is static).
+  List<WordData>? _cachedWords;
+  List<WordData> getAllWords() => _cachedWords ??= _allWordsData
       .map((d) => WordData(
             id:       d['id']!,
             english:  d['english']!,

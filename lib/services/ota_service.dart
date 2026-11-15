@@ -390,13 +390,17 @@ class OtaService {
   }
 
   Future<String> _sha256OfFile(File file) async {
-    final digestSink = _DigestSink();
-    final hasher = sha256.startChunkedConversion(digestSink);
-    await for (final chunk in file.openRead()) {
-      hasher.add(chunk);
+    try {
+      final digestSink = _DigestSink();
+      final hasher = sha256.startChunkedConversion(digestSink);
+      await for (final chunk in file.openRead()) {
+        hasher.add(chunk);
+      }
+      hasher.close();
+      return digestSink.digest.toString();
+    } catch (_) {
+      return '';
     }
-    hasher.close();
-    return digestSink.digest.toString();
   }
 
   Future<void> _deleteQuietly(File file) async {

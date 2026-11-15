@@ -335,6 +335,7 @@ class _Page4State extends State<Page4> {
                       padding: const EdgeInsets.all(12),
                       child: Image.asset(
                         q.image,
+                        cacheWidth: 320,
                         fit: BoxFit.contain,
                         errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                       ),

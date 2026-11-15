@@ -74,7 +74,7 @@ class AnywaaAnswer {
 }
 
 /// A fully offline "Anywaa AI" assistant. It answers only from the local
-/// dictionary bundled in `assets/data/anywaa_dictionary.json`. No network,
+/// dictionary bundled in `assets/data/dictionary_full.json`. No network,
 /// no model download, nothing leaves the device. It is grounded: it never
 /// invents a translation; if a word is not in the data it says so.
 class AnywaaAiService {
