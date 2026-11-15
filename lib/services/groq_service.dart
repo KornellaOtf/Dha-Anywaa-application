@@ -401,7 +401,7 @@ class GroqService {
   /// dashes, no markdown, no emoji or arrow glyphs, no leaked model names.
   /// Does NOT touch [[SAVE: ...]] tags — that only happens once, at the
   /// end, in [_postProcess].
-  /// Anywaa/Nuer-specific letters that should never appear in AI output.
+  /// Anywaa-specific letters that should never appear in AI output.
   /// Transliteration is a backstop: the prompt already bans Anywaa
   /// sentences, and this guarantees no Anywaa orthography renders even
   /// if the model slips (single headwords become readable approximations).

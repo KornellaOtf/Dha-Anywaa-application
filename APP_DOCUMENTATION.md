@@ -17,7 +17,7 @@
 ## 1. What the app is
 
 Dha Anywaa (also written Anuak) is a Nilo-Saharan language of the Eastern
-Sudanic branch, closely related to Dinka and Nuer, spoken primarily in the
+Sudanic branch, closely related to Dinka, spoken primarily in the
 Gambella region of Ethiopia and along the rivers of South Sudan.
 
 This is an **offline-first** learning app: alphabet, illustrated vocabulary,
