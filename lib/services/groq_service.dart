@@ -312,6 +312,50 @@ class GroqService {
     await p.setString(_kCommunityNotes, jsonEncode(list));
   }
 
+  // ── Community notes (for the review UI) ───────────────────────────────────
+
+  /// All saved community contributions, newest first.
+  /// Each item: {'text': String, 'ts': String(ISO8601)}.
+  Future<List<Map<String, dynamic>>> communityNotes() async {
+    try {
+      final p = await SharedPreferences.getInstance();
+      final raw = p.getString(_kCommunityNotes) ?? '[]';
+      final list = jsonDecode(raw);
+      if (list is! List) return const [];
+      return list
+          .whereType<Map>()
+          .map((n) => Map<String, dynamic>.from(n))
+          .toList()
+          .reversed
+          .toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  /// Delete one community note by its index in the stored list
+  /// (oldest-first order, matching communityNotes() reversed output).
+  Future<void> deleteCommunityNote(int reversedIndex) async {
+    final p = await SharedPreferences.getInstance();
+    final raw = p.getString(_kCommunityNotes) ?? '[]';
+    List<dynamic> list;
+    try {
+      final d = jsonDecode(raw);
+      list = d is List ? d : <dynamic>[];
+    } catch (_) {
+      return;
+    }
+    final realIndex = list.length - 1 - reversedIndex;
+    if (realIndex < 0 || realIndex >= list.length) return;
+    list.removeAt(realIndex);
+    await p.setString(_kCommunityNotes, jsonEncode(list));
+  }
+
+  Future<void> clearCommunityNotes() async {
+    final p = await SharedPreferences.getInstance();
+    await p.remove(_kCommunityNotes);
+  }
+
   // ── Post-processing ───────────────────────────────────────────────────────
 
   static final _saveTag = RegExp(r'\[\[SAVE:\s*(.*?)\]\]', dotAll: true);
