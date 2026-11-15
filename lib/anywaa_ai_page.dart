@@ -35,9 +35,7 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
   OrbState _orbState = OrbState.working;
   bool _loading  = true;
   bool _thinking = false;
-  Timer? _rotate;
 
-  List<String> _examples = const [];
 
   @override
   void initState() {
@@ -50,17 +48,11 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
     if (!mounted) return;
     setState(() {
       _loading  = false;
-      _examples = _ai.sampleQuestions(count: 6);
-    });
-    _rotate = Timer.periodic(const Duration(seconds: 10), (_) {
-      if (!mounted || _msgs.isNotEmpty) return;
-      setState(() => _examples = _ai.sampleQuestions(count: 6));
     });
   }
 
   @override
   void dispose() {
-    _rotate?.cancel();
     _ctrl.dispose();
     _scroll.dispose();
     super.dispose();
@@ -247,7 +239,6 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
               setState(() {
                 _msgs.clear();
                 _history.clear();
-                _examples = _ai.sampleQuestions(count: 6);
               });
             },
           ),
@@ -318,49 +309,6 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
           'quizzes, or the Bible.',
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 14.5, height: 1.55, color: c.textSub),
-        ),
-        const SizedBox(height: 26),
-        Text('Try asking',
-            style: TextStyle(
-                fontSize: 12,
-                letterSpacing: 1.2,
-                fontWeight: FontWeight.bold,
-                color: c.textSub)),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: _examples
-              .map((e) => Material(
-                    color: c.card,
-                    borderRadius: BorderRadius.circular(22),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(22),
-                      onTap: () => _send(e),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 10),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(22),
-                          border: Border.all(color: c.border),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.chat_bubble_outline_rounded,
-                                size: 14, color: c.accent),
-                            const SizedBox(width: 7),
-                            Text(e,
-                                style: TextStyle(
-                                    fontSize: 12.5,
-                                    fontWeight: FontWeight.w600,
-                                    color: c.text)),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ))
-              .toList(),
         ),
       ],
     );
