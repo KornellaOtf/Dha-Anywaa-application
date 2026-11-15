@@ -1,5 +1,24 @@
 # Changelog
 
+## 2.0.3 (build 2203)
+
+Released: 2026-11-15
+
+### Fixed
+- Streak freezes now cover every missed day, not just one
+- Bible reader no longer shows duplicated verses (18 duplicate references removed)
+- Privacy policy now correctly discloses Groq AI chat and GitHub update downloads
+- AI chat hardened: safe API response parsing, all hidden tags stripped, 1000-character message limit
+- Name entry requires at least 2 characters
+- OTA download hardened against storage and checksum read errors
+
+### Improved
+- Faster startup: update check, reminders, and shortcuts now load after the first screen
+- Dictionary opens faster on repeat visits (parsed once)
+- Lower memory use: images decode at display size, word list cached
+- Quick Challenge mode is now reachable from Practice
+- Removed unused packages and a dead 170 KB dictionary file
+
 ## 2.0.2 (build 2202)
 
 Released: 2026-11-15
