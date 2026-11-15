@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.0.2 (build 2202)
+
+Released: 2026-11-15
+
+### Changed
+- Name entry screen redesigned: animated hero, card-based form, gradient start button
+- Celebration popup upgraded: expanding ring pulse, confetti on every celebration, serif headline
+- Update screen buttons restyled: softer secondary actions, lifted primary button
+
+### Changed (AI)
+- LANGUAGE RULES updated: multi-language switching on request, honest fluency, no Dha Anywaa or Nuer output
+
 ## 2.0.1 (build 2201)
 
 Released: 2026-11-15

@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// Clean celebration popup — appears when marking a word as learned.
 /// Smooth spring animation, respects dark mode, lightweight confetti.
@@ -32,8 +33,10 @@ class _CelebrationOverlayState extends State<CelebrationOverlay>
     with TickerProviderStateMixin {
   late final AnimationController _scaleCtrl;
   late final AnimationController _fadeCtrl;
+  late final AnimationController _ringCtrl;
   late final Animation<double> _scale;
   late final Animation<double> _fade;
+  late final Animation<double> _ring;
   late final Animation<Offset> _slide;
 
   static const _confettiColors = [
@@ -67,8 +70,18 @@ class _CelebrationOverlayState extends State<CelebrationOverlay>
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut));
 
+    // Expanding ring pulse behind the badge
+    _ringCtrl = AnimationController(
+      duration: const Duration(milliseconds: 900),
+      vsync: this,
+    );
+    _ring = Tween<double>(begin: 0.6, end: 1.6).animate(
+      CurvedAnimation(parent: _ringCtrl, curve: Curves.easeOut),
+    );
+
     _scaleCtrl.forward();
     _fadeCtrl.forward();
+    _ringCtrl.forward();
 
     // Auto dismiss after a short beat
     Future.delayed(const Duration(milliseconds: 1100), () {
@@ -84,6 +97,7 @@ class _CelebrationOverlayState extends State<CelebrationOverlay>
   void dispose() {
     _scaleCtrl.dispose();
     _fadeCtrl.dispose();
+    _ringCtrl.dispose();
     super.dispose();
   }
 
@@ -107,17 +121,17 @@ class _CelebrationOverlayState extends State<CelebrationOverlay>
             child: Container(color: Colors.black.withValues(alpha: 0.35)),
           ),
 
-          // Lightweight confetti (10 particles, single controller)
-          if (widget.type == CelebrationType.confetti ||
-              widget.type == CelebrationType.levelUp ||
-              widget.type == CelebrationType.streakMilestone)
-            ...List.generate(
-              12,
-              (i) => _Confetti(
-                index: i,
-                color: _confettiColors[i % _confettiColors.length],
-              ),
+          // Lightweight confetti — every celebration gets a small burst
+          ...List.generate(
+            widget.type == CelebrationType.correct ||
+                    widget.type == CelebrationType.quickWin
+                ? 8
+                : 14,
+            (i) => _Confetti(
+              index: i,
+              color: _confettiColors[i % _confettiColors.length],
             ),
+          ),
 
           // Center card
           Center(
@@ -145,14 +159,46 @@ class _CelebrationOverlayState extends State<CelebrationOverlay>
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        _buildIcon(),
+                        // Expanding ring pulse behind the badge
+                        SizedBox(
+                          width: 76,
+                          height: 76,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              AnimatedBuilder(
+                                animation: _ring,
+                                builder: (_, __) => Transform.scale(
+                                  scale: _ring.value,
+                                  child: Container(
+                                    width: 76,
+                                    height: 76,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: _badgeColor().withValues(
+                                            alpha: (0.4 *
+                                                    (1.6 - _ring.value) /
+                                                    1.0)
+                                                .clamp(0.0, 0.4)),
+                                        width: 2.5,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              _buildIcon(),
+                            ],
+                          ),
+                        ),
                         const SizedBox(height: 14),
                         Text(
                           _getMessage(),
-                          style: TextStyle(
-                            fontSize:   22,
-                            fontWeight:  FontWeight.bold,
+                          style: GoogleFonts.playfairDisplay(
+                            fontSize:   26,
+                            fontWeight:  FontWeight.w700,
                             color:      textColor,
+                            letterSpacing: 0.3,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -177,6 +223,20 @@ class _CelebrationOverlayState extends State<CelebrationOverlay>
         ],
       ),
     );
+  }
+
+  Color _badgeColor() {
+    switch (widget.type) {
+      case CelebrationType.correct:
+      case CelebrationType.quickWin:
+        return _kGreen;
+      case CelebrationType.levelUp:
+        return _kAmber;
+      case CelebrationType.streakMilestone:
+        return _kOrange;
+      case CelebrationType.confetti:
+        return _kGold;
+    }
   }
 
   Widget _buildIcon() {

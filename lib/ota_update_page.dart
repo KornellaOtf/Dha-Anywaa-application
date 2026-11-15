@@ -295,7 +295,7 @@ class _OtaUpdatePageState extends State<OtaUpdatePage> {
       child: switch (dl.phase) {
         OtaPhase.running => _outlined('Cancel download', () async {
             await _ota.cancelDownload();
-            if (context.mounted) Navigator.pop(context);
+            if (mounted) Navigator.pop(context);
           }),
         OtaPhase.success => Column(
             children: [
@@ -423,18 +423,24 @@ class _OtaUpdatePageState extends State<OtaUpdatePage> {
   Widget _primary(String label, VoidCallback onTap) => SizedBox(
         width: double.infinity,
         height: 52,
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: kGreen,
-            foregroundColor: Colors.white,
-            elevation: 0,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: const [kShadowBtn],
           ),
-          onPressed: onTap,
-          child: Text(label,
-              style: const TextStyle(
-                  fontSize: 16, fontWeight: FontWeight.w700)),
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: kGreen,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
+            ),
+            onPressed: onTap,
+            child: Text(label,
+                style: const TextStyle(
+                    fontSize: 16, fontWeight: FontWeight.w800)),
+          ),
         ),
       );
 
@@ -443,26 +449,31 @@ class _OtaUpdatePageState extends State<OtaUpdatePage> {
         height: 52,
         child: OutlinedButton(
           style: OutlinedButton.styleFrom(
-            foregroundColor: kGreen,
-            side: const BorderSide(color: kGreen),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            foregroundColor: context.c.textSub,
+            side: BorderSide(color: context.c.border, width: 1.4),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16)),
           ),
           onPressed: onTap,
           child: Text(label,
               style: const TextStyle(
-                  fontSize: 16, fontWeight: FontWeight.w700)),
+                  fontSize: 15, fontWeight: FontWeight.w700)),
         ),
       );
 
-  Widget _plain(String label, VoidCallback onTap) => TextButton(
-        style: TextButton.styleFrom(foregroundColor: kGreen),
-        onPressed: onTap,
-        child: Padding(
-          padding: const EdgeInsets.only(top: 4),
+  Widget _plain(String label, VoidCallback onTap) => SizedBox(
+        width: double.infinity,
+        height: 46,
+        child: TextButton(
+          style: TextButton.styleFrom(
+            foregroundColor: context.c.textSub,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14)),
+          ),
+          onPressed: onTap,
           child: Text(label,
               style: const TextStyle(
-                  fontSize: 15, fontWeight: FontWeight.w700)),
+                  fontSize: 14.5, fontWeight: FontWeight.w600)),
         ),
       );
 }
