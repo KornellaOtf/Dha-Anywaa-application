@@ -23,11 +23,16 @@ class DailyFivePage extends StatefulWidget {
   /// Display title for custom sessions (e.g. 'Random Words').
   final String? sessionTitle;
 
+  /// Exercise format: 'picture' (image → Anywaa), 'meaning' (English → Anywaa),
+  /// 'reverse' (Anywaa → English), or 'mixed' (alternates picture/meaning).
+  final String exercise;
+
   const DailyFivePage({
     Key? key,
     required this.allWords,
     this.sessionWords,
     this.sessionTitle,
+    this.exercise = 'picture',
   }) : super(key: key);
 
   @override
@@ -157,13 +162,20 @@ class _DailyFivePageState extends State<DailyFivePage>
 
   // ── Wrong-choice picker: prefer different category ────────────────────────
 
+  /// Exercise type for the current question ('mixed' alternates per index).
+  String get _currentExercise {
+    if (widget.exercise != 'mixed') return widget.exercise;
+    return _currentIndex.isEven ? 'picture' : 'meaning';
+  }
+
   String _pickWrongChoice(WordData word) {
     final pool = widget.allWords.where((w) => w.id != word.id).toList()
       ..shuffle();
 
     // Prefer a word from a different category to avoid easy category cues
     final diffCat = pool.where((w) => w.category != word.category).toList();
-    return diffCat.isNotEmpty ? diffCat.first.anywaa : pool.first.anywaa;
+    final pick = diffCat.isNotEmpty ? diffCat.first : pool.first;
+    return _currentExercise == 'reverse' ? pick.english : pick.anywaa;
   }
 
   // ── Answer handling ───────────────────────────────────────────────────────
@@ -180,7 +192,7 @@ class _DailyFivePageState extends State<DailyFivePage>
       wordId:         word.id,
       correct:        correct,
       responseTimeMs: responseMs,
-      questionType:   'picture_to_word',
+      questionType:   _currentExercise,
     );
 
     // Log to analytics
@@ -443,6 +455,7 @@ class _DailyFivePageState extends State<DailyFivePage>
   // ── Question card: image + prompt ─────────────────────────────────────────
 
   Widget _buildCard(WordData word) {
+    final ex = _currentExercise;
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
       child: ScaleTransition(
@@ -464,47 +477,86 @@ class _DailyFivePageState extends State<DailyFivePage>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const SizedBox(height: 28),
-              const Text(
-                'What is this in Dha Anywaa?',
-                style: TextStyle(
+              Text(
+                ex == 'reverse'
+                    ? 'What does this mean?'
+                    : ex == 'meaning'
+                        ? 'What is "${word.english}" in Dha Anywaa?'
+                        : 'What is this in Dha Anywaa?',
+                style: const TextStyle(
                   fontSize:   15,
                   color:      Colors.black54,
                   fontWeight: FontWeight.w500,
                 ),
               ),
               const SizedBox(height: 20),
-              Hero(
-                tag: word.id,
-                child: Container(
-                  width:  180,
-                  height: 180,
-                  decoration: BoxDecoration(
-                    color:        Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Image.asset(
-                      word.imageUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Icon(
-                        Icons.image_not_supported_rounded,
-                        size:  64,
-                        color: Colors.grey.shade400,
+              if (ex == 'picture') ...[
+                Hero(
+                  tag: word.id,
+                  child: Container(
+                    width:  180,
+                    height: 180,
+                    decoration: BoxDecoration(
+                      color:        Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.asset(
+                        word.imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Icon(
+                          Icons.image_not_supported_rounded,
+                          size:  64,
+                          color: Colors.grey.shade400,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                word.english,
-                style: const TextStyle(
-                  fontSize:   22,
-                  fontWeight: FontWeight.bold,
-                  color:      Color(0xFF1B2E1A),
+                const SizedBox(height: 16),
+                Text(
+                  word.english,
+                  style: const TextStyle(
+                    fontSize:   22,
+                    fontWeight: FontWeight.bold,
+                    color:      Color(0xFF1B2E1A),
+                  ),
                 ),
-              ),
+              ] else ...[
+                Container(
+                  width:  180,
+                  height: 180,
+                  decoration: BoxDecoration(
+                    color:        kGreen.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        ex == 'reverse' ? word.anywaa : word.english,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize:   30,
+                          fontWeight: FontWeight.w800,
+                          color:      Color(0xFF1B2E1A),
+                          height:     1.2,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  ex == 'reverse' ? 'Anywaa word' : 'English meaning',
+                  style: const TextStyle(
+                    fontSize:   13,
+                    fontWeight: FontWeight.w500,
+                    color:      Colors.black38,
+                  ),
+                ),
+              ],
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -541,7 +593,8 @@ class _DailyFivePageState extends State<DailyFivePage>
   Widget _buildChoices(WordData word) {
     // Randomly place correct answer in top or bottom slot
     final rand    = math.Random();
-    final correct = word.anywaa;
+    final ex      = _currentExercise;
+    final correct = ex == 'reverse' ? word.english : word.anywaa;
     final wrong   = _wrongChoice ?? _pickWrongChoice(word);
     final topIsCorrect = rand.nextBool();
 
@@ -594,9 +647,9 @@ class _DailyFivePageState extends State<DailyFivePage>
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  word.anywaa,
+                  '${word.anywaa}  ·  ${word.english}',
                   style: const TextStyle(
-                    fontSize:   20,
+                    fontSize:   18,
                     fontWeight: FontWeight.w700,
                     color:      Colors.white,
                   ),

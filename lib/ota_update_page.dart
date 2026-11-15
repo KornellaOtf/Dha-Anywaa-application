@@ -293,8 +293,9 @@ class _OtaUpdatePageState extends State<OtaUpdatePage> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
       child: switch (dl.phase) {
-        OtaPhase.running => _outlined('Cancel download', () {
-            Navigator.pop(context);
+        OtaPhase.running => _outlined('Cancel download', () async {
+            await _ota.cancelDownload();
+            if (context.mounted) Navigator.pop(context);
           }),
         OtaPhase.success => Column(
             children: [

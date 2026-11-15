@@ -298,7 +298,7 @@ class _PracticeLearnShellState extends State<PracticeLearnShell> {
 
   // ── Practice session launchers ────────────────────────────────────────────
 
-  void _openPractice(List<WordData> words, String title) {
+  void _openPractice(List<WordData> words, String title, String exercise) {
     if (words.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No words to practice yet — try Daily 5 first!')),
@@ -312,6 +312,7 @@ class _PracticeLearnShellState extends State<PracticeLearnShell> {
           allWords:     _allWords,
           sessionWords: words,
           sessionTitle: title,
+          exercise:     exercise,
         ),
       ),
     );
@@ -319,12 +320,12 @@ class _PracticeLearnShellState extends State<PracticeLearnShell> {
 
   void _openRandomWords() {
     final pool = List<WordData>.from(_allWords)..shuffle(math.Random());
-    _openPractice(pool.take(10).toList(), 'Random Words');
+    _openPractice(pool.take(10).toList(), 'Random Words', 'picture');
   }
 
   void _openLongSession() {
     final pool = List<WordData>.from(_allWords)..shuffle(math.Random());
-    _openPractice(pool.take(20).toList(), 'Long Session');
+    _openPractice(pool.take(20).toList(), 'Long Session', 'mixed');
   }
 
   Future<void> _openMistakes() async {
@@ -340,7 +341,7 @@ class _PracticeLearnShellState extends State<PracticeLearnShell> {
       });
     final ids = struggling.map((s) => s.wordId).toSet();
     final words = _allWords.where((w) => ids.contains(w.id)).toList();
-    _openPractice(words.take(10).toList(), 'Mistakes Review');
+    _openPractice(words.take(10).toList(), 'Mistakes Review', 'meaning');
   }
 
   Future<void> _openSavedWords() async {
@@ -351,7 +352,7 @@ class _PracticeLearnShellState extends State<PracticeLearnShell> {
       ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
     final ids = started.map((s) => s.wordId).toSet();
     final words = _allWords.where((w) => ids.contains(w.id)).toList();
-    _openPractice(words.take(15).toList(), 'Saved Words');
+    _openPractice(words.take(15).toList(), 'Saved Words', 'reverse');
   }
 
   void _showNotificationsSheet() {
@@ -476,25 +477,25 @@ class PracticePage extends StatelessWidget {
         ExploreRow(
           icon: Icons.casino_outlined,
           title: 'Random Words',
-          subtitle: 'Practice mixed words',
+          subtitle: 'Picture quiz — mixed words',
           onTap: onRandom,
         ),
         ExploreRow(
           icon: Icons.edit_outlined,
           title: 'Mistakes',
-          subtitle: 'Review words you got wrong',
+          subtitle: 'English → Anywaa review',
           onTap: onMistakes,
         ),
         ExploreRow(
           icon: Icons.bookmark,
           title: 'Saved Words',
-          subtitle: 'Words you\'ve started learning',
+          subtitle: 'Anywaa → English recall',
           onTap: onSaved,
         ),
         ExploreRow(
           icon: Icons.workspace_premium_outlined,
           title: 'Long Session',
-          subtitle: 'Full length practice session',
+          subtitle: 'Mixed quiz — full session',
           onTap: onLongSession,
         ),
       ],

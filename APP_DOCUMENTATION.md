@@ -7,7 +7,7 @@
 - **App name:** Dha Anywaa
 - **Dart package:** `dha_anywaaa`
 - **Android application id:** `com.kornellaotf.learn_dha_anywaa`
-- **Current version:** `1.9.9+2195` (see `pubspec.yaml` and `manifest.json`)
+- **Current version:** `1.9.10+2196` (see `pubspec.yaml` and `manifest.json`)
 - **Developer:** Kornella Otf — kornellaotf@gmail.com
 - **Repository:** https://github.com/KornellaOtf/Dha-Anywaa-application
 - **Primary platform:** Android · also builds/runs on Linux desktop
@@ -305,4 +305,4 @@ includes Linux settings; `zonedSchedule` is Android-only.
 
 ---
 
-*Last updated for v1.9.9 (build 2195).*
+*Last updated for v1.9.10 (build 2196).*

@@ -182,52 +182,74 @@ class _CelebrationOverlayState extends State<CelebrationOverlay>
   Widget _buildIcon() {
     switch (widget.type) {
       case CelebrationType.correct:
-        return Container(
-          width: 64, height: 64,
-          decoration: BoxDecoration(
-            color: _kGreen.withValues(alpha: 0.12),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(Icons.check_rounded, size: 36, color: _kGreen),
-        );
-      case CelebrationType.levelUp:
-        return Container(
-          width: 64, height: 64,
-          decoration: BoxDecoration(
-            color: _kAmber.withValues(alpha: 0.15),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(Icons.emoji_events_rounded, size: 36, color: _kAmber),
-        );
-      case CelebrationType.streakMilestone:
-        return Container(
-          width: 64, height: 64,
-          decoration: BoxDecoration(
-            color: _kOrange.withValues(alpha: 0.15),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(Icons.local_fire_department_rounded,
-              size: 36, color: _kOrange),
-        );
-      case CelebrationType.confetti:
-        return Container(
-          width: 64, height: 64,
-          decoration: BoxDecoration(
-            color: _kGold.withValues(alpha: 0.15),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(Icons.celebration_rounded, size: 36, color: _kGold),
-        );
       case CelebrationType.quickWin:
         return Container(
-          width: 64, height: 64,
+          width: 76, height: 76,
           decoration: BoxDecoration(
-            color: _kGreen.withValues(alpha: 0.12),
             shape: BoxShape.circle,
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF2E7D5B), _kGreen],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: _kGreen.withValues(alpha: 0.35),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
-          child: const Icon(Icons.check_rounded, size: 36, color: _kGreen),
+          child: Container(
+            margin: const EdgeInsets.all(5),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 1.5),
+            ),
+            child: const Icon(Icons.check_rounded, size: 38, color: Colors.white),
+          ),
         );
+      case CelebrationType.levelUp:
+        return _filledBadge(_kAmber, Icons.emoji_events_rounded);
+      case CelebrationType.streakMilestone:
+        return _filledBadge(_kOrange, Icons.local_fire_department_rounded);
+      case CelebrationType.confetti:
+        return _filledBadge(_kGold, Icons.celebration_rounded);
     }
+  }
+
+  /// Filled circular badge with a soft glow and inner ring — used by the
+  /// level-up, streak and confetti celebrations.
+  Widget _filledBadge(Color color, IconData icon) {
+    return Container(
+      width: 76, height: 76,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.lerp(color, Colors.white, 0.25)!,
+            color,
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.35),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Container(
+        margin: const EdgeInsets.all(5),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 1.5),
+        ),
+        child: Icon(icon, size: 36, color: Colors.white),
+      ),
+    );
   }
 
   String _getMessage() {

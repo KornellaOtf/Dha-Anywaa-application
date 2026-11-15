@@ -217,6 +217,19 @@ class OtaService {
 
   OtaCheckResult? _pendingResult;
 
+  /// Cancels an in-progress download and resets the UI state.
+  /// Safe to call when no download is running.
+  Future<void> cancelDownload() async {
+    try {
+      await FileDownloader().cancelTaskWithId(_taskId);
+    } catch (_) {}
+    try {
+      await NotificationService().cancelDownloadProgress();
+    } catch (_) {}
+    download.value = const OtaDownloadState(OtaPhase.idle, 0, '');
+    _active = false;
+  }
+
   Future<void> _enqueue(OtaCheckResult result,
       {bool showNotifications = true}) async {
     try {

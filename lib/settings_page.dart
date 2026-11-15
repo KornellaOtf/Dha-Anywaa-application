@@ -346,10 +346,26 @@ class _SettingsPageState extends State<SettingsPage> {
 
   // ── Reminder time picker ──────────────────────────────────────────────────
   Future<void> _pickReminderTime() async {
+    final c = context.c;
     final picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay(hour: _reminderHour, minute: 0),
       helpText: 'Choose your reminder time',
+      builder: (ctx, child) => TimePickerTheme(
+        data: TimePickerThemeData(
+          backgroundColor: c.card,
+          hourMinuteColor: c.card,
+          hourMinuteTextColor: c.text,
+          dayPeriodColor: c.card,
+          dayPeriodTextColor: c.text,
+          dialHandColor: kGreen,
+          dialBackgroundColor: c.bg,
+          dialTextColor: c.text,
+          entryModeIconColor: kGreen,
+          helpTextStyle: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: c.text),
+        ),
+        child: child!,
+      ),
     );
     if (picked != null && mounted) {
       // Make sure notifications are still enabled and permission is granted

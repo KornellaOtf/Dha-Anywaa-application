@@ -51,7 +51,7 @@ Best wishes!
 Get the latest version from [Releases](https://github.com/KornellaOtf/Dha-Anywaa-application/releases/latest).
 The app checks for updates automatically (about every 6 hours when online).
 
-**Current version:** 1.9.9
+**Current version:** 1.9.10
 
 Full feature, architecture, and release documentation:
 [APP_DOCUMENTATION.md](APP_DOCUMENTATION.md)

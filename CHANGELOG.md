@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.9.10 (build 2196)
+
+Released: 2026-11-14
+
+### Added
+- Practice modes now use different exercise formats: Random Words (picture quiz), Mistakes (English → Anywaa), Saved Words (Anywaa → English recall), Long Session (mixed quiz)
+
+### Changed
+- Celebration popups redesigned: filled gradient badges with glow for Perfect, Level Up, Streak, and Confetti
+- Reminder time picker now matches the app theme
+- "Cancel download" on the update screen now truly cancels the background download
+
 ## 1.9.9 (build 2195)
 
 Released: 2026-11-14
