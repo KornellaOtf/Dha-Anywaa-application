@@ -20,7 +20,7 @@ class AnywaaAiPage extends StatefulWidget {
 
 class _Msg {
   final bool fromUser;
-  final String text;
+  String text;
   final AnywaaAnswer? answer;
   _Msg.user(this.text) : fromUser = true, answer = null;
   _Msg.bot(this.text, [this.answer]) : fromUser = false;
@@ -84,20 +84,41 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
   }
 
   Future<void> _generateReply(String text) async {
-    // Groq AI answers first; the offline dictionary engine is the fallback
-    // for offline use or any API failure.
-    final groq = await GroqService.instance.chat(text, _history);
+    // AI answers first (streamed token-by-token); the offline dictionary
+    // engine is the fallback for offline use or any API failure.
+    _Msg? streamMsg;
+    final groq = await GroqService.instance.chatStream(
+      text,
+      _history,
+      onDelta: (partial) {
+        if (!mounted) return;
+        setState(() {
+          _thinking = false;
+          if (streamMsg == null) {
+            streamMsg = _Msg.bot(partial);
+            _msgs.add(streamMsg!);
+          } else {
+            streamMsg!.text = partial;
+          }
+        });
+        _scrollDown();
+      },
+    );
     if (!mounted) return;
 
     if (groq != null) {
       _history.add({'role': 'user', 'content': text});
       _history.add({'role': 'assistant', 'content': groq.text});
-      if (_history.length > 20) {
-        _history.removeRange(0, _history.length - 20);
+      if (_history.length > 12) {
+        _history.removeRange(0, _history.length - 12);
       }
       setState(() {
         _thinking = false;
-        _msgs.add(_Msg.bot(groq.text));
+        if (streamMsg != null) {
+          streamMsg!.text = groq.text;
+        } else {
+          _msgs.add(_Msg.bot(groq.text));
+        }
       });
       _scrollDown();
       return;
@@ -107,8 +128,8 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
     if (!mounted) return;
     _history.add({'role': 'user', 'content': text});
     _history.add({'role': 'assistant', 'content': dictResult.text});
-    if (_history.length > 20) {
-      _history.removeRange(0, _history.length - 20);
+    if (_history.length > 12) {
+      _history.removeRange(0, _history.length - 12);
     }
     setState(() {
       _thinking = false;

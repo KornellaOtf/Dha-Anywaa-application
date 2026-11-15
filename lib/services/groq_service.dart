@@ -131,6 +131,127 @@ class GroqService {
     }
   }
 
+  /// Streaming variant of [chat]. [onDelta] receives the accumulated,
+  /// display-cleaned text on every chunk so the UI can render tokens as
+  /// they arrive. Falls back to the non-stream request per provider when
+  /// the stream cannot be established.
+  Future<GroqReply?> chatStream(
+    String userText,
+    List<Map<String, String>> history, {
+    void Function(String accumulated)? onDelta,
+  }) async {
+    if (!isConfigured) return null;
+
+    if (_isIdentityQuestion(userText)) {
+      const reply = GroqReply(
+        'I am Anywaa AI, your guide to the Anywaa people, Gambella, and their culture. '
+        'What would you like to explore today?',
+      );
+      onDelta?.call(reply.text);
+      return reply;
+    }
+
+    try {
+      final verified   = await _verifiedEntries(userText);
+      final community  = await _communityNotes();
+      final localBlock = GroqPrompts.localData(verified, community);
+
+      final messages = <Map<String, String>>[
+        {'role': 'system', 'content': GroqPrompts.main},
+        {'role': 'system', 'content': localBlock},
+        {'role': 'user', 'content': 'Who are you?'},
+        {'role': 'assistant',
+         'content': 'I am Anywaa AI, your guide to the Anywaa people, Gambella, and their culture. What would you like to explore today?'},
+        {'role': 'user', 'content': 'What is your name?'},
+        {'role': 'assistant',
+         'content': 'My name is Anywaa AI. I am here to help you learn about the Anywaa heritage and practice Dha Anywaa.'},
+        ...history,
+        {'role': 'user', 'content': userText},
+      ];
+
+      final providers = _activeProviders;
+      if (providers.isEmpty) return null;
+
+      for (final prov in providers) {
+        final streamed = await _requestStream(prov, messages, onDelta);
+        if (streamed != null) return streamed;
+        // Stream failed before producing anything — try non-stream once.
+        final reply = await _request(prov, messages, userText);
+        if (reply != null) {
+          onDelta?.call(reply.text);
+          return reply;
+        }
+      }
+      return null;
+    } catch (e) {
+      debugPrint('AI stream: request failed: $e');
+      return null;
+    }
+  }
+
+  /// POST with `stream: true`, parsing OpenAI-style SSE chunks.
+  /// Returns the post-processed reply, or null if nothing usable arrived.
+  Future<GroqReply?> _requestStream(
+    ({String endpoint, String model, String key, bool reasoningOff}) prov,
+    List<Map<String, String>> messages,
+    void Function(String accumulated)? onDelta,
+  ) async {
+    final client = http.Client();
+    try {
+      final body = <String, dynamic>{
+        'model': prov.model,
+        'messages': messages,
+        'temperature': 0.3,
+        'max_tokens': 512,
+        'stream': true,
+      };
+      if (prov.reasoningOff) {
+        body['chat_template_kwargs'] = {'enable_thinking': false};
+      }
+      final req = http.Request('POST', Uri.parse(prov.endpoint))
+        ..headers.addAll({
+          'Authorization': 'Bearer ${prov.key}',
+          'Content-Type': 'application/json',
+        })
+        ..body = jsonEncode(body);
+
+      final res = await client.send(req).timeout(_timeout);
+      if (res.statusCode != 200) {
+        debugPrint('AI stream: HTTP ${res.statusCode} from ${prov.endpoint}');
+        await res.stream.drain<void>();
+        return null;
+      }
+
+      var acc = '';
+      await for (final line in res.stream
+          .transform(utf8.decoder)
+          .transform(const LineSplitter())) {
+        if (!line.startsWith('data:')) continue;
+        final payload = line.substring(5).trim();
+        if (payload == '[DONE]') break;
+        try {
+          final j = jsonDecode(payload) as Map<String, dynamic>;
+          final choices = j['choices'] as List?;
+          if (choices == null || choices.isEmpty) continue;
+          final delta = (choices.first as Map?)?['delta'];
+          final piece = delta is Map ? delta['content'] as String? : null;
+          if (piece != null && piece.isNotEmpty) {
+            acc += piece;
+            onDelta?.call(_cleanDisplay(acc));
+          }
+        } catch (_) {}
+      }
+
+      if (acc.trim().isEmpty) return null;
+      return _postProcess(acc);
+    } catch (e) {
+      debugPrint('AI stream failed (${prov.endpoint}): $e');
+      return null;
+    } finally {
+      client.close();
+    }
+  }
+
   Future<GroqReply?> _request(
     ({String endpoint, String model, String key, bool reasoningOff}) prov,
     List<Map<String, String>> messages,
@@ -338,10 +459,14 @@ class GroqService {
       }
     }
 
+    return GroqReply(_cleanDisplay(text), contribution);
+  }
 
-    // Style backstop: no em/en dashes, no markdown, no emoji or arrow
-    // glyphs, no leaked model names.
-    text = text
+  /// Cosmetic cleaning safe to run on partial streamed text: no em/en
+  /// dashes, no markdown, no emoji or arrow glyphs, no leaked model names.
+  /// Does NOT touch [[SAVE: ...]] tags — that only happens once, at the
+  /// end, in [_postProcess].
+  String _cleanDisplay(String text) => text
         .replaceAll('—', ',')
         .replaceAll('–', ',')
         .replaceAll('**', '')
@@ -358,9 +483,6 @@ class GroqService {
         .replaceAll(RegExp(r'\bGroq\b', caseSensitive: false), 'Anywaa AI')
         .replaceAll(RegExp(r'\bChatGPT\b', caseSensitive: false), 'Anywaa AI')
         .replaceAll(RegExp(r'\bClaude\b', caseSensitive: false), 'Anywaa AI');
-
-    return GroqReply(text, contribution);
-  }
 
   bool _isIdentityQuestion(String q) {
     final l = q.toLowerCase();
