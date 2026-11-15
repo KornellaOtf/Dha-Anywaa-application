@@ -167,7 +167,7 @@ class AppTheme {
     );
 
     // Serif display face for titles and the big Anywaa words.
-    return sans.copyWith(
+    final themed = sans.copyWith(
       displayLarge: GoogleFonts.playfairDisplay(
           fontSize: 40, fontWeight: FontWeight.w700, color: text),
       displayMedium: GoogleFonts.playfairDisplay(
@@ -176,6 +176,28 @@ class AppTheme {
           fontSize: 28, fontWeight: FontWeight.w700, color: text),
       headlineMedium: GoogleFonts.playfairDisplay(
           fontSize: 24, fontWeight: FontWeight.w700, color: text),
+    );
+
+    // Charis SIL fallback so Anywaa letters (ŋ, ɔ, ə, ӓ, ӧ) never render
+    // as tofu boxes or an inconsistent system font.
+    TextStyle? fb(TextStyle? s) =>
+        s?.copyWith(fontFamilyFallback: const ['CharisSIL']);
+    return themed.copyWith(
+      displayLarge: fb(themed.displayLarge),
+      displayMedium: fb(themed.displayMedium),
+      displaySmall: fb(themed.displaySmall),
+      headlineLarge: fb(themed.headlineLarge),
+      headlineMedium: fb(themed.headlineMedium),
+      headlineSmall: fb(themed.headlineSmall),
+      titleLarge: fb(themed.titleLarge),
+      titleMedium: fb(themed.titleMedium),
+      titleSmall: fb(themed.titleSmall),
+      bodyLarge: fb(themed.bodyLarge),
+      bodyMedium: fb(themed.bodyMedium),
+      bodySmall: fb(themed.bodySmall),
+      labelLarge: fb(themed.labelLarge),
+      labelMedium: fb(themed.labelMedium),
+      labelSmall: fb(themed.labelSmall),
     );
   }
 

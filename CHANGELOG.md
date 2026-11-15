@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.0.1 (build 2201)
+
+Released: 2026-11-15
+
+### Fixed
+- Anywaa words now render correctly everywhere: bundled Charis SIL font covers extended Anywaa letters that previously showed as boxes
+- AI replies are cleaned of markdown symbols, emoji, and arrows before display
+
+### Added
+- LANGUAGE RULES for Anywaa AI: English default, no unprompted Dha Anywaa, proper names allowed
+
 ## 2.0.0 (build 2200)
 
 Released: 2026-11-14

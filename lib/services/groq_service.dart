@@ -260,10 +260,20 @@ class GroqService {
     }
 
 
-    // Style backstop: no em/en dashes, no leaked model names.
+    // Style backstop: no em/en dashes, no markdown, no emoji or arrow
+    // glyphs, no leaked model names.
     text = text
         .replaceAll('—', ',')
         .replaceAll('–', ',')
+        .replaceAll('**', '')
+        .replaceAll('__', '')
+        .replaceAll('`', '')
+        .replaceAll(RegExp(r'\n#{1,6}\s*'), '\n')
+        .replaceAll(RegExp(
+            '[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}'
+            '\u{FE0F}\u{2190}-\u{21FF}\u{2300}-\u{23FF}]',
+            unicode: true),
+            '')
         .replaceAll(RegExp(r'\bLlama\b', caseSensitive: false), 'Anywaa AI')
         .replaceAll(RegExp(r'\bMeta AI\b', caseSensitive: false), 'Anywaa AI')
         .replaceAll(RegExp(r'\bGroq\b', caseSensitive: false), 'Anywaa AI')
