@@ -8,7 +8,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:dha_anywaaa/secrets.dart';
 import 'package:dha_anywaaa/services/anywaa_ai_service.dart';
+import 'package:dha_anywaaa/services/gamification_service.dart';
 import 'package:dha_anywaaa/services/groq_prompts.dart';
+import 'package:dha_anywaaa/services/learning_engine.dart';
+import 'package:dha_anywaaa/services/word_aggregator.dart';
 
 /// Result of a Groq chat call. [text] is display-ready (tags stripped,
 /// dashes cleaned). [contribution] is a non-null community note captured
@@ -48,6 +51,8 @@ class GroqService {
   static const _maxNotes = 200;
 
   List<Map<String, dynamic>>? _facts;
+  List<Map<String, String>>? _bible;
+  Future<void>? _bibleLoad;
 
   bool get isConfigured =>
       _nvidiaKey.isNotEmpty ||
@@ -325,6 +330,129 @@ class GroqService {
     await p.setString(_kCommunityNotes, jsonEncode(list));
   }
 
+  /// Preloads local knowledge (facts, Bible index) after first frame so
+  /// the first AI reply isn't delayed by asset parsing.
+  Future<void> warmUp() async {
+    await Future.wait([_ensureFacts(), _ensureBible()]);
+  }
+
+  // ── Bible grounding ───────────────────────────────────────────────────────
+  // assets/bible.json is ~11 MB / 31k verses. Parsed once, cached for the
+  // session. Only the English text is injected — the Anywaa text stays out
+  // of prompts to respect the no-Dha-Anywaa-speech rule.
+
+  static const _bibleAsset = 'assets/bible.json';
+
+  Future<void> _ensureBible() {
+    return _bibleLoad ??= _loadBible();
+  }
+
+  Future<void> _loadBible() async {
+    try {
+      final raw = await rootBundle.loadString(_bibleAsset);
+      final list = jsonDecode(raw) as List;
+      _bible = list
+          .whereType<Map<String, dynamic>>()
+          .map((v) => {
+                'ref': '${v['book']} ${v['chapter']}:${v['verse']}',
+                'en': (v['english'] ?? '').toString(),
+                'hay':
+                    '${v['book']} ${v['chapter']} ${v['verse']} ${v['english'] ?? ''}'
+                        .toLowerCase(),
+              })
+          .where((v) => (v['en'] as String).isNotEmpty)
+          .toList();
+    } catch (e) {
+      debugPrint('AI: bible load failed: $e');
+      _bible = const [];
+    }
+  }
+
+  static const _bibleKeywords =
+      r'\b(bible|god|jesus|christ|lord|verse|verses|chapter|scripture|'
+      r'genesis|exodus|psalm|psalms|proverb|proverbs|gospel|testament|'
+      r'faith|pray|prayer|church|adam|eve|noah|abraham|moses|david|'
+      r'solomon|cross|resurrection|holy spirit|sin|heaven|hell|angel|'
+      r'creation|ten commandments|ark|egypt|israel)\b';
+
+  static const _queryStopwords = {
+    'the', 'and', 'for', 'are', 'but', 'not', 'you', 'your', 'yours',
+    'what', 'when', 'where', 'which', 'who', 'whom', 'how', 'why',
+    'can', 'could', 'would', 'should', 'tell', 'about', 'with', 'from',
+    'that', 'this', 'have', 'has', 'had', 'does', 'did', 'was', 'were',
+    'anywaa', 'gambella', 'dha',
+  };
+
+  /// Keyword-scored Bible verse search. Returns up to 4 matching verses
+  /// with references, or '' when the query isn't Bible-related.
+  Future<String> _bibleVerses(String query) async {
+    await _ensureBible();
+    final verses = _bible;
+    if (verses == null || verses.isEmpty) return '';
+    final q = query.toLowerCase();
+    if (!RegExp(_bibleKeywords).hasMatch(q)) return '';
+
+    final terms = q
+        .split(RegExp('[^a-zA-Z]+'))
+        .where((t) => t.length >= 3 && !_queryStopwords.contains(t))
+        .toSet()
+        .toList();
+    if (terms.isEmpty) return '';
+
+    final scored = <MapEntry<int, Map<String, String>>>[];
+    for (final v in verses) {
+      final hay = v['hay']!;
+      var score = 0;
+      for (final t in terms) {
+        if (hay.contains(t)) score++;
+      }
+      // Exact book-name hit (e.g. "psalm 23") scores heavily.
+      for (final book in const [
+        'genesis', 'exodus', 'leviticus', 'numbers', 'deuteronomy',
+        'joshua', 'judges', 'ruth', 'samuel', 'kings', 'chronicles',
+        'ezra', 'nehemiah', 'esther', 'job', 'psalm', 'proverbs',
+        'ecclesiastes', 'song of solomon', 'isaiah', 'jeremiah',
+        'lamentations', 'ezekiel', 'daniel', 'hosea', 'joel', 'amos',
+        'obadiah', 'jonah', 'micah', 'nahum', 'habakkuk', 'zephaniah',
+        'haggai', 'zechariah', 'malachi', 'matthew', 'mark', 'luke',
+        'john', 'acts', 'romans', 'corinthians', 'galatians',
+        'ephesians', 'philippians', 'colossians', 'thessalonians',
+        'timothy', 'titus', 'philemon', 'hebrews', 'james', 'peter',
+        'jude', 'revelation',
+      ]) {
+        if (hay.startsWith(book) && q.contains(book)) score += 10;
+      }
+      if (score > 0) scored.add(MapEntry(score, v));
+    }
+    if (scored.isEmpty) return '';
+    scored.sort((a, b) => b.key.compareTo(a.key));
+
+    final buf = StringBuffer();
+    for (final e in scored.take(4)) {
+      buf.writeln('- ${e.value['ref']}: ${e.value['en']}');
+    }
+    return buf.toString().trimRight();
+  }
+
+  /// One-line learner status so answers can be personal and encouraging.
+  Future<String> _learnerStatus() async {
+    try {
+      final g = await GamificationService.instance.load();
+      final words = WordAggregator.instance.getAllWords();
+      final due = await LearningEngine.instance
+          .getDueCount(words.map((w) => w.id).toList());
+      final parts = <String>[
+        'level ${GamificationService.levelFromXp(g.xp)}',
+        '${g.streakDays}-day streak',
+        '${g.todayXp}/${g.dailyGoalXp} XP today',
+      ];
+      if (due > 0) parts.add('$due words due for review');
+      return '- LEARNER: ${parts.join(', ')}';
+    } catch (_) {
+      return '';
+    }
+  }
+
   // ── Local data for the knowledge block ────────────────────────────────────
 
   Future<void> _ensureFacts() async {
@@ -372,6 +500,17 @@ class GroqService {
         }
       }
     } catch (_) {}
+
+    // Bible verses for faith/scripture questions.
+    final bible = await _bibleVerses(query);
+    if (bible.isNotEmpty) {
+      lines.add('- BIBLE VERSES (quote exactly, do not change wording):');
+      lines.add(bible);
+    }
+
+    // Personalised learner status.
+    final status = await _learnerStatus();
+    if (status.isNotEmpty) lines.add(status);
 
     return lines.isEmpty ? '(none)' : lines.join('\n');
   }
