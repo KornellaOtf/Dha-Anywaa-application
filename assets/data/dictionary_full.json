@@ -1804,7 +1804,7 @@
      "note": ""
     },
     {
-     "dha": "Yot",
+     "dha": "Joot",
      "en": "Easy / Soft / Simple",
      "pos": "adjective",
      "cat": "adjectives",
@@ -1815,7 +1815,7 @@
      "note": ""
     },
     {
-     "dha": "Yot",
+     "dha": "Joot",
      "en": "Possible",
      "pos": "adjective",
      "cat": "adjectives",
@@ -1826,7 +1826,7 @@
      "note": ""
     },
     {
-     "dha": "Yot",
+     "dha": "Joot",
      "en": "Simple",
      "pos": "adjective",
      "cat": "adjectives",
@@ -1859,12 +1859,12 @@
      "note": ""
     },
     {
-     "dha": "Yöt",
+     "dha": "Joot",
      "en": "Easy",
      "pos": "adjective",
      "cat": "adjectives",
-     "pron": "yoht",
-     "ex_dha": "Lök yöt.",
+     "pron": "joht",
+     "ex_dha": "Lök joot.",
      "ex_en": "The word is easy.",
      "alt": [
       "Soft",
@@ -9173,7 +9173,7 @@
      "note": ""
     },
     {
-     "dha": "Cwiny yot",
+     "dha": "Cwiny joot",
      "en": "Patience",
      "pos": "noun",
      "cat": "emotions",
@@ -20232,7 +20232,7 @@
      "note": "on one occasion"
     },
     {
-     "dha": "Yot",
+     "dha": "Joot",
      "en": "easy / soft",
      "pos": "",
      "cat": "general",
@@ -26683,7 +26683,7 @@
      "pos": "noun",
      "cat": "nature",
      "pron": "kee-dee",
-     "ex_dha": "Kïdï tyë ï yö.",
+     "ex_dha": "Kïdï tyë ï joot.",
      "ex_en": "There is a stone on the path.",
      "alt": [
       "Rock",
@@ -27056,7 +27056,7 @@
      "pos": "noun",
      "cat": "nature",
      "pron": "yoh",
-     "ex_dha": "Yö bar ähïnyä.",
+     "ex_dha": "joot bar ähïnyä.",
      "ex_en": "The road is very far.",
      "alt": [
       "Path",
@@ -36643,7 +36643,7 @@
      "pos": "verb",
      "cat": "verbs",
      "pron": "woh-toh",
-     "ex_dha": "Äwötö ï yö.",
+     "ex_dha": "Äwötö ï joot.",
      "ex_en": "I walk on the path.",
      "alt": [
       "To go",
