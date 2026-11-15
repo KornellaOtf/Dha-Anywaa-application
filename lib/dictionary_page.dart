@@ -602,7 +602,6 @@ class _DictionaryPageState extends State<DictionaryPage> {
   // ── Category grid ─────────────────────────────────────────────────────────
 
   Widget _buildCategoryGrid() {
-    final c = context.c;
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(

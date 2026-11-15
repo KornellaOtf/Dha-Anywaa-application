@@ -56,7 +56,8 @@ class _QuickChallengePageState extends State<QuickChallengePage> {
     
     // Hide celebration after 1 second
     await Future.delayed(const Duration(milliseconds: 1000));
-    
+    if (!mounted) return;
+
     setState(() {
       _showCelebration = false;
       _currentRound++;

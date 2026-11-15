@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// FSRS-6 powered learning engine for Dha Anywaa.
@@ -17,6 +18,7 @@ class LearningEngine {
 
   // ── Storage keys ──────────────────────────────────────────────────────────
   static const _kWordStates     = 'fsrs_word_states_v1';
+  static const _kWordStatesBak  = 'fsrs_word_states_v1_backup';
   static const _kReviewLog      = 'learn_review_log';       // kept for history
   static const _kDailyCompleted = 'learn_daily_completed_date';
   static const _kDailyStreak    = 'learn_daily_streak';
@@ -41,12 +43,44 @@ class LearningEngine {
   // ══════════════════════════════════════════════════════════════════════════
 
   /// Load all word states from storage.
+  /// Falls back to a backup copy if the primary blob is corrupt, and skips
+  /// individual corrupt entries instead of wiping the whole map.
   Future<Map<String, WordState>> loadStates() async {
-    final p   = await SharedPreferences.getInstance();
-    final raw = p.getString(_kWordStates) ?? '{}';
+    final p = await SharedPreferences.getInstance();
+    final states = _decodeStates(p.getString(_kWordStates));
+    if (states.isNotEmpty) return states;
+
+    // Primary missing or fully corrupt — try the backup written by _saveStates.
+    final backupRaw = p.getString(_kWordStatesBak);
+    if (backupRaw != null) {
+      final backup = _decodeStates(backupRaw);
+      if (backup.isNotEmpty) {
+        debugPrint('LearningEngine: restored word states from backup');
+        await _saveStates(backup); // heal the primary key
+        return backup;
+      }
+    }
+    if ((p.getString(_kWordStates) ?? '').isNotEmpty ||
+        (backupRaw ?? '').isNotEmpty) {
+      debugPrint('LearningEngine: word states unrecoverable, starting fresh');
+    }
+    return {};
+  }
+
+  Map<String, WordState> _decodeStates(String? raw) {
+    if (raw == null || raw.isEmpty) return {};
     try {
-      final map = jsonDecode(raw) as Map<String, dynamic>;
-      return map.map((k, v) => MapEntry(k, WordState.fromJson(v)));
+      final map = jsonDecode(raw);
+      if (map is! Map<String, dynamic>) return {};
+      final out = <String, WordState>{};
+      map.forEach((k, v) {
+        try {
+          out[k] = WordState.fromJson(v);
+        } catch (_) {
+          // Skip individually corrupt entries rather than dropping everything.
+        }
+      });
+      return out;
     } catch (_) {
       return {};
     }
@@ -205,6 +239,7 @@ class LearningEngine {
   Future<void> resetAllProgress() async {
     final p = await SharedPreferences.getInstance();
     await p.remove(_kWordStates);
+    await p.remove(_kWordStatesBak);
     await p.remove(_kReviewLog);
     await p.remove(_kDailyCompleted);
   }
@@ -342,7 +377,10 @@ class LearningEngine {
   Future<void> _saveStates(Map<String, WordState> states) async {
     final p   = await SharedPreferences.getInstance();
     final map = states.map((k, v) => MapEntry(k, v.toJson()));
-    await p.setString(_kWordStates, jsonEncode(map));
+    final encoded = jsonEncode(map);
+    await p.setString(_kWordStates, encoded);
+    // Keep a backup copy so a torn write can't wipe all learning progress.
+    await p.setString(_kWordStatesBak, encoded);
   }
 
   Future<void> _logReview({
@@ -357,7 +395,13 @@ class LearningEngine {
   }) async {
     final p    = await SharedPreferences.getInstance();
     final raw  = p.getString(_kReviewLog) ?? '[]';
-    final list = jsonDecode(raw) as List<dynamic>;
+    List<dynamic> list;
+    try {
+      final decoded = jsonDecode(raw);
+      list = decoded is List ? decoded : <dynamic>[];
+    } catch (_) {
+      list = <dynamic>[];
+    }
 
     list.add({
       'ts':              DateTime.now().toIso8601String(),

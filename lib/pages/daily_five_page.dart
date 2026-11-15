@@ -108,8 +108,10 @@ class _DailyFivePageState extends State<DailyFivePage>
           _sessionWords = words;
           _loading      = false;
         });
-        _animateProgress(0, 1 / words.length);
-        _resetQuestionTimer();
+        if (words.isNotEmpty) {
+          _animateProgress(0, 1 / words.length);
+          _resetQuestionTimer();
+        }
       }
       return;
     }
@@ -140,9 +142,11 @@ class _DailyFivePageState extends State<DailyFivePage>
         _sessionWords = words;
         _loading      = false;
       });
-      _animateProgress(0, 1 / words.length);
-      _resetQuestionTimer();
-      AnalyticsService.instance.logDaily5Start();
+      if (words.isNotEmpty) {
+        _animateProgress(0, 1 / words.length);
+        _resetQuestionTimer();
+        AnalyticsService.instance.logDaily5Start();
+      }
     }
   }
 
@@ -232,13 +236,30 @@ class _DailyFivePageState extends State<DailyFivePage>
   void _finishSession() async {
     // Custom practice sessions don't consume the daily Daily 5 slot.
     final isDailyFive = widget.sessionWords == null;
-    if (isDailyFive) await _learning.markDailyCompleted();
-    // Single unified award calculation — all XP flows through one method
-    final award = await _gamification.completeDailyFive(
-      correct: _results.where((r) => r).length,
-      total: _results.length,
-      comboXp: _combo >= 3 ? GamificationService.xpCombo : 0,
-    );
+    if (isDailyFive) {
+      try {
+        await _learning.markDailyCompleted();
+      } catch (e) {
+        debugPrint('DailyFive: markDailyCompleted failed: $e');
+      }
+    }
+
+    // Single unified award calculation — all XP flows through one method.
+    // Never let an award failure strand the user on the last question.
+    GamState award;
+    try {
+      award = await _gamification.completeDailyFive(
+        correct: _results.where((r) => r).length,
+        total: _results.length,
+        comboXp: _combo >= 3 ? GamificationService.xpCombo : 0,
+      );
+    } catch (e) {
+      debugPrint('DailyFive: XP award failed: $e');
+      award = const GamState(
+        xp: 0, streakDays: 0, freezes: 0,
+        lastActiveDay: '', dailyGoalXp: 0, todayXp: 0,
+      );
+    }
 
     // Analytics
     final correctCount = _results.where((r) => r).length;

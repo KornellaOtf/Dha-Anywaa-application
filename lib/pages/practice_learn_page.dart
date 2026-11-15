@@ -279,6 +279,10 @@ class _PracticeLearnShellState extends State<PracticeLearnShell> {
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
           child: FloatingNav(
             index: _index,
+            backgroundColor: context.c.card,
+            selectedColor: context.c.text.withValues(alpha: 0.08),
+            activeColor: context.c.text,
+            inactiveColor: context.c.textSub,
             onTap: (v) => setState(() => _index = v),
             items: const [
               NavItem(Icons.explore_outlined, 'Overview'),

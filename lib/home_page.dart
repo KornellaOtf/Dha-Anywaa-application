@@ -1,17 +1,15 @@
 import 'package:dha_anywaaa/about.dart';
 import 'package:dha_anywaaa/anywaa_ai_page.dart';
 import 'package:dha_anywaaa/components/savedData.dart';
-import 'package:dha_anywaaa/dictionary_coming_soon_page.dart';
+import 'package:dha_anywaaa/dictionary_page.dart';
 import 'package:dha_anywaaa/help.dart';
 import 'package:dha_anywaaa/pages/daily_five_page.dart';
 import 'package:dha_anywaaa/pages/bible_page.dart';
-import 'package:dha_anywaaa/privacy_policy_page.dart';
 import 'package:dha_anywaaa/services/analytics_service.dart';
 import 'package:dha_anywaaa/services/gamification_service.dart';
 import 'package:dha_anywaaa/services/learning_engine.dart';
 import 'package:dha_anywaaa/services/leaderboard_service.dart';
 import 'package:dha_anywaaa/services/ota_service.dart';
-import 'package:dha_anywaaa/services/learning_engine.dart';
 import 'package:dha_anywaaa/services/retention_engine.dart';
 import 'package:dha_anywaaa/services/share_helper.dart';
 import 'package:dha_anywaaa/services/word_aggregator.dart';
@@ -1034,7 +1032,7 @@ class _HomePageState extends State<HomePage> {
               Navigator.pop(context);
               Navigator.push(
                 context,
-                SlideRoute(page: const DictionaryComingSoonPage(), name: 'dictionary_coming_soon'),
+                SlideRoute(page: const DictionaryPage(), name: 'dictionary'),
               );
             }),
             _drawerTile(context, Icons.share_outlined, 'Share Dha Anywaa', () async {

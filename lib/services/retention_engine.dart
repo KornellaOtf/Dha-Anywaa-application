@@ -267,20 +267,6 @@ class RetentionEngine {
     return timeSinceOpen >= comebackWindow;
   }
 
-  /// Grant comeback bonus (call when they open after 3+ days)
-  Future<int> claimComebackBonus() async {
-    final p = await SharedPreferences.getInstance();
-    final eligible = await isComebackEligible();
-    
-    if (!eligible) return 0;
-    
-    // Give them a nice XP bonus
-    const bonusXp = 50;
-    await p.setInt(_kComebackBonusEligible, 0); // Mark as claimed
-    
-    return bonusXp;
-  }
-
   // ══════════════════════════════════════════════════════════════════════════
   // Analytics & Settings
   // ══════════════════════════════════════════════════════════════════════════

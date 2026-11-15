@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.9.9 (build 2195)
+
+Released: 2026-11-14
+
+### Fixed
+- Learning progress can no longer be silently wiped: word states are backed up on every save and automatically restored if the main copy is corrupt
+- Crash fixes: audio playback on the word-reading page, Quick Challenge celebration, and empty practice sessions no longer risk crashes
+- Session completion can no longer get stuck if saving XP fails
+- Practice tab navigation bar now adapts to dark mode
+
+### Added
+- Dictionary is now fully functional: browse and search 213+ Anywaa words with examples, pronunciation, and categories
+
+### Changed
+- Privacy policy now lists all app permissions (notifications, reminders, update downloads)
+
 ## 1.9.8 (build 2194)
 
 Released: 2026-11-14

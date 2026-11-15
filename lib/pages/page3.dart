@@ -85,6 +85,7 @@ class _Page3State extends State<Page3> {
     try {
       if (_isPlaying && _playingIndex == idx) {
         await player.pause();
+        if (!mounted) return;
         setState(() { _isPlaying = false; _playingIndex = -1; });
       } else {
         setState(() { _isPlaying = true; _playingIndex = idx; });
@@ -92,9 +93,11 @@ class _Page3State extends State<Page3> {
         final dur = await player.getDuration();
         if (dur != null) await Future.delayed(dur);
         await player.stop();
+        if (!mounted) return;
         setState(() { _isPlaying = false; _playingIndex = -1; });
       }
     } catch (_) {
+      if (!mounted) return;
       setState(() { _isPlaying = false; _playingIndex = -1; });
     }
   }

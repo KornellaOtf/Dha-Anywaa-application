@@ -405,14 +405,13 @@ class _Page4State extends State<Page4> {
                             borderColor:
                                 _optionBorderColor(pageIdx, listIdx),
                             onTap: () {
-                              _answeredIds.add(q.id);
-                              final count = _answeredIds
-                                  .where((n) => n == q.id)
-                                  .length;
+                              final isFirstAnswer =
+                                  !_answeredIds.contains(q.id);
+                              if (isFirstAnswer) _answeredIds.add(q.id);
                               setState(() {
                                 _pageSelectedIndex = pageIdx;
                                 _selectedIndex = listIdx;
-                                if (isCorrect && count == 1) {
+                                if (isCorrect && isFirstAnswer) {
                                   _finalResult++;
                                 }
                               });

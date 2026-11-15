@@ -71,7 +71,13 @@ class _PolicyBody extends StatelessWidget {
           '  - ACCESS_NETWORK_STATE: used to check whether your device is online before making '
           'the update request.\n'
           '  - REQUEST_INSTALL_PACKAGES: required to install a downloaded update APK directly '
-          'from within the app.',
+          'from within the app.\n'
+          '  - POST_NOTIFICATIONS: required to show study reminders and streak notifications '
+          'you enable in Settings.\n'
+          '  - SCHEDULE_EXACT_ALARM / USE_EXACT_ALARM: used to schedule those reminders for '
+          'the exact time you choose.\n'
+          '  - FOREGROUND_SERVICE / FOREGROUND_SERVICE_DATA_SYNC: used by the update '
+          'downloader to keep the APK download running if you switch apps.',
         ),
         _section(context, 
           'Children',
