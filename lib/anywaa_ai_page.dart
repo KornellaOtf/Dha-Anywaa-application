@@ -32,6 +32,7 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
   final _scroll = ScrollController();
   final List<_Msg> _msgs = [];
   final List<Map<String, String>> _history = [];
+  OrbState _orbState = OrbState.working;
   bool _loading  = true;
   bool _thinking = false;
   Timer? _rotate;
@@ -78,9 +79,55 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
       _msgs.add(_Msg.user(text));
       _ctrl.clear();
       _thinking = true;
+      _orbState = _orbStateFor(text);
     });
     _scrollDown();
     _generateReply(text);
+  }
+
+  /// Picks the thinking-orb state that best matches what the user asked,
+  /// so the wait animation reflects the kind of answer coming.
+  static OrbState _orbStateFor(String q) {
+    final l = q.toLowerCase();
+    // Dictionary / translation lookups scan a globe.
+    if (RegExp(r'\b(translate|translation|how do you say|what does|'
+            r'mean|meaning|word for|dha for|anywaa for|dictionary|'
+            r'spell|spelling)\b').hasMatch(l)) {
+      return OrbState.searching;
+    }
+    // Stories, culture, history — the composing sash.
+    if (RegExp(r'\b(story|stories|history|tell me about|culture|'
+            r'tradition|custom|legend|folklore|food|music|dance|'
+            r'ceremony|wedding|funeral)\b').hasMatch(l)) {
+      return OrbState.composing;
+    }
+    // Sound / pronunciation / listening.
+    if (RegExp(r'\b(pronounce|pronunciation|say it|listen|speak|'
+            r'voice|audio|how does it sound)\b').hasMatch(l)) {
+      return OrbState.listening;
+    }
+    // Connections, comparisons, related ideas — the constellation.
+    if (RegExp(r'\b(connect|related|similar|same as|compare|'
+            r'contrast|difference between|link)\b').hasMatch(l)) {
+      return OrbState.connecting;
+    }
+    // Crafting, making, weaving — the braid.
+    if (RegExp(r'\b(weave|craft|make|build|create|how to|steps|'
+            r'instructions|teach me)\b').hasMatch(l)) {
+      return OrbState.weaving;
+    }
+    // Greetings and identity get the calm breathing ring.
+    if (RegExp(r'^(hi|hello|hey|good (morning|afternoon|evening)|'
+            r'salaam|who are you|what is your name|your name)\b')
+        .hasMatch(l)) {
+      return OrbState.breathing;
+    }
+    // Explanations and reasoning get the scramble→solve heartbeat.
+    if (RegExp(r'\b(how|why|explain|what is|what are|where|when|'
+            r'which|should|would)\b').hasMatch(l)) {
+      return OrbState.solving;
+    }
+    return OrbState.working;
   }
 
   Future<void> _generateReply(String text) async {
@@ -220,7 +267,7 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
                           itemCount: _msgs.length + (_thinking ? 1 : 0),
                           itemBuilder: (_, i) {
                             if (_thinking && i == _msgs.length) {
-                              return const _ThinkingBubble();
+                              return _ThinkingBubble(state: _orbState);
                             }
                             return _Bubble(msg: _msgs[i], onAsk: _send);
                           },
@@ -556,7 +603,8 @@ class _AnswerBody extends StatelessWidget {
 }
 
 class _ThinkingBubble extends StatelessWidget {
-  const _ThinkingBubble();
+  final OrbState state;
+  const _ThinkingBubble({required this.state});
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -565,7 +613,7 @@ class _ThinkingBubble extends StatelessWidget {
         children: [
           const _EcoMark(size: 26),
           const SizedBox(width: 10),
-          const ThinkingOrb(size: 40),
+          ThinkingOrb(state: state, size: 40),
         ],
       ),
     );
