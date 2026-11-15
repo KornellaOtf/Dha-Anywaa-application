@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:dha_anywaaa/services/anywaa_ai_service.dart';
 import 'package:dha_anywaaa/services/groq_service.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
+import 'package:dha_anywaaa/widgets/thinking_orb.dart';
 
 /// Anywaa AI Chat Interface
 ///
@@ -552,12 +553,7 @@ class _ThinkingBubble extends StatelessWidget {
               borderRadius: const BorderRadius.all(Radius.circular(16)),
               boxShadow: const [kShadowSoft],
             ),
-            child: SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(
-                  strokeWidth: 2, color: c.accent),
-            ),
+            child: const ThinkingOrb(size: 44),
           ),
         ],
       ),
