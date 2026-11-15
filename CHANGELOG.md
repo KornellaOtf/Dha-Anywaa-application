@@ -8,7 +8,7 @@ Released: 2026-11-15
 - Anywaa AI answers from model knowledge only; no local app data is sent in prompts
 - AI never outputs Dha Anywaa or Nuer text (prompt rule + output filter)
 - Suggested-question chips removed from chat welcome screen
-- Dictionary spelling corrections: Bar (far/long/tall), Joot (easy)
+- Dictionary spelling corrections
 
 ## 2.0.5 (build 2205)
 
