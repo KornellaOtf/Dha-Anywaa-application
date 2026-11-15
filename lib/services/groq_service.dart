@@ -211,9 +211,9 @@ class GroqService {
       final req = http.Request('POST', Uri.parse(prov.endpoint))
         ..headers.addAll({
           'Authorization': 'Bearer ${prov.key}',
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json; charset=utf-8',
         })
-        ..body = jsonEncode(body);
+        ..bodyBytes = utf8.encode(jsonEncode(body));
 
       final res = await client.send(req).timeout(_timeout);
       if (res.statusCode != 200) {
@@ -237,7 +237,7 @@ class GroqService {
           final piece = delta is Map ? delta['content'] as String? : null;
           if (piece != null && piece.isNotEmpty) {
             acc += piece;
-            onDelta?.call(_cleanDisplay(acc));
+            onDelta?.call(cleanReply(acc));
           }
         } catch (_) {}
       }
@@ -273,9 +273,9 @@ class GroqService {
             Uri.parse(prov.endpoint),
             headers: {
               'Authorization': 'Bearer ${prov.key}',
-              'Content-Type': 'application/json',
+              'Content-Type': 'application/json; charset=utf-8',
             },
-            body: jsonEncode(body),
+            body: utf8.encode(jsonEncode(body)),
           )
           .timeout(_timeout);
 
@@ -284,7 +284,10 @@ class GroqService {
         return null;
       }
 
-      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      // Responses carry no charset header — decode raw bytes as UTF-8
+      // or ë/ö/curly quotes arrive as mojibake.
+      final data =
+          jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
       final choices = data['choices'] as List?;
       if (choices == null || choices.isEmpty) return null;
       final first = choices.first;
@@ -459,14 +462,29 @@ class GroqService {
       }
     }
 
-    return GroqReply(_cleanDisplay(text), contribution);
+    return GroqReply(cleanReply(text), contribution);
+  }
+
+  /// Repairs text that was UTF-8 decoded as Latin-1 (mojibake), e.g.
+  /// "DÃ«Ã«ri" -> "Dëëri". Safe no-op on already-correct or unrepairable
+  /// text (Anywaa letters like ŋ exceed Latin-1 and are returned as-is).
+  static String fixMojibake(String s) {
+    try {
+      return utf8.decode(latin1.encode(s));
+    } catch (_) {
+      return s;
+    }
   }
 
   /// Cosmetic cleaning safe to run on partial streamed text: no em/en
   /// dashes, no markdown, no emoji or arrow glyphs, no leaked model names.
   /// Does NOT touch [[SAVE: ...]] tags — that only happens once, at the
   /// end, in [_postProcess].
-  String _cleanDisplay(String text) => text
+  static String cleanReply(String text) => text
+        .replaceAll('\u202F', ' ') // narrow no-break space
+        .replaceAll('\u00A0', ' ') // no-break space
+        .replaceAll('\u2011', '-') // non-breaking hyphen
+        .replaceAll('\u200B', '') // zero-width space
         .replaceAll('—', ',')
         .replaceAll('–', ',')
         .replaceAll('**', '')
