@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.0.9 (build 2209)
+
+Released: 2026-11-18
+
+### Security
+- Redacted leaked keystore passwords from historical release notes
+- Release script now builds with required obfuscation flags
+
+### Docs
+- Full markdown audit: stale versions corrected, superseded docs
+  marked, privacy policy now accurately discloses Firebase Analytics
+  and AI providers, Nuer/Kiro references scrubbed
+
 ## 2.0.8 (build 2208)
 
 Released: 2026-11-18
