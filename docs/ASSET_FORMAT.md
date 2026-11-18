@@ -123,6 +123,11 @@ methods bridged to Dart via `MethodChannel('dna/asset_guard')` in
 - `checkIntegrity` compares the running APK's signing cert against the
   release cert hash baked into native code; debug builds are exempt.
   On failure it also wipes the on-disk key cache.
+- **IMPORTANT:** `kStrData`, `kPartA`, `kPartB` are declared
+  `volatile const` on purpose. Without `volatile`, clang -O2 constant-
+  folds the XOR decode and materializes the passphrase + detection
+  strings as plaintext `.rodata.cst16` constants — verified leak in the
+  first release APK. Never remove the `volatile` qualifiers.
 - `antiTamperOk` re-runs before every decrypt (hooking can attach
   after launch). ptrace self-attach, /proc/self/status TracerPid,
   /proc/self/maps scan for frida/xposed/lsposed/substrate/dobby etc.,

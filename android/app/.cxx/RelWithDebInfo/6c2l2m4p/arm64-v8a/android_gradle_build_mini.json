@@ -1,0 +1,27 @@
+{
+  "buildFiles": [
+    "/home/kornella/Dha-Anywaa-application/android/app/src/main/cpp/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/home/kornella/Android/Sdk/cmake/3.22.1/bin/ninja",
+      "-C",
+      "/home/kornella/Dha-Anywaa-application/android/app/.cxx/RelWithDebInfo/6c2l2m4p/arm64-v8a",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/home/kornella/Android/Sdk/cmake/3.22.1/bin/ninja",
+    "-C",
+    "/home/kornella/Dha-Anywaa-application/android/app/.cxx/RelWithDebInfo/6c2l2m4p/arm64-v8a",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "keyguard::@6890427a1f51a3e7e1df": {
+      "artifactName": "keyguard",
+      "abi": "arm64-v8a",
+      "output": "/home/kornella/Dha-Anywaa-application/build/app/intermediates/cxx/RelWithDebInfo/6c2l2m4p/obj/arm64-v8a/libkeyguard.so",
+      "runtimeFiles": []
+    }
+  }
+}

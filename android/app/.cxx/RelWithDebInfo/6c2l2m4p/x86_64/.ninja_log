@@ -1,0 +1,5 @@
+# ninja log v5
+0	2044	1795025869953592307	CMakeFiles/keyguard.dir/key_guard.c.o	be899a7fe7360db5
+2044	2668	1795025870580488318	/home/kornella/Dha-Anywaa-application/build/app/intermediates/cxx/RelWithDebInfo/6c2l2m4p/obj/x86_64/libkeyguard.so	51c70aa466ba23b8
+1	1547	1795028186227270297	CMakeFiles/keyguard.dir/key_guard.c.o	be899a7fe7360db5
+1547	1922	1795028186619294692	/home/kornella/Dha-Anywaa-application/build/app/intermediates/cxx/RelWithDebInfo/6c2l2m4p/obj/x86_64/libkeyguard.so	c4572d768ac1fa11
