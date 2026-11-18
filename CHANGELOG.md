@@ -684,4 +684,21 @@ Released: 2025
 - Settings screen: sound toggle, name change
 - OTA update check via GitHub Releases API
 - Quiz: live score, confirm-quit dialog, swipe disabled
-- Result screen: percentage, share to clipboard
+- Result screen: percentage, share to clipboard## [2.0.8] - 2026-11-18
+
+### Security
+- Bundled dictionary, Bible, and cultural facts now ship AES-256-GCM
+  encrypted with obfuscated filenames (docs/ASSET_FORMAT.md)
+- Native keyguard library: key material lives only in C, never in Dart
+- APK signature integrity check + emulator/root detection
+- Anti-debug/anti-hook checks (ptrace, TracerPid, Frida/Xposed maps scan)
+  re-verified before every decrypt
+- Optional server-delivered key path with Keystore device binding
+  (tools/key_server/ Cloudflare Worker)
+- Release builds now require --obfuscate --split-debug-info; CI guard
+  workflow added
+
+### Content
+- Dictionary creator attribution corrected to Kornella Otf
+
+
