@@ -13,14 +13,14 @@ How to build, tag, and ship a release for Dha Anywaa.
 
 > **Important:** versionCodes in the wild are already in the 2180s (a build
 > shipped outside this repo used 2186). Always bump above the highest code
-> known to be installed — currently **2188**. Do not drop back to the old
+> known to be installed — currently **2208**. Do not drop back to the old
 > `+18x` scheme or devices with newer builds cannot update.
 
 ## Build
 
 ```bash
-flutter build apk --release
-# output: build/app/outputs/flutter-apk/app-release.apk (~91 MB)
+flutter build apk --release --obfuscate --split-debug-info=build/symbols/$(date +%Y%m%d)
+# output: build/app/outputs/flutter-apk/app-release.apk (~97 MB)
 ```
 
 ## Release checklist
@@ -45,9 +45,9 @@ Fields:
 
 ```json
 {
-  "version": "1.9.2",
-  "versionCode": 2188,
-  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v1.9.2/dha-anywaa-v1.9.2.apk",
+  "version": "2.0.8",
+  "versionCode": 2208,
+  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v2.0.8/dha-anywaa-v2.0.8.apk",
   "sha256": "<sha256 of the APK>",
   "sizeBytes": <bytes>,
   "minSupportedVersionCode": 1,

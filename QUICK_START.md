@@ -1,5 +1,7 @@
 #  Quick Start: Make Your App Addictive in 30 Minutes
 
+> **Superseded.** This is an early AI-assisted planning doc (pre-v1.x). Current docs: README.md, APP_DOCUMENTATION.md, docs/ARCHITECTURE.md, docs/SECURITY.md, RELEASE.md.
+
 You asked for the **best addictive algorithm**. Here's what I built for you:
 
 ##  What You Got

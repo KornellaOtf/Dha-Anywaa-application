@@ -1,5 +1,7 @@
 # Integration Guide: FSRS Learning System → Dha Anywaa App
 
+> **Superseded / never implemented.** The FSRS learning engine described here was never merged; the app uses its own Leitner-style progress in lib/. Kept for historical reference only.
+
 **Quick Start Guide for connecting Phase 1 components**
 
 ---

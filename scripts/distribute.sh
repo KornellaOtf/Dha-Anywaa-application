@@ -32,7 +32,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 
 # ── Build ─────────────────────────────────────────────────────────────────────
 echo "→ Building release APK..."
-flutter build apk --release
+flutter build apk --release --obfuscate --split-debug-info=build/symbols/$(date +%Y%m%d)
 
 # ── Hash ──────────────────────────────────────────────────────────────────────
 SHA256=$(shasum -a 256 "$APK_PATH" | cut -d' ' -f1)

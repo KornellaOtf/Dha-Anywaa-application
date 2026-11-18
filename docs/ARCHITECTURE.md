@@ -3,7 +3,7 @@
 > Canonical documentation now lives in `APP_DOCUMENTATION.md` (repo root).
 > This file is kept for historical reference.
 
-Last updated: v1.9.8 (build 2194)
+Last updated: v2.0.8 (build 2208)
 
 ## Overview
 

@@ -1,12 +1,13 @@
 # Privacy Policy
 
-Last updated: 2026
+Last updated: November 18, 2026
 
 ## What this app is
 
 Learn Dha Anywaa is a language learning app for the Anywaa (Anuak) language.
 It contains alphabet lessons, vocabulary with audio, reading exercises and a quiz.
-It works fully offline. No account is required.
+The core lessons, dictionary, Bible, and quizzes work fully offline. No account is required.
+The AI chat feature and update checks need an internet connection.
 
 ## What is stored on your device
 
@@ -44,12 +45,26 @@ and does not show advertising.
 
 ## Analytics and advertising
 
-The app contains no analytics, crash reporting, tracking or advertising of any kind.
+The app uses **Firebase Analytics** (Google) to collect anonymous usage
+events such as lessons completed, quizzes finished, and feature usage.
+These events contain no personal information. If you enter your name,
+it is converted to a one-way SHA-256 hash before being used as the
+analytics user ID — your actual name is never sent. Clearing the app's
+data or reinstalling resets it.
+
+There is no advertising and no sale of data.
 
 ## Third-party services
 
-The app uses Google Fonts (Nunito) loaded from the app bundle, not from the network.
-No other third-party services are used.
+- **Firebase Analytics** (Google) — anonymous usage events, as above.
+- **NVIDIA Nemotron / Groq** — when you use Anywaa AI chat, your
+  messages are sent to these providers to generate replies. Do not
+  share personal information in chat. Groq is used only as a fallback
+  if Nemotron is unavailable.
+- **GitHub** — update checks download the release manifest and APK
+  from this app's public GitHub repository.
+- **Google Fonts** — bundled inside the app, not loaded from the
+  network.
 
 ## Data deletion
 

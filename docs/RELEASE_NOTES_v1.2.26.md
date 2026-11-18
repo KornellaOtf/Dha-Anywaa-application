@@ -183,8 +183,8 @@ android/app/src/main/kotlin/com/kornellaotf/learn_dha_anywaa/MainActivity.kt
 
 **key.properties:**
 ```properties
-storePassword=3g3dp0owe9VKlXEpOhaV1jNA
-keyPassword=3g3dp0owe9VKlXEpOhaV1jNA
+storePassword=<redacted>
+keyPassword=<redacted>
 keyAlias=upload
 storeFile=../upload-keystore.jks
 ```
@@ -554,4 +554,4 @@ This release requires a one-time user inconvenience (uninstall/reinstall) but es
 
 **Document Version:** 1.0  
 **Last Updated:** November 9, 2026  
-**Author:** Kiro AI Development Assistant
+**Author:** Kornella Otf

@@ -1,5 +1,7 @@
 # Anywaa AI Status
 
+> **Historical document (v1.2.14 era).** Describes an outdated dictionary-based AI. Current app (v2.0.8) uses Nemotron/Groq cloud AI, encrypted assets, and native key protection — see docs/SECURITY.md.
+
 ## Current Implementation (v1.2.14)
 
 ### ✅ **Fully Working: Dictionary-Based AI**
@@ -448,8 +450,7 @@ git log --oneline --since="2026-11-06"
 
 ### Development Team
 
-- **Lead Developer**: Kornella
-- **AI Assistant**: Kiro (code generation, architecture, documentation)
+- **Creator**: Kornella Otf
 
 ### Data Sources
 

@@ -27,7 +27,9 @@ Three layers, in order of preference:
 
 1. **Server-delivered** (`AssetKeyStore.kt`): device RSA-2048 keypair in
    AndroidKeyStore → POST pubkey to the Cloudflare Worker
-   (`tools/key_server/`) → asset key returned RSA-OAEP-SHA256 wrapped to
+   (`tools/key_server/`, scaffolded — **not yet deployed**; until then
+   this path is dormant and the native fallback below is what runs)
+   → asset key returned RSA-OAEP-SHA256 wrapped to
    that device only → cached on disk AES-GCM-wrapped by a second
    Keystore key. Raw key never touches disk.
 2. **Native-embedded fallback** (`key_guard.c`): passphrase split across

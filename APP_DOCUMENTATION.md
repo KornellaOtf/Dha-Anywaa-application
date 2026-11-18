@@ -259,7 +259,7 @@ lib/
 ## 7. Release pipeline
 
 1. Bump `pubspec.yaml` → `version: X.Y.Z+BUILD`
-2. `flutter build apk --release` → `build/app/outputs/flutter-apk/app-release.apk`
+2. `flutter build apk --release --obfuscate --split-debug-info=build/symbols/$(date +%Y%m%d)` → `build/app/outputs/flutter-apk/app-release.apk`
 3. Copy to `.tmp_apk/dha-anywaa-vX.Y.Z.apk`
 4. Update `manifest.json` (version, versionCode, apkUrl, sha256, sizeBytes)
 5. Add `CHANGELOG.md` entry
@@ -322,4 +322,4 @@ includes Linux settings; `zonedSchedule` is Android-only.
 
 ---
 
-*Last updated for v2.0.6 (build 2206).*
+*Last updated for v2.0.8 (build 2208).*

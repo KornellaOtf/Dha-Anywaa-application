@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.0.8 (build 2208)
+
+Released: 2026-11-18
+
+### Security
+- Bundled dictionary, Bible, and cultural facts now ship AES-256-GCM
+  encrypted with obfuscated filenames (docs/ASSET_FORMAT.md)
+- Native keyguard library: key material lives only in C, never in Dart
+- APK signature integrity check + emulator/root detection
+- Anti-debug/anti-hook checks re-verified before every content decrypt
+- Optional server-delivered key path scaffolded (tools/key_server/)
+- Release builds require --obfuscate --split-debug-info; CI guard added
+
+### Content
+- Dictionary creator attribution corrected to Kornella Otf
+
 ## 2.0.7 (build 2207)
 
 Released: 2026-11-15
@@ -15,7 +31,7 @@ Released: 2026-11-15
 
 ### Changed
 - Anywaa AI answers from model knowledge only; no local app data is sent in prompts
-- AI never outputs Dha Anywaa or Nuer text (prompt rule + output filter)
+- AI never outputs Dha Anywaa text (prompt rule + output filter)
 - Suggested-question chips removed from chat welcome screen
 - Dictionary spelling corrections
 
@@ -67,7 +83,7 @@ Released: 2026-11-15
 - Update screen buttons restyled: softer secondary actions, lifted primary button
 
 ### Changed (AI)
-- LANGUAGE RULES updated: multi-language switching on request, honest fluency, no Dha Anywaa or Nuer output
+- LANGUAGE RULES updated: multi-language switching on request, honest fluency, no Dha Anywaa output
 
 ## 2.0.1 (build 2201)
 
@@ -684,21 +700,4 @@ Released: 2025
 - Settings screen: sound toggle, name change
 - OTA update check via GitHub Releases API
 - Quiz: live score, confirm-quit dialog, swipe disabled
-- Result screen: percentage, share to clipboard## [2.0.8] - 2026-11-18
-
-### Security
-- Bundled dictionary, Bible, and cultural facts now ship AES-256-GCM
-  encrypted with obfuscated filenames (docs/ASSET_FORMAT.md)
-- Native keyguard library: key material lives only in C, never in Dart
-- APK signature integrity check + emulator/root detection
-- Anti-debug/anti-hook checks (ptrace, TracerPid, Frida/Xposed maps scan)
-  re-verified before every decrypt
-- Optional server-delivered key path with Keystore device binding
-  (tools/key_server/ Cloudflare Worker)
-- Release builds now require --obfuscate --split-debug-info; CI guard
-  workflow added
-
-### Content
-- Dictionary creator attribution corrected to Kornella Otf
-
-
+- Result screen: percentage, share to clipboard

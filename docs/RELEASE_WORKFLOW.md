@@ -101,7 +101,7 @@ That's it. The script handles everything else automatically:
 
 ```
 1. Read version from pubspec.yaml (e.g. 1.2.28+128)
-2. flutter build apk --release
+2. flutter build apk --release --obfuscate --split-debug-info=build/symbols/$(date +%Y%m%d)
 3. Compute SHA-256 and file size
 4. Write manifest.json with new version info
 5. firebase appdistribution:distribute → uploads APK to Firebase

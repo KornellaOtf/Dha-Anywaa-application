@@ -589,5 +589,5 @@ The package name change in v1.2.26 requires a one-time user migration (uninstall
 ---
 
 **Document Version:** 1.0  
-**Author:** Kiro AI Development Assistant  
+**Author:** Kornella Otf  
 **Last Updated:** November 9, 2026

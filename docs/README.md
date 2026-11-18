@@ -349,6 +349,6 @@ See LICENSE file in repository root.
 
 ---
 
-**Last Updated:** November 11, 2026  
-**Documentation Version:** 1.4.9  
-**App Version:** 1.4.9 (build 169)
+**Last Updated:** November 18, 2026  
+**Documentation Version:** 2.0.8  
+**App Version:** 2.0.8 (build 2208)

@@ -549,5 +549,5 @@ void main() {
 ---
 
 **Document Version:** 1.0  
-**Author:** Kiro AI Development Assistant  
+**Author:** Kornella Otf  
 **Last Updated:** November 9, 2026
