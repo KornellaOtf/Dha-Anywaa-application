@@ -1,8 +1,8 @@
 {
-  "version": "2.0.9",
-  "versionCode": 2209,
-  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v2.0.9/dha-anywaa-v2.0.9.apk",
-  "sha256": "8cf4563407167f5c8f7d828ac1c4eb05d5c6f0fa2b5508ffd15939ec73e82fa4",
+  "version": "2.0.10",
+  "versionCode": 2210,
+  "apkUrl": "https://github.com/KornellaOtf/Dha-Anywaa-application/releases/download/v2.0.10/dha-anywaa-v2.0.10.apk",
+  "sha256": "7a6efe3cd619c99574db954f837ca4e1db8a91d1d0c30b03b55055ea5db1ee62",
   "sizeBytes": 96903800,
   "minSupportedVersionCode": 1,
   "mandatory": false,
