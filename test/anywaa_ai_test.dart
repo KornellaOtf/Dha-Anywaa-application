@@ -5,9 +5,12 @@
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'helpers/real_assets.dart';
+
 import 'package:dha_anywaaa/services/anywaa_ai_service.dart';
 
 void main() {
+  enableRealEncryptedAssets();
   TestWidgetsFlutterBinding.ensureInitialized();
 
   // Each test starts a fresh thread so conversational context never leaks

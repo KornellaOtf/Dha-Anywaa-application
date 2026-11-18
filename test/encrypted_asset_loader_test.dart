@@ -39,6 +39,7 @@ void main() {
         switch (call.method) {
           case 'isTrusted':
           case 'checkIntegrity':
+          case 'antiTamperOk':
             return true;
           case 'getAssetName':
             return 'testasset';

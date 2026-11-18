@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:crypto/crypto.dart' as crypto;
 import 'package:cryptography/cryptography.dart' hide Hmac;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -31,26 +32,40 @@ class EncryptedAssetLoader {
   final Map<String, Uint8List> _cache = {};
   final Map<String, String> _nameCache = {};
   Uint8List? _magic;
-  bool? _guardOk;
+  bool? _staticGuard; // integrity + emulator/root: checked once
 
-  /// One-time environment + integrity gate. Returns false (and caches it)
-  /// when the device is untrusted or the APK signature doesn't match —
-  /// callers surface a generic "content unavailable" message.
+  /// Gate: static checks (signature, emulator/root) run once; the
+  /// anti-debug/anti-hook check re-runs before EVERY decryption since
+  /// hooking can attach after launch. All failures return the same
+  /// generic refusal — no reason leaks to the caller.
   Future<bool> _guard() async {
-    if (_guardOk != null) return _guardOk!;
-    try {
-      final trusted = await _channel.invokeMethod<bool>('isTrusted') ?? false;
-      final intact = await _channel.invokeMethod<bool>('checkIntegrity') ?? false;
-      _guardOk = trusted && intact;
-    } catch (_) {
-      _guardOk = false; // no native lib (tests/desktop) → refuse
+    if (_staticGuard == null) {
+      try {
+        final trusted = await _channel.invokeMethod<bool>('isTrusted') ?? false;
+        final intact = await _channel.invokeMethod<bool>('checkIntegrity') ?? false;
+        _staticGuard = trusted && intact;
+      } catch (_) {
+        _staticGuard = false; // no native lib (tests/desktop) → refuse
+      }
+      if (!_staticGuard!) return false;
     }
-    return _guardOk!;
+    try {
+      return await _channel.invokeMethod<bool>('antiTamperOk') ?? false;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<String> _assetName(String logicalId) async {
     final cached = _nameCache[logicalId];
     if (cached != null) return cached;
+    // Test path: derive the same HMAC name in Dart (no native lib).
+    if (debugBypassGuard && debugKeyOverride != null) {
+      final mac = crypto.Hmac(crypto.sha256, debugKeyOverride!)
+          .convert(utf8.encode('name:$logicalId'))
+          .toString();
+      return _nameCache[logicalId] = mac.substring(0, 16);
+    }
     final name = await _channel.invokeMethod<String>('getAssetName', logicalId);
     if (name == null) {
       throw const AssetDecryptException('', 'native name derivation failed');
@@ -60,6 +75,7 @@ class EncryptedAssetLoader {
 
   Future<List<int>> _magicBytes() async {
     if (_magic != null) return _magic!;
+    if (debugBypassGuard) return _magic = Uint8List.fromList(_defaultMagic);
     final m = await _channel.invokeMethod<Uint8List>('getMagicBytes');
     if (m == null) throw const AssetDecryptException('', 'no magic bytes');
     return _magic = m;
@@ -70,7 +86,11 @@ class EncryptedAssetLoader {
     final cached = _cache[logicalId];
     if (cached != null) return cached;
 
-    if (!await _guard()) {
+    if (!debugBypassGuard && !await _guard()) {
+      // Tamper response: drop everything decrypted so a repackaged APK
+      // can't scrape leftover plaintext from memory.
+      _cache.clear();
+      if (kDebugMode) debugPrint('asset guard refused decrypt ($logicalId)');
       throw AssetDecryptException(
           logicalId, 'content unavailable on this device');
     }
@@ -93,13 +113,18 @@ class EncryptedAssetLoader {
     }
 
     // Key is fetched transiently and only lives inside the job.
-    final key = await _channel.invokeMethod<Uint8List>('getAssetKey');
+    final key = debugKeyOverride ??
+        await _channel.invokeMethod<Uint8List>('getAssetKey');
     if (key == null) {
       throw AssetDecryptException(logicalId, 'key unavailable');
     }
 
-    final plain =
-        await compute(_decryptIsolate, _DecryptJob(blob, key, logicalId, magic));
+    final job = _DecryptJob(blob, key, logicalId, magic);
+    final plain = debugInlineDecrypt
+        ? await _decryptIsolate(job)
+        : await compute(_decryptIsolate, job);
+    // Wipe the transient key bytes — Dart GC timing isn't guaranteed.
+    key.fillRange(0, key.length, 0);
     _cache[logicalId] = plain;
     return plain;
   }
@@ -111,6 +136,18 @@ class EncryptedAssetLoader {
   /// Drop cached plaintext (e.g. on logout / memory pressure).
   void evict(String logicalId) => _cache.remove(logicalId);
   void clear() => _cache.clear();
+
+  /// Test hooks: flutter_test has no native lib, so tests that exercise
+  /// real bundled content inject the derived key and skip the guard.
+  /// Never set these outside tests.
+  @visibleForTesting
+  static Uint8List? debugKeyOverride;
+  @visibleForTesting
+  static bool debugBypassGuard = false;
+  /// compute() deadlocks inside testWidgets' FakeAsync zone — tests set
+  /// this to decrypt inline on the test isolate instead.
+  @visibleForTesting
+  static bool debugInlineDecrypt = false;
 
   /// Test hook: decrypt a raw container blob without touching rootBundle
   /// or the native channel.

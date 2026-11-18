@@ -116,11 +116,44 @@ methods bridged to Dart via `MethodChannel('dna/asset_guard')` in
 | `getAssetName` | HMAC-derived obfuscated filename for a logical ID |
 | `getMagicBytes` | container magic bytes |
 | `isTrusted` | false on emulator/root/debug builds signals |
-| `checkIntegrity` | APK signing-cert SHA-256 vs baked constant |
+| `checkIntegrity` | APK signing-cert SHA-256 vs baked constant; wipes key cache on failure |
+| `antiTamperOk` | re-checked before EVERY decrypt: JDWP, ptrace/TracerPid, Frida/Xposed maps + port scan |
 
 - Filename derivation and magic bytes are **not** in Dart source.
 - `checkIntegrity` compares the running APK's signing cert against the
   release cert hash baked into native code; debug builds are exempt.
+  On failure it also wipes the on-disk key cache.
+- `antiTamperOk` re-runs before every decrypt (hooking can attach
+  after launch). ptrace self-attach, /proc/self/status TracerPid,
+  /proc/self/maps scan for frida/xposed/lsposed/substrate/dobby etc.,
+  frida-server port 27042, xposed installer dir, plus
+  `Debug.isDebuggerConnected()` on the Kotlin side. All failures return
+  the same generic refusal — nothing reveals which check tripped.
+
+## Server-delivered key (AssetKeyStore.kt)
+
+The 32-byte key can also be fetched from a tiny Cloudflare Worker
+(`tools/key_server/`):
+
+1. Device generates an RSA-2048 keypair inside AndroidKeyStore
+   (private key non-exportable).
+2. App POSTs the public key; worker returns the asset key wrapped with
+   RSA-OAEP-SHA256 — only that device can unwrap it.
+3. The unwrapped key is cached on disk AES-GCM-wrapped by a second
+   Keystore key, so raw key bytes never touch storage.
+4. Offline fallback: the native-embedded key is used when the fetch
+   fails, so first-launch-offline still works.
+
+**Device binding:** a dumped wrapped blob or cache file is useless on
+any other device or reinstall — unwrapping requires the on-device
+Keystore keys. The raw key exists in memory only transiently.
+
+**Backend down / key rotation:** the worker is stateless. Rotate by
+updating the `ASSET_PASSPHRASE` secret and re-running
+`tools/encrypt_assets.py`; bump `minSupportedVersionCode` so older
+builds update. If the worker is deleted entirely, devices that already
+cached the key keep working; new installs fall back to the native key
+until a new endpoint ships.
 - Decoy files: `tools/encrypt_assets.py` also writes 8 deterministic
   fake containers (valid headers, garbage ciphertext) into
   `assets/encrypted/` so bulk-extraction scripts produce broken output.

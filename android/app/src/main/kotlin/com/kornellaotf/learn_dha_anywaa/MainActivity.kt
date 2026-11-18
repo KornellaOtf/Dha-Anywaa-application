@@ -17,6 +17,7 @@ class MainActivity: FlutterActivity() {
         @JvmStatic external fun getMagicBytes(): ByteArray
         @JvmStatic external fun expectedCertHash(): String
         @JvmStatic external fun isTrustedEnvironment(): Boolean
+        @JvmStatic external fun antiTamperOk(): Boolean
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -24,10 +25,12 @@ class MainActivity: FlutterActivity() {
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "dna/asset_guard")
             .setMethodCallHandler { call, result ->
                 when (call.method) {
-                    "getAssetKey" -> result.success(getAssetKey())
+                    "getAssetKey" -> result.success(AssetKeyStore.get(applicationContext) ?: getAssetKey())
                     "getAssetName" -> result.success(getAssetName(call.arguments as String))
                     "getMagicBytes" -> result.success(getMagicBytes())
                     "isTrusted" -> result.success(isTrustedEnvironment())
+                    "antiTamperOk" -> result.success(
+                        !android.os.Debug.isDebuggerConnected() && antiTamperOk())
                     "checkIntegrity" -> result.success(checkIntegrity())
                     else -> result.notImplemented()
                 }
@@ -38,6 +41,12 @@ class MainActivity: FlutterActivity() {
     private fun checkIntegrity(): Boolean {
         // Debug builds are signed with the debug cert — skip the check.
         if (BuildConfig.DEBUG) return true
+        val ok = runCatching { verifySignature() }.getOrDefault(false)
+        if (!ok) AssetKeyStore.wipe(applicationContext) // tamper response
+        return ok
+    }
+
+    private fun verifySignature(): Boolean {
         return try {
             val pm = packageManager
             val sig = if (Build.VERSION.SDK_INT >= 28) {

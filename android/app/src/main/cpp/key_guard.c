@@ -14,8 +14,15 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
 #include <sys/system_properties.h>
+#include <sys/ptrace.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 /* ------------------------------------------------------------------ */
 /* SHA-256 (compact public-domain-style implementation)               */
@@ -94,6 +101,114 @@ static void hmac_sha256_hex(const uint8_t *key, size_t klen,
   sha256_init(&c); sha256_update(&c,opad,64); sha256_update(&c,inner,32); sha256_final(&c,out);
   for (int i=0;i<32;i++) sprintf(hex+i*2,"%02x",out[i]);
   hex[64]=0;
+}
+
+/* XOR-encoded strings (key 0x5A) — decoded at call site only. */
+static void unxor(const unsigned char *in, size_t n, char *out) {
+    for (size_t i = 0; i < n; i++) out[i] = (char)(in[i] ^ 0x5A);
+    out[n] = 0;
+}
+#define XS_0 (0)
+#define XS_1 (1)
+#define XS_2 (2)
+#define XS_3 (3)
+#define XS_4 (4)
+#define XS_5 (5)
+#define XS_6 (6)
+#define XS_7 (7)
+#define XS_8 (8)
+#define XS_9 (9)
+#define XS_10 (10)
+#define XS_11 (11)
+#define XS_12 (12)
+#define XS_13 (13)
+#define XS_14 (14)
+#define XS_15 (15)
+#define XS_16 (16)
+#define XS_17 (17)
+#define XS_18 (18)
+#define XS_19 (19)
+#define XS_20 (20)
+#define XS_21 (21)
+#define XS_22 (22)
+#define XS_23 (23)
+#define XS_24 (24)
+#define XS_25 (25)
+#define XS_26 (26)
+#define XS_27 (27)
+#define XS_28 (28)
+#define XS_29 (29)
+#define XS_30 (30)
+static const unsigned char kStrData[] = {
+    0x28,0x35,0x74,0x31,0x3F,0x28,0x34,0x3F,0x36,0x74,0x2B,0x3F,0x37,0x2F,
+    0x28,0x35,0x74,0x32,0x3B,0x28,0x3E,0x2D,0x3B,0x28,0x3F,
+    0x28,0x35,0x74,0x2A,0x28,0x35,0x3E,0x2F,0x39,0x2E,0x74,0x37,0x35,0x3E,0x3F,0x36,
+    0x28,0x35,0x74,0x3E,0x3F,0x38,0x2F,0x3D,0x3D,0x3B,0x38,0x36,0x3F,
+    0x3C,0x28,0x33,0x3E,0x3B,
+    0x3D,0x2F,0x37,0x77,0x30,0x29,0x77,0x36,0x35,0x35,0x2A,
+    0x3D,0x37,0x3B,0x33,0x34,
+    0x36,0x33,0x34,0x30,0x3F,0x39,0x2E,0x35,0x28,
+    0x22,0x2A,0x35,0x29,0x3F,0x3E,
+    0x36,0x29,0x2A,0x35,0x29,0x3F,0x3E,
+    0x29,0x2F,0x38,0x29,0x2E,0x28,0x3B,0x2E,0x3F,
+    0x3F,0x2A,0x33,0x39,
+    0x29,0x3B,0x34,0x3E,0x32,0x35,0x35,0x31,
+    0x3F,0x3E,0x22,0x2A,
+    0x2A,0x33,0x34,0x3F,
+    0x3E,0x35,0x38,0x38,0x23,
+    0x75,0x2A,0x28,0x35,0x39,0x75,0x29,0x3F,0x36,0x3C,0x75,0x37,0x3B,0x2A,0x29,
+    0x75,0x2A,0x28,0x35,0x39,0x75,0x29,0x3F,0x36,0x3C,0x75,0x29,0x2E,0x3B,0x2E,0x2F,0x29,
+    0x0E,0x28,0x3B,0x39,0x3F,0x28,0x0A,0x33,0x3E,0x60,
+    0x75,0x29,0x23,0x29,0x2E,0x3F,0x37,0x75,0x38,0x33,0x34,0x75,0x29,0x2F,
+    0x75,0x29,0x23,0x29,0x2E,0x3F,0x37,0x75,0x22,0x38,0x33,0x34,0x75,0x29,0x2F,
+    0x75,0x29,0x38,0x33,0x34,0x75,0x29,0x2F,
+    0x75,0x29,0x2F,0x75,0x38,0x33,0x34,0x75,0x29,0x2F,
+    0x75,0x3E,0x3B,0x2E,0x3B,0x75,0x36,0x35,0x39,0x3B,0x36,0x75,0x29,0x2F,
+    0x75,0x3E,0x3B,0x2E,0x3B,0x75,0x3E,0x3B,0x2E,0x3B,0x75,0x3E,0x3F,0x74,0x28,0x35,0x38,0x2C,0x74,0x3B,0x34,0x3E,0x28,0x35,0x33,0x3E,0x74,0x22,0x2A,0x35,0x29,0x3F,0x3E,0x74,0x33,0x34,0x29,0x2E,0x3B,0x36,0x36,0x3F,0x28,
+    0x3D,0x35,0x36,0x3E,0x3C,0x33,0x29,0x32,
+    0x28,0x3B,0x34,0x39,0x32,0x2F,
+    0x2C,0x38,0x35,0x22,
+    0x29,0x3E,0x31,
+    0x1F,0x37,0x2F,0x36,0x3B,0x2E,0x35,0x28,
+    0x1B,0x34,0x3E,0x28,0x35,0x33,0x3E,0x7A,0x09,0x1E,0x11,
+};
+static const unsigned short kStrOff[32] = {
+    0,
+    14,
+    25,
+    41,
+    54,
+    59,
+    70,
+    75,
+    84,
+    90,
+    97,
+    106,
+    110,
+    118,
+    122,
+    126,
+    131,
+    146,
+    163,
+    173,
+    187,
+    202,
+    210,
+    220,
+    234,
+    277,
+    285,
+    291,
+    295,
+    298,
+    306,
+    317,
+};
+static void xstr(int idx, char *out, size_t cap) {
+    (void)cap;
+    unxor(kStrData + kStrOff[idx], kStrOff[idx+1]-kStrOff[idx], out);
 }
 
 /* ------------------------------------------------------------------ */
@@ -183,16 +298,96 @@ JNIEXPORT jboolean JNICALL
 JNI_NAME(com_kornellaotf_learn_1dha_1anywaa, MainActivity, isTrustedEnvironment)(
     JNIEnv *env, jobject thiz) {
     char v[PROP_VALUE_MAX];
-    /* Emulator detection */
-    if (__system_property_get("ro.kernel.qemu", v) > 0 && strcmp(v,"1")==0) return JNI_FALSE;
-    if (__system_property_get("ro.hardware", v) > 0 &&
-        (strstr(v,"goldfish")||strstr(v,"ranchu")||strstr(v,"vbox"))) return JNI_FALSE;
-    if (__system_property_get("ro.product.model", v) > 0 &&
-        (strstr(v,"sdk")||strstr(v,"Emulator")||strstr(v,"Android SDK"))) return JNI_FALSE;
+    char pn[64], n1[16], n2[16], n3[16], n4[16];
+    xstr(0,pn,sizeof pn); if (__system_property_get(pn, v) > 0 && strcmp(v,"1")==0) return JNI_FALSE;
+    xstr(1,pn,sizeof pn); xstr(25,n1,sizeof n1); xstr(26,n2,sizeof n2); xstr(27,n3,sizeof n3);
+    if (__system_property_get(pn, v) > 0 &&
+        (strstr(v,n1)||strstr(v,n2)||strstr(v,n3))) return JNI_FALSE;
+    xstr(2,pn,sizeof pn); xstr(28,n4,sizeof n4); xstr(29,n1,sizeof n1); xstr(30,n2,sizeof n2);
+    if (__system_property_get(pn, v) > 0 &&
+        (strstr(v,n4)||strstr(v,n1)||strstr(v,n2))) return JNI_FALSE;
     /* Root / debuggable detection — soft signal only */
-    if (__system_property_get("ro.debuggable", v) > 0 && strcmp(v,"1")==0) return JNI_FALSE;
-    if (access("/system/bin/su", F_OK) == 0 || access("/system/xbin/su", F_OK) == 0 ||
-        access("/sbin/su", F_OK) == 0 || access("/su/bin/su", F_OK) == 0 ||
-        access("/data/local/su", F_OK) == 0) return JNI_FALSE;
+    xstr(3,pn,sizeof pn); if (__system_property_get(pn, v) > 0 && strcmp(v,"1")==0) return JNI_FALSE;
+    char p1[64],p2[64],p3[64],p4[64],p5[64],p6[64];
+    xstr(19,p1,sizeof p1); xstr(20,p2,sizeof p2); xstr(21,p3,sizeof p3);
+    xstr(22,p4,sizeof p4); xstr(23,p5,sizeof p5); xstr(24,p6,sizeof p6);
+    if (access(p1, F_OK) == 0 || access(p2, F_OK) == 0 ||
+        access(p3, F_OK) == 0 || access(p4, F_OK) == 0 ||
+        access(p5, F_OK) == 0 || access(p6, F_OK) == 0) return JNI_FALSE;
     return JNI_TRUE;
+}
+
+/* ------------------------------------------------------------------ */
+/* Anti-debug / anti-hook checks (Prompt 7)                           */
+/* Returns 1 = clean, 0 = suspicious. Failures look identical to the  */
+/* caller — no reason is exposed.                                    */
+/* ------------------------------------------------------------------ */
+static int maps_contains_x(int needleIdx) {
+    char path[64]; xstr(16, path, sizeof path);
+    FILE *f = fopen(path, "r");
+    if (!f) return 0;
+    char line[512];
+    int found = 0;
+    char needle[32]; xstr(needleIdx, needle, sizeof needle);
+    while (fgets(line, sizeof line, f)) {
+        if (strstr(line, needle)) { found = 1; break; }
+    }
+    fclose(f);
+    return found;
+}
+
+static int tracer_pid(void) {
+    char path[64]; xstr(17, path, sizeof path);
+    FILE *f = fopen(path, "r");
+    if (!f) return 0;
+    char line[256];
+    int pid = 0;
+    while (fgets(line, sizeof line, f)) {
+        char tp[16]; xstr(18, tp, sizeof tp);
+        if (strncmp(line, tp, strlen(tp)) == 0) {
+            pid = atoi(line + 10);
+            break;
+        }
+    }
+    fclose(f);
+    return pid;
+}
+
+static int port_open(uint16_t port) {
+    int fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (fd < 0) return 0;
+    struct timeval tv = {0, 200000}; /* 200 ms */
+    setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof tv);
+    struct sockaddr_in a;
+    memset(&a, 0, sizeof a);
+    a.sin_family = AF_INET;
+    a.sin_port = htons(port);
+    a.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    int r = connect(fd, (struct sockaddr *)&a, sizeof a);
+    close(fd);
+    return r == 0;
+}
+
+static int anti_tamper_native(void) {
+    /* ptrace self-attach: fails if a debugger/frida already attached */
+    if (ptrace(PTRACE_TRACEME, 0, 0, 0) == -1) return 0;
+    ptrace(PTRACE_DETACH, 0, 0, 0);
+    /* a live tracer shows up in status even if traceme raced */
+    if (tracer_pid() > 0) return 0;
+    /* frida / hooking frameworks in memory maps */
+    static const int bad[] = {4,5,6,7,8,9,10,11,12,13,14,15};
+    for (size_t i = 0; i < sizeof(bad)/sizeof(bad[0]); i++)
+        if (maps_contains_x(bad[i])) return 0;
+    /* default frida-server port */
+    if (port_open(27042)) return 0;
+    /* xposed installer package dir */
+    char xp[128]; xstr(24, xp, sizeof xp);
+    if (access(xp, F_OK) == 0) return 0;
+    return 1;
+}
+
+JNIEXPORT jboolean JNICALL
+JNI_NAME(com_kornellaotf_learn_1dha_1anywaa, MainActivity, antiTamperOk)(
+    JNIEnv *env, jobject thiz) {
+    return anti_tamper_native() ? JNI_TRUE : JNI_FALSE;
 }

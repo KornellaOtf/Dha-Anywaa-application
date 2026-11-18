@@ -1,0 +1,60 @@
+name: Release safety check
+
+on:
+  push:
+    branches: [main, ui-cleanup-startup]
+    tags: ['v*']
+  pull_request:
+
+jobs:
+  asset-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check 1 — plaintext sources must never be committed
+        run: |
+          if git ls-files | grep -q '^assets_src/'; then
+            echo "::error::assets_src/ is tracked in git — plaintext learning content would leak. Remove it and keep it local-only (see .gitignore)."
+            exit 1
+          fi
+          echo "OK: no plaintext assets_src/ in tree"
+
+      - name: Check 2 — release docs must mandate obfuscation flags
+        run: |
+          if ! grep -R -- '--obfuscate' docs/ASSET_FORMAT.md RELEASE.md >/dev/null 2>&1; then
+            echo "::error::Release docs must document 'flutter build apk --release --obfuscate --split-debug-info=...' — an unobfuscated build ships readable Dart snapshots."
+            exit 1
+          fi
+          echo "OK: obfuscation flags documented"
+
+      - name: Check 3 — release buildType must minify + shrink
+        run: |
+          if ! grep -A8 'buildTypes' android/app/build.gradle | grep -q 'minifyEnabled true' \
+             || ! grep -A8 'buildTypes' android/app/build.gradle | grep -q 'shrinkResources true'; then
+            echo "::error::android/app/build.gradle release buildType lost minifyEnabled/shrinkResources — release APKs would ship unminified."
+            exit 1
+          fi
+          echo "OK: minify + shrink enabled"
+
+      - name: Check 4 — no raw key literals in Dart/native sources
+        run: |
+          # Heuristic: 64+ hex chars or long base64-looking literals that
+          # could be a raw AES key. False positives are acceptable — this
+          # is a guard-rail, not a scanner.
+          # key_guard.c legitimately contains the 64-hex cert hash constant.
+          if grep -rInE "['\"][0-9a-fA-F]{64,}['\"]" lib/ android/app/src/ tools/ \
+             | grep -v 'secrets.example\|test/\|\.md\|key_guard\.c'; then
+            echo "::error::Possible hardcoded key material found (see matches above). Move secrets to lib/secrets.dart (gitignored) or native code."
+            exit 1
+          fi
+          echo "OK: no obvious key literals"
+
+      - name: Check 5 — encrypted assets present and non-empty
+        run: |
+          count=$(find assets/encrypted -type f 2>/dev/null | wc -l)
+          if [ "$count" -lt 4 ]; then
+            echo "::error::assets/encrypted/ has $count files — expected the encrypted content set. Run tools/encrypt_assets.py before releasing."
+            exit 1
+          fi
+          echo "OK: $count encrypted assets present"
