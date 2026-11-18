@@ -1,1 +1,0 @@
-/home/kornella/Dha-Anywaa-application/build/app/intermediates/cxx/RelWithDebInfo/6c2l2m4p/obj/armeabi-v7a

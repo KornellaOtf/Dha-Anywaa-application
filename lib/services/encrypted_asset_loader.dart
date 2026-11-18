@@ -90,7 +90,13 @@ class EncryptedAssetLoader {
       // Tamper response: drop everything decrypted so a repackaged APK
       // can't scrape leftover plaintext from memory.
       _cache.clear();
-      if (kDebugMode) debugPrint('asset guard refused decrypt ($logicalId)');
+      if (kDebugMode) {
+        debugPrint('asset guard refused decrypt ($logicalId)');
+        try {
+          final report = await _channel.invokeMethod<String>('guardReport');
+          debugPrint('guard report: $report');
+        } catch (_) {}
+      }
       throw AssetDecryptException(
           logicalId, 'content unavailable on this device');
     }
@@ -148,6 +154,17 @@ class EncryptedAssetLoader {
   /// this to decrypt inline on the test isolate instead.
   @visibleForTesting
   static bool debugInlineDecrypt = false;
+
+  /// Debug-only diagnostic: which guard checks are failing.
+  /// Returns null in release builds or when the channel is unavailable.
+  Future<String?> debugGuardReport() async {
+    if (!kDebugMode) return null;
+    try {
+      return await _channel.invokeMethod<String>('guardReport');
+    } catch (_) {
+      return null;
+    }
+  }
 
   /// Test hook: decrypt a raw container blob without touching rootBundle
   /// or the native channel.

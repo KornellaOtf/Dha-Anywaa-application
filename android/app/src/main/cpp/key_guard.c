@@ -329,8 +329,19 @@ static int maps_contains_x(int needleIdx) {
     char line[512];
     int found = 0;
     char needle[32]; xstr(needleIdx, needle, sizeof needle);
+    size_t nl = strlen(needle);
     while (fgets(line, sizeof line, f)) {
-        if (strstr(line, needle)) { found = 1; break; }
+        char *hit = strstr(line, needle);
+        while (hit) {
+            /* require non-identifier boundaries so 'pine' inside
+               'spinel' or 'epic' inside a longer word can't match */
+            int lb = (hit == line) || !((hit[-1]>='a'&&hit[-1]<='z')||(hit[-1]>='A'&&hit[-1]<='Z')||(hit[-1]>='0'&&hit[-1]<='9')||hit[-1]=='_');
+            char after = hit[nl];
+            int rb = (after=='\n'||after=='\r'||after=='\0') || !((after>='a'&&after<='z')||(after>='A'&&after<='Z')||(after>='0'&&after<='9')||after=='_');
+            if (lb && rb) { found = 1; break; }
+            hit = strstr(hit + 1, needle);
+        }
+        if (found) break;
     }
     fclose(f);
     return found;
@@ -390,4 +401,27 @@ JNIEXPORT jboolean JNICALL
 JNI_NAME(com_kornellaotf_learn_1dha_1anywaa, MainActivity, antiTamperOk)(
     JNIEnv *env, jobject thiz) {
     return anti_tamper_native() ? JNI_TRUE : JNI_FALSE;
+}
+
+/* Per-check report for diagnostics. Callers must only surface this in
+   debug builds — in release it stays internal. */
+static void check_reports(char *out, size_t cap) {
+    int n = snprintf(out, cap, "ptrace:%d ", ptrace(PTRACE_TRACEME,0,0,0)==-1?0:1);
+    ptrace(PTRACE_DETACH,0,0,0);
+    n += snprintf(out+n, cap-n, "tracer:%d ", tracer_pid());
+    for (int i=0;i<12;i++) {
+        static const int bi[12]={4,5,6,7,8,9,10,11,12,13,14,15};
+        if (maps_contains_x(bi[i])) n += snprintf(out+n, cap-n, "map%d ", bi[i]);
+    }
+    n += snprintf(out+n, cap-n, "port:%d ", port_open(27042)?1:0);
+    char xp[128]; xstr(24, xp, sizeof xp);
+    n += snprintf(out+n, cap-n, "xposedir:%d", access(xp,F_OK)==0?1:0);
+}
+
+JNIEXPORT jstring JNICALL
+JNI_NAME(com_kornellaotf_learn_1dha_1anywaa, MainActivity, guardReport)(
+    JNIEnv *env, jobject thiz) {
+    char buf[512];
+    check_reports(buf, sizeof buf);
+    return (*env)->NewStringUTF(env, buf);
 }

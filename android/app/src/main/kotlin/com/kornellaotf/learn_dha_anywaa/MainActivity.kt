@@ -18,6 +18,7 @@ class MainActivity: FlutterActivity() {
         @JvmStatic external fun expectedCertHash(): String
         @JvmStatic external fun isTrustedEnvironment(): Boolean
         @JvmStatic external fun antiTamperOk(): Boolean
+        @JvmStatic external fun guardReport(): String
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -40,6 +41,12 @@ class MainActivity: FlutterActivity() {
                     "isTrusted" -> result.success(isTrustedEnvironment())
                     "antiTamperOk" -> result.success(
                         !android.os.Debug.isDebuggerConnected() && antiTamperOk())
+                    // Diagnostic only — never expose check detail in release.
+                    "guardReport" -> result.success(
+                        if (BuildConfig.DEBUG)
+                            "trusted=${isTrustedEnvironment()} intact=${checkIntegrity()} " +
+                            "tamper=${antiTamperOk()} native=[${guardReport()}]"
+                        else "unavailable")
                     "checkIntegrity" -> result.success(checkIntegrity())
                     else -> result.notImplemented()
                 }

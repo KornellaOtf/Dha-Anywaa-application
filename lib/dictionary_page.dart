@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dha_anywaaa/services/encrypted_asset_loader.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
@@ -460,6 +461,8 @@ class _DictionaryPageState extends State<DictionaryPage> {
   List<_Category> _categories = [];
   int _total = 0;
   bool _loaded = false;
+  bool _loadFailed = false;
+  String? _loadErrorDetail;
 
   _Category? _currentCat;
   String _search = '';
@@ -494,7 +497,23 @@ class _DictionaryPageState extends State<DictionaryPage> {
       });
       return;
     }
-    final raw = await EncryptedAssetLoader.instance.loadString('data/dictionary_full');
+    final String raw;
+    try {
+      raw = await EncryptedAssetLoader.instance.loadString('data/dictionary_full');
+    } catch (_) {
+      String? detail;
+      if (kDebugMode) {
+        try {
+          detail = await EncryptedAssetLoader.instance.debugGuardReport();
+        } catch (_) {}
+      }
+      if (!mounted) return;
+      setState(() {
+        _loadFailed = true;
+        _loadErrorDetail = detail;
+      });
+      return;
+    }
     final map = json.decode(raw) as Map<String, dynamic>;
     final cats = ((map['categories'] ?? const []) as List)
         .map((c) => _Category.fromJson(c as Map<String, dynamic>))
@@ -604,7 +623,34 @@ class _DictionaryPageState extends State<DictionaryPage> {
             ),
         ],
       ),
-      body: !_loaded
+      body: _loadFailed
+          ? Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.cloud_off_outlined, color: c.textSub, size: 40),
+                  const SizedBox(height: 12),
+                  Text('Dictionary content is unavailable on this device.',
+                      style: TextStyle(color: c.textSub)),
+                  if (_loadErrorDetail != null) ...[
+                    const SizedBox(height: 8),
+                    Text(_loadErrorDetail!,
+                        style: TextStyle(color: c.textSub, fontSize: 11),
+                        textAlign: TextAlign.center),
+                  ],
+                  const SizedBox(height: 12),
+                  TextButton.icon(
+                    onPressed: () => setState(() {
+                      _loadFailed = false;
+                      _load();
+                    }),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Retry'),
+                  ),
+                ],
+              ),
+            )
+          : !_loaded
           ? Center(child: CircularProgressIndicator(color: c.accent))
           : _searching
               ? _buildSearchResults()

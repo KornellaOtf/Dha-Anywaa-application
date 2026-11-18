@@ -1,1 +1,0 @@
-/home/kornella/Dha-Anywaa-application/android/app/src/main/cpp/CMakeLists.txt
