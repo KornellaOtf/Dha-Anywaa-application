@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/home/kornella/Dha-Anywaa-application/android/app/.cxx/Debug/6y8534b6/x86_64",
+  "command": "/home/kornella/Android/Sdk/ndk/28.2.13676358/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=x86_64-none-linux-android24 --sysroot=/home/kornella/Android/Sdk/ndk/28.2.13676358/toolchains/llvm/prebuilt/linux-x86_64/sysroot -Dkeyguard_EXPORTS -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info  -fPIC -o CMakeFiles/keyguard.dir/key_guard.c.o -c /home/kornella/Dha-Anywaa-application/android/app/src/main/cpp/key_guard.c",
+  "file": "/home/kornella/Dha-Anywaa-application/android/app/src/main/cpp/key_guard.c"
+}
+]

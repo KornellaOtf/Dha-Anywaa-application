@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.0.11 (build 2211)
+
+Released: 2026-11-18
+
+### Fixed
+- Dictionary and Anywaa AI pages no longer hang on a spinner when
+  encrypted content can't load — they show an unavailable state with
+  retry instead
+- Anti-tamper maps scan now requires word boundaries, fixing false
+  refusals on devices with libraries like libspinel
+- Key fetch moved off the UI thread (follow-up to v2.0.10)
+
 ## 2.0.10 (build 2210)
 
 Released: 2026-11-18
