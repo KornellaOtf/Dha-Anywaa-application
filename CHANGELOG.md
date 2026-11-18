@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.10 (build 2210)
+
+Released: 2026-11-18
+
+### Fixed
+- Anywaa AI page no longer hangs on the loading spinner when the
+  encrypted dictionary asset is unavailable
+- Key-fetch no longer blocks the UI thread and backs off for 5 minutes
+  when the key server is unreachable
+
 ## 2.0.9 (build 2209)
 
 Released: 2026-11-18
