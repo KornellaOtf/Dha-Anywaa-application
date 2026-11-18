@@ -37,15 +37,23 @@ object AssetKeyStore {
     private const val TIMEOUT_MS = 10_000
 
     @Volatile private var cached: ByteArray? = null
+    @Volatile private var lastFailAt = 0L
+    private val FAIL_BACKOFF_MS = 5 * 60 * 1000L
 
     /** Returns the 32-byte asset key, or null if unavailable. */
     fun get(context: Context): ByteArray? {
         cached?.let { return it }
+        // Don't hammer a dead/undeployed endpoint on every decrypt call.
+        if (System.currentTimeMillis() - lastFailAt < FAIL_BACKOFF_MS) {
+            return null
+        }
         return try {
             val key = loadCached(context) ?: fetchAndCache(context)
+            if (key == null) lastFailAt = System.currentTimeMillis()
             cached = key
             key
         } catch (e: Exception) {
+            lastFailAt = System.currentTimeMillis()
             null
         }
     }

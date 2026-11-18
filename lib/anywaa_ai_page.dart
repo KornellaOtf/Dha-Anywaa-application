@@ -44,7 +44,12 @@ class _AnywaaAiPageState extends State<AnywaaAiPage> {
   }
 
   Future<void> _start() async {
-    await _ai.load();
+    try {
+      await _ai.load();
+    } catch (_) {
+      // Asset unavailable (guard refusal / decrypt failure) — render the
+      // chat anyway; the service reports itself unready per-message.
+    }
     if (!mounted) return;
     setState(() {
       _loading  = false;

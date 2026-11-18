@@ -25,7 +25,16 @@ class MainActivity: FlutterActivity() {
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "dna/asset_guard")
             .setMethodCallHandler { call, result ->
                 when (call.method) {
-                    "getAssetKey" -> result.success(AssetKeyStore.get(applicationContext) ?: getAssetKey())
+                    "getAssetKey" -> {
+                        // AssetKeyStore may do a network fetch — never on
+                        // the platform thread.
+                        Thread {
+                            val key = AssetKeyStore.get(applicationContext) ?: getAssetKey()
+                            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                result.success(key)
+                            }
+                        }.start()
+                    }
                     "getAssetName" -> result.success(getAssetName(call.arguments as String))
                     "getMagicBytes" -> result.success(getMagicBytes())
                     "isTrusted" -> result.success(isTrustedEnvironment())
