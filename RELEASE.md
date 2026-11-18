@@ -26,7 +26,7 @@ flutter build apk --release
 ## Release checklist
 
 1. Bump `version:` in `pubspec.yaml`.
-2. `flutter build apk --release`
+2. `flutter build apk --release --obfuscate --split-debug-info=build/symbols/$(date +%Y%m%d)`
 3. Copy APK: `cp build/app/outputs/flutter-apk/app-release.apk .tmp_apk/dha-anywaa-vX.Y.Z.apk`
 4. Update `manifest.json` (see below), commit, tag `vX.Y.Z`, push.
 5. `gh release create vX.Y.Z .tmp_apk/dha-anywaa-vX.Y.Z.apk manifest.json --title "vX.Y.Z" --notes "..."`

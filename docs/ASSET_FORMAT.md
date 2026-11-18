@@ -31,13 +31,16 @@ public format).
 ## Key
 
 - 32-byte AES key = `SHA-256(DHA_ASSET_KEY)`.
-- `DHA_ASSET_KEY` is a high-entropy passphrase stored **only** in
-  `lib/secrets.dart` (compiled into the app, same protection level as
-  the API keys) and in the `DHA_ASSET_KEY` environment variable for the
-  Python encryptor. Never committed.
+- `DHA_ASSET_KEY` is a high-entropy passphrase. It is **not in Dart**:
+  the passphrase lives XOR-split across two constant arrays inside
+  `android/app/src/main/cpp/key_guard.c` (native `keyguard` library),
+  reassembled and hashed only in native code per call.
+- The Python encryptor gets the same passphrase via the
+  `DHA_ASSET_KEY` environment variable. Never committed.
 - Rationale: assets are obfuscation, not DRM — a determined attacker
-  with the APK can extract the key. The goal is raising the bar against
-  casual `unzip`/`strings` inspection.
+  can still extract the key from the native library. The goal is
+  raising the bar against casual `unzip`/`strings` inspection and
+  Dart-source analysis.
 
 ## Nonce (deterministic)
 
@@ -87,15 +90,44 @@ filename from the logical ID at runtime using the same keyed hash.
 
 ```bash
 # Encrypt (requires DHA_ASSET_KEY env var + python cryptography pkg)
-DHA_ASSET_KEY=... python3 tools/encrypt_assets.py
-
-# Verify round-trip
 DHA_ASSET_KEY=... python3 tools/encrypt_assets.py --verify
 ```
 
+## Release build (required flags)
+
+Never ship an unobfuscated build. The release command is:
+
+```bash
+flutter build apk --release --obfuscate --split-debug-info=build/symbols/$(date +%Y%m%d)
+```
+
+`android/app/build.gradle` already sets `minifyEnabled true` and
+`shrinkResources true` for release; keep them.
+
+## Native layer (`keyguard`)
+
+`android/app/src/main/cpp/key_guard.c` (CMake, all ABIs) exposes JNI
+methods bridged to Dart via `MethodChannel('dna/asset_guard')` in
+`MainActivity.kt`:
+
+| Channel method | Returns |
+|---|---|
+| `getAssetKey` | derived 32-byte AES key (transient, per call) |
+| `getAssetName` | HMAC-derived obfuscated filename for a logical ID |
+| `getMagicBytes` | container magic bytes |
+| `isTrusted` | false on emulator/root/debug builds signals |
+| `checkIntegrity` | APK signing-cert SHA-256 vs baked constant |
+
+- Filename derivation and magic bytes are **not** in Dart source.
+- `checkIntegrity` compares the running APK's signing cert against the
+  release cert hash baked into native code; debug builds are exempt.
+- Decoy files: `tools/encrypt_assets.py` also writes 8 deterministic
+  fake containers (valid headers, garbage ciphertext) into
+  `assets/encrypted/` so bulk-extraction scripts produce broken output.
+
 Dart side: `EncryptedAssetLoader.instance.loadBytes('data/dictionary_full')`
 returns decrypted `Uint8List`; `loadString` decodes UTF-8.
-Decrypts on an isolate; caches per logical ID.
+Decrypts on an isolate; caches per logical ID in memory only.
 
 ## Threat model (honest)
 

@@ -102,8 +102,38 @@ def main() -> None:
 
     MANIFEST.write_text("\n".join(manifest_lines) + "\n")
     print(f"\nmanifest -> {MANIFEST.relative_to(ROOT)}")
+
+    # Decoys: valid-looking containers with garbage ciphertext so bulk
+    # extraction scripts produce visibly broken output.
+    decoys = write_decoys(key, aes)
+    print(f"decoys: {decoys} written")
+
     if failures:
         sys.exit(f"{failures} verification failure(s)")
+
+
+def write_decoys(key: bytes, aes: AESGCM) -> int:
+    """Deterministic fake encrypted files — same container shape, random
+    payload that can never decrypt. Names derive from fake logical ids so
+    they can never collide with real assets."""
+    count = 0
+    for i in range(8):
+        logical_id = f"decoy_{i:02d}"
+        name = obfuscated_name(key, logical_id)
+        nonce = nonce_for(key, logical_id)
+        # Deterministic "ciphertext" — hash counter stream, NOT encrypted.
+        size = 180 + (i * 137) % 600
+        junk = bytearray()
+        counter = 0
+        while len(junk) < size:
+            junk += hashlib.sha256(
+                b"decoy" + logical_id.encode() + counter.to_bytes(4, "big")
+            ).digest()
+            counter += 1
+        blob = MAGIC + bytes([VERSION]) + nonce + bytes(junk[:size])
+        (OUT / name).write_bytes(blob)
+        count += 1
+    return count
 
 
 if __name__ == "__main__":

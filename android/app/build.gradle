@@ -55,7 +55,15 @@ android {
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         // Note: ABI filtering is handled by flutter build --split-per-abi flag
-        // No ndk abiFilters needed here
+        ndk {
+            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64'
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path 'src/main/cpp/CMakeLists.txt'
+        }
     }
 
     signingConfigs {
