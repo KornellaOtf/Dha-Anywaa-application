@@ -2,11 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/analytics_service.dart';
+import '../services/encrypted_asset_loader.dart';
 
 // ─── Palette ──────────────────────────────────────────────────────────────────
 const _kDark    = Color(0xFF0F1923);
@@ -113,7 +113,7 @@ class _BiblePageState extends State<BiblePage>
 
   Future<void> _loadData() async {
     try {
-      final raw  = await rootBundle.loadString('assets/bible.json');
+      final raw  = await EncryptedAssetLoader.instance.loadString('bible');
       final list = json.decode(raw) as List<dynamic>;
       final verses = list
           .map((v) => BibleVerse.fromJson(v as Map<String, dynamic>))

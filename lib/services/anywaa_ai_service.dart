@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:math' as math;
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:dha_anywaaa/services/encrypted_asset_loader.dart';
 
 // ── Cultural fact ────────────────────────────────────────────────────────────
 class CulturalFact {
@@ -81,8 +81,8 @@ class AnywaaAiService {
   AnywaaAiService._();
   static final AnywaaAiService instance = AnywaaAiService._();
 
-  static const String _asset = 'assets/data/dictionary_full.json';
-  static const String _culturalAsset = 'assets/data/cultural_facts.json';
+  static const String _asset = 'data/dictionary_full';
+  static const String _culturalAsset = 'data/cultural_facts';
 
   List<DictEntry> _words = const [];
   List<CulturalFact> _facts = const [];
@@ -178,7 +178,7 @@ class AnywaaAiService {
   Future<void> load() async {
     if (ready) return;
     // Load dictionary_full.json (nested by category)
-    final raw = await rootBundle.loadString(_asset);
+    final raw = await EncryptedAssetLoader.instance.loadString(_asset);
     final map = json.decode(raw) as Map<String, dynamic>;
     
     final allWords = <DictEntry>[];
@@ -214,7 +214,7 @@ class AnywaaAiService {
     
     // Load cultural facts (non-fatal if missing)
     try {
-      final factRaw = await rootBundle.loadString(_culturalAsset);
+      final factRaw = await EncryptedAssetLoader.instance.loadString(_culturalAsset);
       final factMap = json.decode(factRaw) as Map<String, dynamic>;
       _facts = ((factMap['facts'] ?? const []) as List)
           .map((e) => CulturalFact.fromJson(e as Map<String, dynamic>))

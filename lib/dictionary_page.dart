@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:dha_anywaaa/services/encrypted_asset_loader.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
 
 // ── Models ────────────────────────────────────────────────────────────────────
@@ -494,7 +494,7 @@ class _DictionaryPageState extends State<DictionaryPage> {
       });
       return;
     }
-    final raw = await rootBundle.loadString('assets/data/dictionary_full.json');
+    final raw = await EncryptedAssetLoader.instance.loadString('data/dictionary_full');
     final map = json.decode(raw) as Map<String, dynamic>;
     final cats = ((map['categories'] ?? const []) as List)
         .map((c) => _Category.fromJson(c as Map<String, dynamic>))

@@ -51,6 +51,7 @@ dependencies:
   share_plus: ^10.0.0
   quick_actions: ^1.0.8
   flutter_timezone: ^5.1.1
+  cryptography: ^2.9.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -94,8 +95,7 @@ flutter:
     - assets/birds/
     - assets/fish/
     - assets/cloth/
-    - assets/data/
-    - assets/bible.json
+    - assets/encrypted/
 
   # Charis SIL covers Anywaa extended Latin characters (ŋ, ɔ, ə, ӓ, ӧ, ı, ő)
   # that Nunito lacks. Registered as a fallback so those glyphs never show
