@@ -13,7 +13,7 @@ import 'package:dha_anywaaa/services/share_helper.dart';
 import 'package:dha_anywaaa/terms_page.dart';
 import 'package:dha_anywaaa/widgets/route_transitions.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:dha_anywaaa/theme/app_fonts.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -557,7 +557,7 @@ class _BrandedDialog extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(title,
-                          style: GoogleFonts.playfairDisplay(
+                          style: AppFonts.playfair(
                               fontSize: 20,
                               fontWeight: FontWeight.w700,
                               color: c.text)),

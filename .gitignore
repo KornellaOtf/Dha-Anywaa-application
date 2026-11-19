@@ -51,3 +51,4 @@ lib/secrets.dart
 # Encrypted-asset pipeline: plaintext sources and dev manifest stay local
 assets_src/
 tools/asset_manifest.log
+.cxx/

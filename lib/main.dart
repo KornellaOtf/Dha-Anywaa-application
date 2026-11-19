@@ -41,35 +41,11 @@ bool firebaseReady = false;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize timezone data for notifications
-  tz.initializeTimeZones();
-
-  // Initialize Firebase (Analytics only - no FCM for now)
-  try {
-    await Firebase.initializeApp();
-    // Set user properties so Firebase can segment users by app version
-    // and distribution channel. Helps replace "(not set)" with real data.
-    final analytics = FirebaseAnalytics.instance;
-    final pkgInfo = await PackageInfo.fromPlatform();
-    await analytics.setUserProperty(
-        name: 'app_version', value: pkgInfo.version);
-    await analytics.setUserProperty(
-        name: 'build_number', value: pkgInfo.buildNumber);
-    await analytics.setUserProperty(name: 'distribution', value: 'github');
-
-    // Restore hashed user ID and log app open via unified service
-    await AnalyticsService.instance.initializeFromStorage();
-    await AnalyticsService.instance.logAppOpen();
-    firebaseReady = true;
-  } catch (e) {
-    debugPrint('Firebase initialization error: $e');
-  }
-
-  final quickActions = const QuickActions();
-
-  // Load the saved preference first so the correct theme is applied from the
-  // very first frame instead of flashing the system theme on relaunch.
+  // Only the theme preference is read before runApp — everything else
+  // (Firebase, timezone DB, package info) is deferred to post-frame so
+  // the splash/logo renders immediately instead of stalling on init.
   final prefs = await SharedPreferences.getInstance();
+  final quickActions = const QuickActions();
   runApp(
     AppSettings(
       notifier: AppSettingsNotifier(
@@ -83,6 +59,25 @@ void main() async {
 
   // Non-critical services init after the first frame so startup stays fast.
   WidgetsBinding.instance.addPostFrameCallback((_) async {
+    // Timezone DB + Firebase + analytics are network/plugin heavy —
+    // keep them off the startup path entirely.
+    tz.initializeTimeZones();
+    try {
+      await Firebase.initializeApp();
+      final analytics = FirebaseAnalytics.instance;
+      final pkgInfo = await PackageInfo.fromPlatform();
+      await analytics.setUserProperty(
+          name: 'app_version', value: pkgInfo.version);
+      await analytics.setUserProperty(
+          name: 'build_number', value: pkgInfo.buildNumber);
+      await analytics.setUserProperty(name: 'distribution', value: 'github');
+      await AnalyticsService.instance.initializeFromStorage();
+      await AnalyticsService.instance.logAppOpen();
+      firebaseReady = true;
+    } catch (e) {
+      debugPrint('Firebase initialization error: $e');
+    }
+
     await OtaService.initialize();
 
     try {

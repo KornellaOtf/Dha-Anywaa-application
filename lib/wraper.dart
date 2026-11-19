@@ -5,7 +5,7 @@ import 'package:dha_anywaaa/services/analytics_service.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:dha_anywaaa/widgets/brand_leaf.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:dha_anywaaa/theme/app_fonts.dart';
 
 class Wrapper extends StatefulWidget {
   const Wrapper({super.key});
@@ -61,7 +61,7 @@ class _WrapperState extends State<Wrapper> {
                 const SizedBox(height: 26),
                 Text(
                   'Dha Anywaa',
-                  style: GoogleFonts.playfairDisplay(
+                  style: AppFonts.playfair(
                     fontSize: 30,
                     fontWeight: FontWeight.w800,
                     color: context.c.text,

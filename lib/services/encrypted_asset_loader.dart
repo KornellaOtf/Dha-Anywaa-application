@@ -119,11 +119,15 @@ class EncryptedAssetLoader {
     }
 
     // Key is fetched transiently and only lives inside the job.
-    final key = debugKeyOverride ??
+    // Platform-channel lists are unmodifiable — copy so the wipe below
+    // can't throw (it did on-device: "Cannot modify an unmodifiable
+    // list" broke every decrypt).
+    final rawKey = debugKeyOverride ??
         await _channel.invokeMethod<Uint8List>('getAssetKey');
-    if (key == null) {
+    if (rawKey == null) {
       throw AssetDecryptException(logicalId, 'key unavailable');
     }
+    final key = Uint8List.fromList(rawKey);
 
     final job = _DecryptJob(blob, key, logicalId, magic);
     final plain = debugInlineDecrypt

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:dha_anywaaa/theme/app_fonts.dart';
 
 // ── Brand accent tokens (readable on both light and dark surfaces) ───────────
 const kGreen    = Color(0xFF1F4D3A); // forest green (solid surfaces, buttons)
@@ -147,7 +147,7 @@ class AppTheme {
   AppTheme._();
 
   static TextTheme _textTheme({required Color text, required Color textSub}) {
-    final sans = GoogleFonts.nunitoTextTheme(
+    final sans = AppFonts.nunitoTextTheme(
       TextTheme(
         displayLarge: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: text),
         displayMedium: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: text),
@@ -168,13 +168,13 @@ class AppTheme {
 
     // Serif display face for titles and the big Anywaa words.
     final themed = sans.copyWith(
-      displayLarge: GoogleFonts.playfairDisplay(
+      displayLarge: AppFonts.playfair(
           fontSize: 40, fontWeight: FontWeight.w700, color: text),
-      displayMedium: GoogleFonts.playfairDisplay(
+      displayMedium: AppFonts.playfair(
           fontSize: 32, fontWeight: FontWeight.w700, color: text),
-      headlineLarge: GoogleFonts.playfairDisplay(
+      headlineLarge: AppFonts.playfair(
           fontSize: 28, fontWeight: FontWeight.w700, color: text),
-      headlineMedium: GoogleFonts.playfairDisplay(
+      headlineMedium: AppFonts.playfair(
           fontSize: 24, fontWeight: FontWeight.w700, color: text),
     );
 

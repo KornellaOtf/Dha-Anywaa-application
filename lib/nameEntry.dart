@@ -3,7 +3,7 @@ import 'package:dha_anywaaa/services/analytics_service.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:dha_anywaaa/widgets/brand_leaf.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:dha_anywaaa/theme/app_fonts.dart';
 
 class NameEntry extends StatefulWidget {
   const NameEntry({super.key});
@@ -107,7 +107,7 @@ class _NameEntryState extends State<NameEntry> {
                     _rise(
                       1,
                       Text('Dëëri jööt?',
-                          style: GoogleFonts.playfairDisplay(
+                          style: AppFonts.playfair(
                               fontSize: 20,
                               fontStyle: FontStyle.italic,
                               fontWeight: FontWeight.w500,
@@ -117,7 +117,7 @@ class _NameEntryState extends State<NameEntry> {
                     _rise(
                       2,
                       Text('Dha Anywaa',
-                          style: GoogleFonts.playfairDisplay(
+                          style: AppFonts.playfair(
                               fontSize: 40,
                               fontWeight: FontWeight.w800,
                               color: c.text,

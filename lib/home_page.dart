@@ -22,7 +22,7 @@ import 'package:dha_anywaaa/widgets/brand_leaf.dart';
 import 'package:dha_anywaaa/widgets/celebration_widget.dart';
 import 'package:dha_anywaaa/widgets/floating_nav.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:dha_anywaaa/theme/app_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Items per category: used to calculate progress %.
@@ -245,7 +245,7 @@ class _HomePageState extends State<HomePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('Explore',
-                        style: GoogleFonts.playfairDisplay(
+                        style: AppFonts.playfair(
                             fontSize: 22,
                             fontWeight: FontWeight.w700,
                             color: context.c.text)),
@@ -298,7 +298,7 @@ class _HomePageState extends State<HomePage> {
                 const SizedBox(height: 2),
                 Text(
                   _name.isEmpty ? 'Learner' : _name,
-                  style: GoogleFonts.playfairDisplay(
+                  style: AppFonts.playfair(
                       fontSize: 28,
                       fontWeight: FontWeight.w700,
                       color: context.c.text,
@@ -477,7 +477,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 14),
                 Text(_lastRouteName,
-                    style: GoogleFonts.playfairDisplay(
+                    style: AppFonts.playfair(
                         fontSize: 26,
                         fontWeight: FontWeight.w700,
                         color: Colors.white)),

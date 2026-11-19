@@ -3,7 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:dha_anywaaa/theme/app_fonts.dart';
 
 import '../services/analytics_service.dart';
 import '../services/encrypted_asset_loader.dart';
@@ -279,7 +279,7 @@ class _BiblePageState extends State<BiblePage>
         centerTitle: false,
         titleSpacing: 4,
         title: Text('Wëël Jwök',
-            style: GoogleFonts.playfairDisplay(
+            style: AppFonts.playfair(
                 color: fg, fontSize: 20, fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
@@ -443,7 +443,7 @@ class _BiblePageState extends State<BiblePage>
                   alignment: Alignment.center,
                   child: Text(
                     initial,
-                    style: GoogleFonts.playfairDisplay(
+                    style: AppFonts.playfair(
                       color: isLast
                           ? _kGoldSoft
                           : (_night ? _kGoldSoft : _kGreen),
@@ -459,7 +459,7 @@ class _BiblePageState extends State<BiblePage>
                     children: [
                       Text(
                         book,
-                        style: GoogleFonts.playfairDisplay(
+                        style: AppFonts.playfair(
                             color: isLast ? _kGold : fg,
                             fontSize: 15.5,
                             fontWeight: FontWeight.w700,
@@ -565,7 +565,7 @@ class _BiblePageState extends State<BiblePage>
           onPressed: () => setState(() => _book = null),
         ),
         title: Text(_book!,
-            style: GoogleFonts.playfairDisplay(
+            style: AppFonts.playfair(
                 color: fg, fontWeight: FontWeight.bold, fontSize: 20)),
         actions: [
           IconButton(
@@ -591,7 +591,7 @@ class _BiblePageState extends State<BiblePage>
                   alignment: Alignment.center,
                   child: Text(
                     _book!.isEmpty ? '?' : _book![0].toUpperCase(),
-                    style: GoogleFonts.playfairDisplay(
+                    style: AppFonts.playfair(
                       color: _night ? _kGoldSoft : _kGreen,
                       fontSize: 19,
                       fontWeight: FontWeight.bold,
@@ -691,7 +691,7 @@ class _BiblePageState extends State<BiblePage>
                         alignment: Alignment.center,
                         child: Text(
                           _book!.isEmpty ? '?' : _book![0].toUpperCase(),
-                          style: GoogleFonts.playfairDisplay(
+                          style: AppFonts.playfair(
                             color: _night ? _kGoldSoft : _kGreen,
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -703,7 +703,7 @@ class _BiblePageState extends State<BiblePage>
                         child: Column(
                           children: [
                             Text(_book!,
-                                style: GoogleFonts.playfairDisplay(
+                                style: AppFonts.playfair(
                                     color: _night
                                         ? Colors.white
                                         : _kInkDay,

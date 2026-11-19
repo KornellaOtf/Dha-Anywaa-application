@@ -105,6 +105,12 @@ flutter:
       fonts:
         - asset: assets/fonts/CharisSIL-Regular.ttf
         - asset: assets/fonts/CharisSIL-Bold.ttf
+    - family: PlayfairDisplay
+      fonts:
+        - asset: assets/fonts/PlayfairDisplay.ttf
+    - family: Nunito
+      fonts:
+        - asset: assets/fonts/Nunito.ttf
           weight: 700
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg

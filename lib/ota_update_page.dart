@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:dha_anywaaa/theme/app_fonts.dart';
 import 'package:open_file/open_file.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -66,7 +66,7 @@ class _OtaUpdatePageState extends State<OtaUpdatePage> {
         centerTitle: false,
         titleSpacing: 4,
         title: Text(title,
-            style: GoogleFonts.playfairDisplay(
+            style: AppFonts.playfair(
                 fontWeight: FontWeight.w700,
                 fontSize: 22,
                 color: Colors.white)),
@@ -341,7 +341,7 @@ class _OtaUpdatePageState extends State<OtaUpdatePage> {
 
   Widget _display(String text) => Text(
         text,
-        style: GoogleFonts.playfairDisplay(
+        style: AppFonts.playfair(
             fontSize: 28, fontWeight: FontWeight.w700, color: context.c.text),
       );
 

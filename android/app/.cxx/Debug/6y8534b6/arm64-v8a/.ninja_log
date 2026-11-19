@@ -1,6 +1,0 @@
-# ninja log v5
-0	819	1795044581782970853	CMakeFiles/keyguard.dir/key_guard.c.o	db7ccd98a381543d
-820	941	1795044581906976686	/home/kornella/Dha-Anywaa-application/build/app/intermediates/cxx/Debug/6y8534b6/obj/arm64-v8a/libkeyguard.so	5a3439b497f2a8c5
-430	4308	1795046104005225212	/home/kornella/Dha-Anywaa-application/build/app/intermediates/cxx/Debug/6y8534b6/obj/arm64-v8a/libkeyguard.so	5a3439b497f2a8c5
-1	195	1795048577087146203	CMakeFiles/keyguard.dir/key_guard.c.o	db7ccd98a381543d
-195	225	1795048577120072964	/home/kornella/Dha-Anywaa-application/build/app/intermediates/cxx/Debug/6y8534b6/obj/arm64-v8a/libkeyguard.so	5a3439b497f2a8c5

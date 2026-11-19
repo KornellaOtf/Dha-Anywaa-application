@@ -1,3 +1,0 @@
-/home/kornella/Dha-Anywaa-application/android/app/.cxx/RelWithDebInfo/6c2l2m4p/arm64-v8a/CMakeFiles/keyguard.dir
-/home/kornella/Dha-Anywaa-application/android/app/.cxx/RelWithDebInfo/6c2l2m4p/arm64-v8a/CMakeFiles/edit_cache.dir
-/home/kornella/Dha-Anywaa-application/android/app/.cxx/RelWithDebInfo/6c2l2m4p/arm64-v8a/CMakeFiles/rebuild_cache.dir

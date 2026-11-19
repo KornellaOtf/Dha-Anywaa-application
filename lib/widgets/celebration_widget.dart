@@ -1,6 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:dha_anywaaa/theme/app_fonts.dart';
 
 /// Clean celebration popup — appears when marking a word as learned.
 /// Smooth spring animation, respects dark mode, lightweight confetti.
@@ -194,7 +194,7 @@ class _CelebrationOverlayState extends State<CelebrationOverlay>
                         const SizedBox(height: 14),
                         Text(
                           _getMessage(),
-                          style: GoogleFonts.playfairDisplay(
+                          style: AppFonts.playfair(
                             fontSize:   26,
                             fontWeight:  FontWeight.w700,
                             color:      textColor,

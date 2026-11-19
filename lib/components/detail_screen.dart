@@ -5,7 +5,7 @@ import 'package:dha_anywaaa/services/gamification_service.dart';
 import 'package:dha_anywaaa/theme/app_theme.dart';
 import 'package:dha_anywaaa/widgets/celebration_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:dha_anywaaa/theme/app_fonts.dart';
 
 /// Reusable detail + grid screen for every vocabulary category.
 /// Pass [category] (matches SavedData keys), [title], and [items] list.
@@ -412,7 +412,7 @@ class _DetailPanel extends StatelessWidget {
               const SizedBox(height: 16),
               Text(item['anyName']!,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.playfairDisplay(
+                  style: AppFonts.playfair(
                       fontSize: 28,
                       fontWeight: FontWeight.w700,
                       color: learned ? context.c.accent : context.c.text)),

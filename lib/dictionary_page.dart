@@ -500,11 +500,13 @@ class _DictionaryPageState extends State<DictionaryPage> {
     final String raw;
     try {
       raw = await EncryptedAssetLoader.instance.loadString('data/dictionary_full');
-    } catch (_) {
+    } catch (e) {
       String? detail;
       if (kDebugMode) {
+        detail = e.toString();
         try {
-          detail = await EncryptedAssetLoader.instance.debugGuardReport();
+          final r = await EncryptedAssetLoader.instance.debugGuardReport();
+          if (r != null) detail = '$detail | guard: $r';
         } catch (_) {}
       }
       if (!mounted) return;
