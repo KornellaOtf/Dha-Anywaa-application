@@ -380,10 +380,11 @@ static int port_open(uint16_t port) {
 }
 
 static int anti_tamper_native(void) {
-    /* ptrace self-attach: fails if a debugger/frida already attached */
-    if (ptrace(PTRACE_TRACEME, 0, 0, 0) == -1) return 0;
-    ptrace(PTRACE_DETACH, 0, 0, 0);
-    /* a live tracer shows up in status even if traceme raced */
+    /* NOTE: ptrace(PTRACE_TRACEME) was removed — several OEM kernels
+       (e.g. Transsion/MediaTek) deny it via SELinux even for the app
+       itself, causing false refusals on normal devices. TracerPid in
+       /proc/self/status is the authoritative check: a real debugger
+       or frida attach shows up there. */
     if (tracer_pid() > 0) return 0;
     /* frida / hooking frameworks in memory maps */
     static const int bad[] = {4,5,6,7,8,9,10,11,12,13,14,15};
@@ -406,9 +407,7 @@ JNI_NAME(com_kornellaotf_learn_1dha_1anywaa, MainActivity, antiTamperOk)(
 /* Per-check report for diagnostics. Callers must only surface this in
    debug builds — in release it stays internal. */
 static void check_reports(char *out, size_t cap) {
-    int n = snprintf(out, cap, "ptrace:%d ", ptrace(PTRACE_TRACEME,0,0,0)==-1?0:1);
-    ptrace(PTRACE_DETACH,0,0,0);
-    n += snprintf(out+n, cap-n, "tracer:%d ", tracer_pid());
+    int n = snprintf(out, cap, "tracer:%d ", tracer_pid());
     for (int i=0;i<12;i++) {
         static const int bi[12]={4,5,6,7,8,9,10,11,12,13,14,15};
         if (maps_contains_x(bi[i])) n += snprintf(out+n, cap-n, "map%d ", bi[i]);

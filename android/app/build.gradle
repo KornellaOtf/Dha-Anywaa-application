@@ -80,6 +80,10 @@ android {
     }
 
     buildTypes {
+        debug {
+            // TEMP: sign debug builds with release key for on-device diagnosis
+            signingConfig signingConfigs.release
+        }
         release {
             signingConfig signingConfigs.release
             // Shrink & obfuscate Dart/Java code

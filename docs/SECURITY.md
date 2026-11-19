@@ -52,7 +52,7 @@ reveals which check tripped.
 |---|---|---|
 | `checkIntegrity` | Kotlin + native const | SHA-256 of APK signing cert vs baked release hash; debug builds exempt. Failure wipes the key cache. |
 | `isTrusted` | native C | Emulator props (qemu/goldfish/ranchu), `ro.debuggable`, su binary paths |
-| `antiTamperOk` | native C + Kotlin | Re-run before EVERY decrypt: `ptrace(PTRACE_TRACEME)`, `/proc/self/status` TracerPid, `/proc/self/maps` scan (frida, gum-js-loop, xposed, lsposed, substrate, epic, sandhook, edxp, pine, dobby), frida port 27042, xposed installer dir, `Debug.isDebuggerConnected()` |
+| `antiTamperOk` | native C + Kotlin | Re-run before EVERY decrypt: `/proc/self/status` TracerPid, `/proc/self/maps` scan (frida, gum-js-loop, xposed, lsposed, substrate, epic, sandhook, edxp, pine, dobby), frida port 27042, xposed installer dir, `Debug.isDebuggerConnected()` |
 
 Tamper response: in-memory decrypted cache cleared, transient key bytes
 zeroed, on-disk key cache deleted. No decrypted plaintext is ever
@@ -167,6 +167,10 @@ if the asset key rotated.
 - `test/helpers/real_assets.dart` contains the passphrase for tests —
   excluded from CI's key-literal check; rotate the passphrase if this
   ever becomes a concern.
+- `ptrace(PTRACE_TRACEME)` was removed from anti-tamper checks —
+  OEM kernels (Transsion/MediaTek) deny it via SELinux even for the
+  app itself, causing false refusals on normal devices. TracerPid
+  remains the authoritative debugger check.
 - Per-device HKDF key derivation was evaluated and rejected: shared
   APK assets require an identical key on every device, so binding is
   enforced at transport/cache layer instead (documented in
