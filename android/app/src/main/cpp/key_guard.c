@@ -99,7 +99,7 @@ static void hmac_sha256_hex(const uint8_t *key, size_t klen,
   Sha256 c; uint8_t inner[32],out[32];
   sha256_init(&c); sha256_update(&c,ipad,64); sha256_update(&c,msg,mlen); sha256_final(&c,inner);
   sha256_init(&c); sha256_update(&c,opad,64); sha256_update(&c,inner,32); sha256_final(&c,out);
-  for (int i=0;i<32;i++) sprintf(hex+i*2,"%02x",out[i]);
+  for (int i=0;i<32;i++) snprintf(hex+i*2, 3, "%02x", out[i]);
   hex[64]=0;
 }
 
@@ -356,7 +356,12 @@ static int tracer_pid(void) {
     while (fgets(line, sizeof line, f)) {
         char tp[16]; xstr(18, tp, sizeof tp);
         if (strncmp(line, tp, strlen(tp)) == 0) {
-            pid = atoi(line + 10);
+            /* strtol with validation: atoi() can't tell "0" from a
+               parse failure, which would read a malformed status as
+               "no tracer" on a security check. */
+            char *end = NULL;
+            long v = strtol(line + 10, &end, 10);
+            if (end != line + 10) pid = (int)v;
             break;
         }
     }

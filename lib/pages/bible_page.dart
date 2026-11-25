@@ -214,7 +214,9 @@ class _BiblePageState extends State<BiblePage>
   void _onSearchChanged(String v) {
     _query = v;
     _searchDebounce?.cancel();
-    _searchDebounce = Timer(const Duration(milliseconds: 300), () => _search(v));
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () {
+      if (mounted) _search(v);
+    });
   }
 
   // ─── chapter navigation (crosses book boundaries) ─────────────────────────

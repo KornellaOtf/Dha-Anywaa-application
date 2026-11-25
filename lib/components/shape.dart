@@ -1,8 +1,8 @@
 import 'package:dha_anywaaa/components/detail_screen.dart';
 import 'package:flutter/material.dart';
 
-class Shpae extends StatelessWidget {
-  const Shpae({super.key});
+class Shape extends StatelessWidget {
+  const Shape({super.key});
 
   static const List<Map<String, String>> _items = [
     {'engName': 'Rectangle',   'anyName': 'Atuk ngween',   'imageLink': 'assets/word_images/rectangle.png'},

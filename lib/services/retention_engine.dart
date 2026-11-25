@@ -204,7 +204,7 @@ class RetentionEngine {
 
     try {
       await _notifications.zonedSchedule(
-        0, // notification ID
+        100, // notification ID — must not collide with NotificationService IDs (0-2)
         title,
         body,
         scheduledTime,

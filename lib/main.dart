@@ -180,7 +180,7 @@ class _MyAppState extends State<MyApp> {
           'number': () => const Number(),
           'alphabet': () => const Page1(),
           'word': () => const Page2(),
-          'shape': () => const Shpae(),
+          'shape': () => const Shape(),
           'reading': () => const Page3(),
           'quiz': () => const Page4(),
           'bible': () => const BiblePage(),

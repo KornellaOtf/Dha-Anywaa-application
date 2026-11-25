@@ -58,6 +58,7 @@ class _DailyFivePageState extends State<DailyFivePage>
 
   // Session scoring
   int  _combo       = 0;
+  int  _comboXpEarned = 0;
   int  _maxCombo    = 0;
   int  _totalXp     = 0;
   int  _cardXp      = 0;       // XP earned on this card (shown in feedback)
@@ -207,7 +208,10 @@ class _DailyFivePageState extends State<DailyFivePage>
     if (correct) {
       _combo++;
       if (_combo > _maxCombo) _maxCombo = _combo;
-      if (_combo >= 3) xp += GamificationService.xpCombo;
+      if (_combo >= 3) {
+        xp += GamificationService.xpCombo;
+        _comboXpEarned += GamificationService.xpCombo;
+      }
     } else {
       _combo = 0;
     }
@@ -263,7 +267,7 @@ class _DailyFivePageState extends State<DailyFivePage>
       award = await _gamification.completeDailyFive(
         correct: _results.where((r) => r).length,
         total: _results.length,
-        comboXp: _combo >= 3 ? GamificationService.xpCombo : 0,
+        comboXp: _comboXpEarned,
       );
     } catch (e) {
       debugPrint('DailyFive: XP award failed: $e');
