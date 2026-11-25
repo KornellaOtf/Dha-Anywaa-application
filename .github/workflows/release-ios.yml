@@ -1,11 +1,9 @@
 name: Build & Release iOS OTA
 
 on:
-  push:
-    tags:
-      - 'v*'           # triggers on v1.0.2, v1.1.0, etc.
-
-  workflow_dispatch:   # manual trigger from GitHub UI
+  # Tag pushes no longer trigger iOS builds — releases are manual/local.
+  # Use workflow_dispatch if an iOS build is ever needed.
+  workflow_dispatch:
 
 permissions:
   contents: write      # needed to create releases and upload assets
